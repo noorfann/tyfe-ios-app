@@ -7,7 +7,7 @@
 
 import XCTest
 
-final class tyfe-ios-appUITestsLaunchTests: XCTestCase {
+final class TyfeappUITestsLaunchTests: XCTestCase {
 
     override static var runsForEachTargetApplicationUIConfiguration: Bool {
         true

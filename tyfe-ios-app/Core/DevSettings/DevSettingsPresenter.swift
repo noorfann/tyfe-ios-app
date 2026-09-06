@@ -90,6 +90,13 @@ class DevSettingsPresenter {
         router.dismissScreen()
     }
 
+    #if MOCK || DEV
+    func onDesignSystemGalleryPressed() {
+        interactor.trackEvent(event: Event.onDesignSystemGallery)
+        router.showDesignSystemGallery()
+    }
+    #endif
+
 }
 
 extension DevSettingsPresenter {
@@ -97,11 +104,17 @@ extension DevSettingsPresenter {
     enum Event: LoggableEvent {
         case onAppear
         case onDisappear
+        #if MOCK || DEV
+        case onDesignSystemGallery
+        #endif
 
         var eventName: String {
             switch self {
             case .onAppear:             return "TestView_Appear"
             case .onDisappear:          return "TestView_Disappear"
+            #if MOCK || DEV
+            case .onDesignSystemGallery: return "DevSettings_DesignSystemGallery"
+            #endif
             }
         }
         

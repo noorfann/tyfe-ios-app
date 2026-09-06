@@ -7,7 +7,7 @@
 
 import XCTest
 
-final class tyfe-ios-appUITests: XCTestCase {
+final class TyfeappUITests: XCTestCase {
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
@@ -39,5 +39,39 @@ final class tyfe-ios-appUITests: XCTestCase {
                 XCUIApplication().launch()
             }
         }
+    }
+
+    @MainActor
+    func testDesignSystemGalleryLaunchesInUITestHarness() throws {
+        let app = XCUIApplication()
+        app.launchArguments.append("DESIGN_SYSTEM_GALLERY")
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["Tyfe building blocks"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Focus Chamber"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testPhase1PlanningFlowReachesFocusReady() throws {
+        let app = XCUIApplication()
+        app.launchArguments.append("PHASE1_FLOW")
+        app.launch()
+
+        XCTAssertTrue(app.buttons["Create today’s plan"].waitForExistence(timeout: 5))
+        app.buttons["Create today’s plan"].tap()
+
+        XCTAssertTrue(app.staticTexts["STARTER ACTIVITY"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Continue to today’s plan"].waitForExistence(timeout: 5))
+        app.buttons["Continue to today’s plan"].tap()
+
+        XCTAssertTrue(app.staticTexts["DAILY PLAN"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Set today’s plan"].waitForExistence(timeout: 5))
+        app.buttons["Set today’s plan"].tap()
+
+        XCTAssertTrue(app.buttons["Start Focus"].firstMatch.waitForExistence(timeout: 5))
+        app.buttons["Start Focus"].firstMatch.tap()
+
+        XCTAssertTrue(app.staticTexts["FOCUS CHAMBER"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Begin Focus"].waitForExistence(timeout: 5))
     }
 }

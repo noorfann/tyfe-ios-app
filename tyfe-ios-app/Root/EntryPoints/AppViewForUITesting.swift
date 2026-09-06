@@ -20,7 +20,17 @@ struct AppViewForUITesting: View {
     }
 
     var body: some View {
-        if processInfoContains("STARTSCREEN_[ADDSCREENNAME]") {
+        if processInfoContains("PHASE1_FLOW") {
+            NavigationStack {
+                RouterView { router in
+                    builder.todayView(router: router, delegate: TodayDelegate())
+                }
+            }
+        } else if processInfoContains("DESIGN_SYSTEM_GALLERY") {
+            NavigationStack {
+                TyfeDesignSystemGalleryView(presenter: TyfeDesignSystemGalleryPresenter())
+            }
+        } else if processInfoContains("STARTSCREEN_[ADDSCREENNAME]") {
             RouterView { _ in
                 Text("Screen")
             }

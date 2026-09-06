@@ -17,6 +17,9 @@ struct DevSettingsView: View {
             authSection
             userSection
             deviceSection
+            #if MOCK || DEV
+            designSystemSection
+            #endif
         }
         .navigationTitle("Dev Settings")
         .toolbar {
@@ -91,6 +94,22 @@ struct DevSettingsView: View {
             Text("Device Info")
         }
     }
+
+    #if MOCK || DEV
+    private var designSystemSection: some View {
+        Section {
+            Text("Open component gallery")
+                .font(.body.weight(.semibold))
+                .asButton(.press) {
+                    presenter.onDesignSystemGalleryPressed()
+                }
+        } header: {
+            Text("Design System")
+        } footer: {
+            Text("Mock-only visual review. These fixtures do not touch remote services.")
+        }
+    }
+    #endif
     
     private func itemRow(item: (key: String, value: Any)) -> some View {
         HStack {
