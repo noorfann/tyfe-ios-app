@@ -8,11 +8,17 @@ final class FocusPresenter {
     private let router: FocusRouter
 
     private(set) var session: FocusSessionModel
+    private(set) var remainingFocusSeconds: Int
+    private(set) var remainingPauseSeconds: Int
+    private(set) var completion: FocusCompletionResult?
+    private var tickerTask: Task<Void, Never>?
 
     init(interactor: FocusInteractor, router: FocusRouter, session: FocusSessionModel) {
         self.interactor = interactor
         self.router = router
         self.session = session
+        self.remainingFocusSeconds = session.durationSeconds
+        self.remainingPauseSeconds = session.pauseRemainingSeconds
     }
 
     var isPaused: Bool {
@@ -34,12 +40,7 @@ final class FocusPresenter {
     }
 
     var timerText: String {
-        switch session.state {
-        case .ready, .running: return "25:00"
-        case .paused: return "24:32"
-        case .completed: return "00:00"
-        case .abandoned: return "24:32"
-        }
+        formatted(seconds: remainingFocusSeconds)
     }
 
     var allowanceText: String {
@@ -49,7 +50,7 @@ final class FocusPresenter {
         case .running:
             return session.pauseUsed ? "Pause used · stay with it" : "One pause available · phone lock will not pause"
         case .paused:
-            return "Pause remaining: \(formattedPauseRemaining)"
+            return "Pause remaining: \(formatted(seconds: remainingPauseSeconds))"
         case .completed, .abandoned:
             return "No pause available"
         }
@@ -75,32 +76,131 @@ final class FocusPresenter {
 
     func onViewAppear(delegate: FocusDelegate) {
         interactor.trackScreenEvent(event: Event.onAppear(delegate: delegate))
+        refresh()
+        startTicker()
     }
 
     func onViewDisappear(delegate: FocusDelegate) {
+        stopTicker()
         interactor.trackEvent(event: Event.onDisappear(delegate: delegate))
     }
 
     func onPrimaryActionPressed() {
-        switch session.state {
-        case .ready:
-            session = updatedSession(state: .running)
-            interactor.trackEvent(event: Event.onBegin)
-        case .paused:
-            session = updatedSession(state: .running)
-            interactor.trackEvent(event: Event.onResume)
-        case .running:
-            guard !session.pauseUsed else { return }
-            session = updatedSession(
-                state: .paused,
-                pausedAt: Date(),
-                pauseUsed: true,
-                pauseRemainingSeconds: 272
-            )
-            interactor.trackEvent(event: Event.onPause)
-        case .completed, .abandoned:
-            break
+        do {
+            switch session.state {
+            case .ready:
+                session = try interactor.beginFocusSession(focusSessionId: session.focusSessionId)
+                refresh()
+                startTicker()
+                interactor.trackEvent(event: Event.onBegin)
+            case .paused:
+                session = try interactor.resumeFocusSession(focusSessionId: session.focusSessionId)
+                refresh()
+                startTicker()
+                interactor.trackEvent(event: Event.onResume)
+            case .running:
+                guard !session.pauseUsed else { return }
+                session = try interactor.pauseFocusSession(focusSessionId: session.focusSessionId)
+                refresh()
+                stopTicker()
+                interactor.trackEvent(event: Event.onPause)
+            case .completed, .abandoned:
+                break
+            }
+        } catch {
+            showPersistenceAlert()
         }
+    }
+
+    func onSceneBecameActive() {
+        refresh()
+        if session.state == .running {
+            startTicker()
+        }
+    }
+
+    func onStartAnotherPressed() {
+        do {
+            session = try interactor.startAnotherFocusSession(activityId: session.activityId)
+            completion = nil
+            remainingFocusSeconds = session.durationSeconds
+            remainingPauseSeconds = session.pauseRemainingSeconds
+            startTicker()
+        } catch {
+            showPersistenceAlert()
+        }
+    }
+
+    func onBackToTodayPressed() {
+        router.dismissScreen()
+    }
+
+    private func refresh() {
+        do {
+            let refresh = try interactor.refreshFocusSession(focusSessionId: session.focusSessionId)
+            session = refresh.session
+            remainingFocusSeconds = refresh.remainingFocusSeconds
+            remainingPauseSeconds = refresh.remainingPauseSeconds
+            completion = refresh.completion
+            if session.state == .completed || session.state == .abandoned {
+                stopTicker()
+            }
+        } catch {
+            showPersistenceAlert()
+        }
+    }
+
+    private func startTicker() {
+        stopTicker()
+        guard session.state == .running || session.state == .paused else { return }
+        tickerTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(1))
+                guard !Task.isCancelled else { return }
+                self?.refresh()
+            }
+        }
+    }
+
+    private func stopTicker() {
+        tickerTask?.cancel()
+        tickerTask = nil
+    }
+
+    private func showPersistenceAlert() {
+        router.showAlert(
+            .alert,
+            title: "Couldn't save session",
+            subtitle: "Your Focus Session is still safe. Please try that action again.",
+            buttons: {
+                AnyView(
+                    Button("OK", role: .cancel) { }
+                )
+            }
+        )
+    }
+
+    private func formatted(seconds: Int) -> String {
+        let safeSeconds = max(seconds, 0)
+        return String(format: "%d:%02d", safeSeconds / 60, safeSeconds % 60)
+    }
+
+    private var formattedPauseRemaining: String {
+        formatted(seconds: remainingPauseSeconds)
+    }
+
+    private func updatedSession(
+        state: FocusSessionState,
+        pausedAt: Date? = nil,
+        pauseUsed: Bool? = nil,
+        pauseRemainingSeconds: Int? = nil
+    ) -> FocusSessionModel {
+        session.updated(
+            state: state,
+            pausedAt: pausedAt,
+            pauseUsed: pauseUsed,
+            pauseRemainingSeconds: pauseRemainingSeconds
+        )
     }
 
     func onAbandonPressed() {
@@ -120,34 +220,14 @@ final class FocusPresenter {
     }
 
     private func onAbandonConfirmed() {
-        interactor.trackEvent(event: Event.onAbandonConfirmed)
-        session = updatedSession(state: .abandoned)
-        router.dismissScreen()
-    }
-
-    private var formattedPauseRemaining: String {
-        let minutes = session.pauseRemainingSeconds / 60
-        let seconds = session.pauseRemainingSeconds % 60
-        return String(format: "%d:%02d", minutes, seconds)
-    }
-
-    private func updatedSession(
-        state: FocusSessionState,
-        pausedAt: Date? = nil,
-        pauseUsed: Bool? = nil,
-        pauseRemainingSeconds: Int? = nil
-    ) -> FocusSessionModel {
-        FocusSessionModel(
-            focusSessionId: session.focusSessionId,
-            activityId: session.activityId,
-            state: state,
-            startedAt: session.startedAt,
-            pausedAt: pausedAt ?? session.pausedAt,
-            completedAt: session.completedAt,
-            pauseUsed: pauseUsed ?? session.pauseUsed,
-            pauseRemainingSeconds: pauseRemainingSeconds ?? session.pauseRemainingSeconds,
-            isBonusSession: session.isBonusSession
-        )
+        do {
+            session = try interactor.abandonFocusSession(focusSessionId: session.focusSessionId)
+            completion = nil
+            stopTicker()
+            interactor.trackEvent(event: Event.onAbandonConfirmed)
+        } catch {
+            showPersistenceAlert()
+        }
     }
 }
 

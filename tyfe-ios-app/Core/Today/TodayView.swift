@@ -145,6 +145,32 @@ struct TodayView: View {
                 }
             }
 
+            if let activeSession = presenter.activeFocusSession,
+               let activity = presenter.activities.first(where: { $0.activityId == activeSession.activityId }) {
+                TyfeSurfaceView(role: .focusChamber) {
+                    HStack(spacing: TyfeSpacing.control) {
+                        Image(systemName: activeSession.state.symbolName)
+                            .font(.title2.weight(.black))
+                            .foregroundStyle(TyfeEditorialPalette.focus)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(activeSession.state == .ready ? "Focus is ready" : "Focus in progress")
+                                .font(TyfeTypography.interfaceStrong)
+                                .foregroundStyle(TyfeEditorialPalette.onDark)
+                            Text(activity.name)
+                                .font(TyfeTypography.interface)
+                                .foregroundStyle(TyfeEditorialPalette.onDark.opacity(0.72))
+                        }
+
+                    }
+                    .contentShape(Rectangle())
+                    .asButton(.press) {
+                        presenter.onResumeActiveFocusPressed()
+                    }
+                    .accessibilityLabel("Resume focus session for \(activity.name)")
+                }
+            }
+
             planDeck
 
             if !presenter.hasUnfinishedPlan {
@@ -684,8 +710,8 @@ struct TodayAddActivitySheet: View {
 
 #Preview("Today — planned") {
     let container = DevPreview.shared.container()
-    let store = container.resolve(Phase1PlanningStore.self)!
-    _ = store.acceptDailyPlan(
+    let manager = container.resolve(TodayManager.self)!
+    _ = manager.acceptDailyPlan(
         intendedSessionCount: 16,
         activityIds: [ActivityModel.mock.activityId],
         timeBlocks: nil

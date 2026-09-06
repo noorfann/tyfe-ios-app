@@ -14,7 +14,8 @@ struct CoreInteractor: GlobalInteractor {
     private let streakManager: StreakManager
     private let xpManager: ExperiencePointsManager
     private let progressManager: ProgressManager
-    private let phase1PlanningStore: Phase1PlanningStore
+    let todayManager: TodayManager
+    let focusManager: FocusManager
 
     init(container: DependencyContainer) {
         self.appState = container.resolve(AppState.self)!
@@ -29,7 +30,8 @@ struct CoreInteractor: GlobalInteractor {
         self.streakManager = container.resolve(StreakManager.self, key: Dependencies.streakConfiguration.streakKey)!
         self.xpManager = container.resolve(ExperiencePointsManager.self, key: Dependencies.xpConfiguration.experienceKey)!
         self.progressManager = container.resolve(ProgressManager.self, key: Dependencies.progressConfiguration.progressKey)!
-        self.phase1PlanningStore = container.resolve(Phase1PlanningStore.self)!
+        self.todayManager = container.resolve(TodayManager.self)!
+        self.focusManager = container.resolve(FocusManager.self)!
     }
     
     // MARK: APP STATE
@@ -318,30 +320,30 @@ struct CoreInteractor: GlobalInteractor {
     // MARK: Phase 1 Planning
 
     var phase1Activities: [ActivityModel] {
-        phase1PlanningStore.activities
+        todayManager.activities
     }
 
     var phase1DailyPlan: DailyPlanModel? {
-        phase1PlanningStore.dailyPlan
+        todayManager.dailyPlan
     }
 
     var phase1CompletedSessionCount: Int {
-        phase1PlanningStore.completedSessionCount
+        todayManager.completedSessionCount
     }
 
     var phase1CompletedSessionCounts: [String: Int] {
-        guard let dailyPlan = phase1PlanningStore.dailyPlan else { return [:] }
+        guard let dailyPlan = todayManager.dailyPlan else { return [:] }
         return Dictionary(uniqueKeysWithValues: dailyPlan.planItems.map { item in
-            (item.activityId, phase1PlanningStore.completedSessionCount(for: item.activityId))
+            (item.activityId, todayManager.completedSessionCount(for: item.activityId))
         })
     }
 
     var phase1RewardCredits: Int {
-        phase1PlanningStore.rewardCredits
+        todayManager.rewardCredits
     }
 
     var phase1Progression: ProgressionSnapshotModel {
-        phase1PlanningStore.progression
+        todayManager.progression
     }
 
     @discardableResult
@@ -350,7 +352,7 @@ struct CoreInteractor: GlobalInteractor {
         category: ActivityCategory?,
         colorToken: String?
     ) -> ActivityModel? {
-        phase1PlanningStore.createActivity(name: name, category: category, colorToken: colorToken)
+        todayManager.createActivity(name: name, category: category, colorToken: colorToken)
     }
 
     @discardableResult
@@ -359,7 +361,7 @@ struct CoreInteractor: GlobalInteractor {
         activityIds: [String],
         timeBlocks: [PlanTimeBlockModel]?
     ) -> DailyPlanModel {
-        phase1PlanningStore.acceptDailyPlan(
+        todayManager.acceptDailyPlan(
             intendedSessionCount: intendedSessionCount,
             activityIds: activityIds,
             timeBlocks: timeBlocks
@@ -368,7 +370,7 @@ struct CoreInteractor: GlobalInteractor {
 
     @discardableResult
     func startPhase1FocusSession(activityId: String) -> FocusSessionModel? {
-        phase1PlanningStore.startFocusSession(activityId: activityId)
+        focusManager.startFocusSession(activityId: activityId)
     }
 
     @discardableResult
@@ -376,7 +378,7 @@ struct CoreInteractor: GlobalInteractor {
         activityId: String,
         sessionCount: Int
     ) -> DailyPlanModel? {
-        phase1PlanningStore.addActivityToDailyPlan(
+        todayManager.addActivityToDailyPlan(
             activityId: activityId,
             sessionCount: sessionCount
         )
@@ -387,7 +389,7 @@ struct CoreInteractor: GlobalInteractor {
         activityId: String,
         sessionCount: Int
     ) -> DailyPlanModel? {
-        phase1PlanningStore.updateDailyPlanItemCount(
+        todayManager.updateDailyPlanItemCount(
             activityId: activityId,
             sessionCount: sessionCount
         )
@@ -395,7 +397,7 @@ struct CoreInteractor: GlobalInteractor {
 
     @discardableResult
     func removePhase1ActivityFromDailyPlan(activityId: String) -> DailyPlanModel? {
-        phase1PlanningStore.removeActivityFromDailyPlan(activityId: activityId)
+        todayManager.removeActivityFromDailyPlan(activityId: activityId)
     }
 
     // MARK: SHARED

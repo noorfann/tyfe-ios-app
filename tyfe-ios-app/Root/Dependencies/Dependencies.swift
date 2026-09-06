@@ -27,7 +27,9 @@ struct Dependencies {
         let streakManager: StreakManager
         let xpManager: ExperiencePointsManager
         let progressManager: ProgressManager
-        let phase1PlanningStore: Phase1PlanningStore
+        let repository: FocusRepository
+        let todayManager: TodayManager
+        let focusManager: FocusManager
         
         switch config {
         case .mock(isSignedIn: let isSignedIn, addLogging: let addLogging):
@@ -95,7 +97,14 @@ struct Dependencies {
         }
         pushManager = PushManager(logManager: logManager)
         soundEffectManager = SoundEffectManager(logger: logManager)
-        phase1PlanningStore = Phase1PlanningStore()
+        switch config {
+        case .mock:
+            repository = MockFocusRepository()
+        case .dev, .prod:
+            repository = LocalFocusRepository(persistence: LocalFocusRepositoryPersistence())
+        }
+        todayManager = TodayManager(repository: repository)
+        focusManager = FocusManager(repository: repository)
         
         let container = DependencyContainer()
         container.register(AuthManager.self, service: authManager)
@@ -110,7 +119,8 @@ struct Dependencies {
         container.register(StreakManager.self, key: Dependencies.streakConfiguration.streakKey, service: streakManager)
         container.register(ExperiencePointsManager.self, key: Dependencies.xpConfiguration.experienceKey, service: xpManager)
         container.register(ProgressManager.self, key: Dependencies.progressConfiguration.progressKey, service: progressManager)
-        container.register(Phase1PlanningStore.self, service: phase1PlanningStore)
+        container.register(TodayManager.self, service: todayManager)
+        container.register(FocusManager.self, service: focusManager)
 
         self.container = container
         

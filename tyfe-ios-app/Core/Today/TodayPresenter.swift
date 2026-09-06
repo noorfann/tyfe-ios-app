@@ -14,6 +14,7 @@ final class TodayPresenter {
     private(set) var completedSessionCounts: [String: Int] = [:]
     private(set) var rewardCredits = 0
     private(set) var progression = ProgressionSnapshotModel.noXPMock
+    private(set) var activeFocusSession: FocusSessionModel?
 
     var selectedPlanItemId: String?
     var isAddActivitySheetPresented = false
@@ -38,6 +39,10 @@ final class TodayPresenter {
 
     var hasUnfinishedPlan: Bool {
         planItems.contains { remainingSessionCount(for: $0) > 0 }
+    }
+
+    var hasActiveFocusSession: Bool {
+        activeFocusSession != nil
     }
 
     var nextPlanItem: DailyPlanItemModel? {
@@ -149,6 +154,14 @@ final class TodayPresenter {
     }
 
     func onStartFocusPressed(for item: DailyPlanItemModel) {
+        if let activeFocusSession,
+           let activity = activities.first(where: { $0.activityId == activeFocusSession.activityId }) {
+            selectedPlanItemId = item.id
+            interactor.trackEvent(event: Event.startFocus)
+            router.showFocusView(delegate: FocusDelegate(activity: activity, session: activeFocusSession))
+            return
+        }
+
         guard remainingSessionCount(for: item) > 0,
               let activity = activity(for: item),
               let session = interactor.startPhase1FocusSession(activityId: activity.activityId) else {
@@ -157,6 +170,15 @@ final class TodayPresenter {
         selectedPlanItemId = item.id
         interactor.trackEvent(event: Event.startFocus)
         router.showFocusView(delegate: FocusDelegate(activity: activity, session: session))
+    }
+
+    func onResumeActiveFocusPressed() {
+        guard let activeFocusSession,
+              let activity = activities.first(where: { $0.activityId == activeFocusSession.activityId }) else {
+            return
+        }
+        interactor.trackEvent(event: Event.startFocus)
+        router.showFocusView(delegate: FocusDelegate(activity: activity, session: activeFocusSession))
     }
 
     func onDevSettingsPressed() {
@@ -178,6 +200,7 @@ final class TodayPresenter {
         completedSessionCounts = interactor.phase1CompletedSessionCounts
         rewardCredits = interactor.phase1RewardCredits
         progression = interactor.phase1Progression
+        activeFocusSession = interactor.activeFocusSession
 
         if let selectedPlanItemId,
            planItems.contains(where: { $0.id == selectedPlanItemId }) {

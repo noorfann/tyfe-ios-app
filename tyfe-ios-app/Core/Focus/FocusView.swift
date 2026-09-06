@@ -37,6 +37,7 @@ struct FocusView: View {
     let delegate: FocusDelegate
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
     @State private var showWarmSurface = true
 
     private var chamberAnimation: Animation {
@@ -71,6 +72,11 @@ struct FocusView: View {
         .onDisappear {
             presenter.onViewDisappear(delegate: delegate)
         }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                presenter.onSceneBecameActive()
+            }
+        }
     }
 
     private var chamberContent: some View {
@@ -80,7 +86,11 @@ struct FocusView: View {
                 activityHeader
                 timer
                 allowance
-                actions
+                if presenter.session.state == .completed || presenter.session.state == .abandoned {
+                    outcome
+                } else {
+                    actions
+                }
             }
             .padding(.horizontal, 22)
             .padding(.top, 18)
@@ -226,6 +236,54 @@ struct FocusView: View {
                     presenter.onAbandonPressed()
                 }
         }
+    }
+
+    private var outcome: some View {
+        TyfeSurfaceView(role: presenter.session.state == .completed ? .celebration : .warning) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+                Label(
+                    presenter.session.state == .completed ? "Session complete" : "Session ended",
+                    systemImage: presenter.session.state.symbolName
+                )
+                .font(TyfeTypography.displayCompact)
+
+                if let completion = presenter.completion, presenter.session.state == .completed {
+                    Text("You earned +\(completion.rewardCreditsAwarded) Reward Credit and +\(completion.xpAwarded) XP.")
+                        .font(TyfeTypography.interfaceStrong)
+                } else {
+                    Text("No Reward Credit or XP earned.")
+                        .font(TyfeTypography.interfaceStrong)
+                }
+
+                HStack(spacing: TyfeSpacing.small) {
+                    if presenter.session.state == .completed {
+                        Text("Start another")
+                            .font(TyfeTypography.interfaceStrong)
+                            .frame(maxWidth: .infinity)
+                            .frame(minHeight: 48)
+                            .background(TyfeEditorialPalette.navy)
+                            .foregroundStyle(TyfeEditorialPalette.onDark)
+                            .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
+                            .asButton(.press) {
+                                presenter.onStartAnotherPressed()
+                            }
+                    }
+
+                    Text("Back to Today")
+                        .font(TyfeTypography.interfaceStrong)
+                        .frame(maxWidth: .infinity)
+                        .frame(minHeight: 48)
+                        .background(TyfeEditorialPalette.onDark.opacity(0.82))
+                        .foregroundStyle(presenter.session.state == .completed ? TyfeEditorialPalette.onDark : TyfeEditorialPalette.ink)
+                        .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
+                        .asButton(.press) {
+                            presenter.onBackToTodayPressed()
+                        }
+                }
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(presenter.session.state == .completed ? "Focus session complete" : "Focus session abandoned")
     }
 
     private func enterFocusChamber() {

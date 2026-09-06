@@ -2,6 +2,7 @@ import SwiftUI
 
 @MainActor
 protocol TodayInteractor: GlobalInteractor {
+    var activeFocusSession: FocusSessionModel? { get }
     var phase1Activities: [ActivityModel] { get }
     var phase1DailyPlan: DailyPlanModel? { get }
     var phase1CompletedSessionCount: Int { get }
