@@ -38,9 +38,23 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
     let startedAt: Date
     let pausedAt: Date?
     let completedAt: Date?
+    let focusEndsAt: Date?
     let pauseUsed: Bool
     let pauseRemainingSeconds: Int
     let isBonusSession: Bool
+
+    private enum CodingKeys: String, CodingKey {
+        case focusSessionId
+        case activityId
+        case state
+        case startedAt
+        case pausedAt
+        case completedAt
+        case focusEndsAt
+        case pauseUsed
+        case pauseRemainingSeconds
+        case isBonusSession
+    }
 
     var id: String {
         focusSessionId
@@ -66,6 +80,7 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
         state: FocusSessionState,
         pausedAt: Date? = nil,
         completedAt: Date? = nil,
+        focusEndsAt: Date? = nil,
         pauseUsed: Bool? = nil,
         pauseRemainingSeconds: Int? = nil
     ) -> Self {
@@ -76,6 +91,7 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
             startedAt: startedAt,
             pausedAt: pausedAt ?? self.pausedAt,
             completedAt: completedAt ?? self.completedAt,
+            focusEndsAt: focusEndsAt ?? self.focusEndsAt,
             pauseUsed: pauseUsed ?? self.pauseUsed,
             pauseRemainingSeconds: pauseRemainingSeconds ?? self.pauseRemainingSeconds,
             isBonusSession: isBonusSession
@@ -89,6 +105,7 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
         startedAt: Date,
         pausedAt: Date? = nil,
         completedAt: Date? = nil,
+        focusEndsAt: Date? = nil,
         pauseUsed: Bool = false,
         pauseRemainingSeconds: Int = FocusSessionModel.pauseAllowanceSeconds,
         isBonusSession: Bool = false
@@ -99,9 +116,26 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
         self.startedAt = startedAt
         self.pausedAt = pausedAt
         self.completedAt = completedAt
+        self.focusEndsAt = focusEndsAt
         self.pauseUsed = pauseUsed
         self.pauseRemainingSeconds = min(max(pauseRemainingSeconds, 0), Self.pauseAllowanceSeconds)
         self.isBonusSession = isBonusSession
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            focusSessionId: try container.decode(String.self, forKey: .focusSessionId),
+            activityId: try container.decode(String.self, forKey: .activityId),
+            state: try container.decode(FocusSessionState.self, forKey: .state),
+            startedAt: try container.decode(Date.self, forKey: .startedAt),
+            pausedAt: try container.decodeIfPresent(Date.self, forKey: .pausedAt),
+            completedAt: try container.decodeIfPresent(Date.self, forKey: .completedAt),
+            focusEndsAt: try container.decodeIfPresent(Date.self, forKey: .focusEndsAt),
+            pauseUsed: try container.decodeIfPresent(Bool.self, forKey: .pauseUsed) ?? false,
+            pauseRemainingSeconds: try container.decodeIfPresent(Int.self, forKey: .pauseRemainingSeconds) ?? Self.pauseAllowanceSeconds,
+            isBonusSession: try container.decodeIfPresent(Bool.self, forKey: .isBonusSession) ?? false
+        )
     }
 
     var eventParameters: [String: Any] {
@@ -112,6 +146,7 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
             "focus_session_started_at": startedAt,
             "focus_session_pause_used": pauseUsed,
             "focus_session_pause_remaining_seconds": pauseRemainingSeconds,
+            "focus_session_ends_at": focusEndsAt as Any,
             "focus_session_is_bonus": isBonusSession
         ]
     }

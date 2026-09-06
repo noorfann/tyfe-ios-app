@@ -3,34 +3,37 @@ import Observation
 
 @Observable
 @MainActor
-final class Phase1PlanningStore {
+final class TodayManager {
 
-    private(set) var activities: [ActivityModel]
-    private(set) var dailyPlan: DailyPlanModel?
-    private(set) var completedSessionCount: Int
-    private(set) var rewardCredits: Int
-    private(set) var progression: ProgressionSnapshotModel
-    private(set) var currentFocusSession: FocusSessionModel?
-    private(set) var focusSessions: [FocusSessionModel]
-
-    private var nextActivityNumber: Int
-    private var nextSessionNumber = 1
+    private let repository: FocusRepository
+    private let clock: FocusClock
 
     init(
-        activities: [ActivityModel] = [ActivityModel.mock],
-        dailyPlan: DailyPlanModel? = nil,
-        completedSessionCount: Int = 0,
-        rewardCredits: Int = 2,
-        progression: ProgressionSnapshotModel = .mock,
-        focusSessions: [FocusSessionModel] = []
+        repository: FocusRepository = MockFocusRepository(),
+        clock: FocusClock = SystemFocusClock()
     ) {
-        self.activities = activities
-        self.dailyPlan = dailyPlan
-        self.completedSessionCount = max(completedSessionCount, 0)
-        self.rewardCredits = max(rewardCredits, 0)
-        self.progression = progression
-        self.focusSessions = focusSessions
-        self.nextActivityNumber = activities.count + 1
+        self.repository = repository
+        self.clock = clock
+    }
+
+    var activities: [ActivityModel] {
+        repository.snapshot.activities
+    }
+
+    var dailyPlan: DailyPlanModel? {
+        repository.snapshot.dailyPlan
+    }
+
+    var completedSessionCount: Int {
+        repository.snapshot.completedSessionCount
+    }
+
+    var rewardCredits: Int {
+        repository.snapshot.rewardCredits
+    }
+
+    var progression: ProgressionSnapshotModel {
+        repository.snapshot.progression
     }
 
     @discardableResult
@@ -41,24 +44,33 @@ final class Phase1PlanningStore {
     ) -> ActivityModel? {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty else { return nil }
-
-        if let existing = activities.first(where: {
+        guard !activities.contains(where: {
             $0.name.localizedCaseInsensitiveCompare(trimmedName) == .orderedSame && !$0.isArchived
-        }) {
-            return existing
+        }) else {
+            return activities.first(where: {
+                $0.name.localizedCaseInsensitiveCompare(trimmedName) == .orderedSame && !$0.isArchived
+            })
         }
 
-        let activity = ActivityModel(
-            activityId: "activity-\(nextActivityNumber)",
-            name: trimmedName,
-            category: category,
-            iconToken: iconToken(for: category),
-            colorToken: colorToken,
-            createdAt: Date()
-        )
-        nextActivityNumber += 1
-        activities.append(activity)
-        return activity
+        var createdActivity: ActivityModel?
+        do {
+            try repository.transaction { snapshot in
+                let activity = ActivityModel(
+                    activityId: "activity-" + String(snapshot.nextActivityNumber),
+                    name: trimmedName,
+                    category: category,
+                    iconToken: iconToken(for: category),
+                    colorToken: colorToken,
+                    createdAt: clock.now
+                )
+                snapshot.nextActivityNumber += 1
+                snapshot.activities.append(activity)
+                createdActivity = activity
+            }
+        } catch {
+            return nil
+        }
+        return createdActivity
     }
 
     @discardableResult
@@ -85,7 +97,7 @@ final class Phase1PlanningStore {
         }
         let plan = DailyPlanModel(
             dailyPlanId: dailyPlan?.dailyPlanId ?? "daily-plan-current",
-            localDate: Calendar.current.startOfDay(for: Date()),
+            localDate: Calendar.current.startOfDay(for: clock.now),
             intendedSessionCount: count,
             originalIntendedSessionCount: dailyPlan?.originalIntendedSessionCount ?? count,
             activityIds: selectedActivityIds,
@@ -93,7 +105,9 @@ final class Phase1PlanningStore {
             timeBlocks: normalizedTimeBlocks,
             isRevised: dailyPlan != nil
         )
-        dailyPlan = plan
+        try? repository.transaction { snapshot in
+            snapshot.dailyPlan = plan
+        }
         return plan
     }
 
@@ -114,7 +128,7 @@ final class Phase1PlanningStore {
                 timeBlocks: nil,
                 planItems: [
                     DailyPlanItemModel(
-                        planItemId: "plan-item-\(activityId)",
+                        planItemId: "plan-item-" + activityId,
                         activityId: activityId,
                         plannedSessionCount: count
                     )
@@ -133,14 +147,13 @@ final class Phase1PlanningStore {
         } else {
             items.append(
                 DailyPlanItemModel(
-                    planItemId: "plan-item-\(activityId)",
+                    planItemId: "plan-item-" + activityId,
                     activityId: activityId,
                     plannedSessionCount: count
                 )
             )
         }
-
-        return replaceDailyPlan(dailyPlan, planItems: items, isRevised: true)
+        return replaceDailyPlan(dailyPlan, planItems: items)
     }
 
     @discardableResult
@@ -162,111 +175,53 @@ final class Phase1PlanningStore {
             activityId: item.activityId,
             plannedSessionCount: count
         )
-
-        return replaceDailyPlan(dailyPlan, planItems: items, isRevised: true)
+        return replaceDailyPlan(dailyPlan, planItems: items)
     }
 
     @discardableResult
     func removeActivityFromDailyPlan(activityId: String) -> DailyPlanModel? {
-        guard let dailyPlan,
-              completedSessionCount(for: activityId) == 0 else {
+        guard let dailyPlan, completedSessionCount(for: activityId) == 0 else {
             return dailyPlan
         }
 
         let items = dailyPlan.planItems.filter { $0.activityId != activityId }
-        guard !items.isEmpty else {
-            self.dailyPlan = nil
+        if items.isEmpty {
+            try? repository.transaction { snapshot in
+                snapshot.dailyPlan = nil
+            }
             return nil
         }
-
-        return replaceDailyPlan(dailyPlan, planItems: items, isRevised: true)
+        return replaceDailyPlan(dailyPlan, planItems: items)
     }
 
     func completedSessionCount(for activityId: String) -> Int {
-        focusSessions.filter {
+        repository.snapshot.focusSessions.filter {
             $0.activityId == activityId && $0.state == .completed
         }.count
     }
 
-    @discardableResult
-    func completeFocusSession(
-        focusSessionId: String,
-        completedAt: Date = Date()
-    ) -> FocusSessionModel? {
-        guard let index = focusSessions.firstIndex(where: { $0.focusSessionId == focusSessionId }) else {
-            return nil
-        }
-
-        let session = focusSessions[index]
-        guard session.state != .completed && session.state != .abandoned else { return session }
-        let completedSession = session.updated(state: .completed, completedAt: completedAt)
-        focusSessions[index] = completedSession
-        completedSessionCount += 1
-        currentFocusSession = completedSession
-        return completedSession
-    }
-
-    @discardableResult
-    func abandonFocusSession(focusSessionId: String) -> FocusSessionModel? {
-        guard let index = focusSessions.firstIndex(where: { $0.focusSessionId == focusSessionId }) else {
-            return nil
-        }
-
-        let session = focusSessions[index]
-        guard session.state != .completed && session.state != .abandoned else { return session }
-        let abandonedSession = session.updated(state: .abandoned)
-        focusSessions[index] = abandonedSession
-        currentFocusSession = abandonedSession
-        return abandonedSession
-    }
-
-    @discardableResult
-    func startFocusSession(activityId: String) -> FocusSessionModel? {
-        guard activities.contains(where: { $0.activityId == activityId && !$0.isArchived }) else {
-            return nil
-        }
-
-        let isBonusSession = dailyPlan.map { plan in
-            guard let item = plan.planItems.first(where: { $0.activityId == activityId }) else {
-                return true
-            }
-            return completedSessionCount(for: activityId) >= item.plannedSessionCount
-        } ?? true
-        let session = FocusSessionModel(
-            focusSessionId: "focus-session-\(nextSessionNumber)",
-            activityId: activityId,
-            state: .ready,
-            startedAt: Date(),
-            isBonusSession: isBonusSession
-        )
-        nextSessionNumber += 1
-        focusSessions.append(session)
-        currentFocusSession = session
-        return session
-    }
-
     private func replaceDailyPlan(
         _ plan: DailyPlanModel,
-        planItems: [DailyPlanItemModel],
-        isRevised: Bool
+        planItems: [DailyPlanItemModel]
     ) -> DailyPlanModel {
         let normalizedItems = planItems.filter { item in
             activities.contains(where: { activity in
                 activity.activityId == item.activityId && !activity.isArchived
             })
         }
-        let total = normalizedItems.reduce(0) { $0 + $1.plannedSessionCount }
         let updatedPlan = DailyPlanModel(
             dailyPlanId: plan.dailyPlanId,
             localDate: plan.localDate,
-            intendedSessionCount: total,
+            intendedSessionCount: normalizedItems.reduce(0) { $0 + $1.plannedSessionCount },
             originalIntendedSessionCount: plan.originalIntendedSessionCount,
             activityIds: normalizedItems.map(\.activityId),
             planItems: normalizedItems,
             timeBlocks: plan.timeBlocks,
-            isRevised: isRevised
+            isRevised: true
         )
-        dailyPlan = updatedPlan
+        try? repository.transaction { snapshot in
+            snapshot.dailyPlan = updatedPlan
+        }
         return updatedPlan
     }
 
