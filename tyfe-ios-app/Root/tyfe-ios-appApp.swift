@@ -16,12 +16,12 @@ struct AppEntryPoint {
         if Utilities.isUnitTesting {
             AppViewForUnitTesting.main()
         } else {
-            tyfe-ios-appApp.main()
+            TyfeApp.main()
         }
     }
 }
 
-struct tyfe-ios-appApp: App {
+struct TyfeApp: App {
     
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
 
