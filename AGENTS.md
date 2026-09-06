@@ -2,6 +2,12 @@
 
 This is the canonical project guidance for Codex and other coding agents working in this repository. User instructions and safety constraints take priority over this file; when guidance conflicts, follow the higher-priority instruction and call out the conflict briefly.
 
+## Caveman workflow
+
+- Caveman mode is the default response style for this project at full intensity, while preserving exact technical meaning. Return to normal prose when the user asks for it.
+- Before each task, check available Caveman skills and invoke every task-specific Caveman skill whose trigger matches. Use `caveman-explore` for cold-start or broad repository localization, `caveman-review` for code reviews, and `caveman-commit` for commit-message requests. Use other Caveman skills only when their stated trigger applies.
+- Keep persisted project documentation, code comments, commit bodies, and messages intended for other humans in normal prose unless the user explicitly requests Caveman formatting.
+
 ## Working agreement
 
 - Inspect the relevant files, tests, and existing patterns before editing.
