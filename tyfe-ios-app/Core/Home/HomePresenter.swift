@@ -3,9 +3,14 @@ import SwiftUI
 @Observable
 @MainActor
 class HomePresenter {
-    
+
     private let interactor: HomeInteractor
     private let router: HomeRouter
+
+    private(set) var activityTitle = "Study Swift"
+    private(set) var planCompleted = 1
+    private(set) var planTotal = 3
+    private(set) var rewardCredits = 2
     
     init(interactor: HomeInteractor, router: HomeRouter) {
         self.interactor = interactor
@@ -28,6 +33,11 @@ class HomePresenter {
         interactor.trackEvent(event: Event.onDevSettingsFail)
         #endif
     }
+
+    func onStartFocusPressed() {
+        interactor.trackEvent(event: Event.onStartFocus)
+        router.showFocusView(delegate: FocusDelegate(activityTitle: activityTitle))
+    }
 }
 
 extension HomePresenter {
@@ -37,6 +47,7 @@ extension HomePresenter {
         case onDisappear(delegate: HomeDelegate)
         case onDevSettings
         case onDevSettingsFail
+        case onStartFocus
 
         var eventName: String {
             switch self {
@@ -44,6 +55,7 @@ extension HomePresenter {
             case .onDisappear:              return "HomeView_Disappear"
             case .onDevSettings:            return "HomeView_DevSettings"
             case .onDevSettingsFail:        return "HomeView_DevSettings_Fail"
+            case .onStartFocus:             return "HomeView_StartFocus"
             }
         }
         
