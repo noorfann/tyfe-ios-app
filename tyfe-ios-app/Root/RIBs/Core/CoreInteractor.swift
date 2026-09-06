@@ -14,6 +14,7 @@ struct CoreInteractor: GlobalInteractor {
     private let streakManager: StreakManager
     private let xpManager: ExperiencePointsManager
     private let progressManager: ProgressManager
+    private let phase1PlanningStore: Phase1PlanningStore
 
     init(container: DependencyContainer) {
         self.appState = container.resolve(AppState.self)!
@@ -28,6 +29,7 @@ struct CoreInteractor: GlobalInteractor {
         self.streakManager = container.resolve(StreakManager.self, key: Dependencies.streakConfiguration.streakKey)!
         self.xpManager = container.resolve(ExperiencePointsManager.self, key: Dependencies.xpConfiguration.experienceKey)!
         self.progressManager = container.resolve(ProgressManager.self, key: Dependencies.progressConfiguration.progressKey)!
+        self.phase1PlanningStore = container.resolve(Phase1PlanningStore.self)!
     }
     
     // MARK: APP STATE
@@ -311,6 +313,89 @@ struct CoreInteractor: GlobalInteractor {
 
     func deleteAllProgress() async throws {
         try await progressManager.deleteAllProgress()
+    }
+
+    // MARK: Phase 1 Planning
+
+    var phase1Activities: [ActivityModel] {
+        phase1PlanningStore.activities
+    }
+
+    var phase1DailyPlan: DailyPlanModel? {
+        phase1PlanningStore.dailyPlan
+    }
+
+    var phase1CompletedSessionCount: Int {
+        phase1PlanningStore.completedSessionCount
+    }
+
+    var phase1CompletedSessionCounts: [String: Int] {
+        guard let dailyPlan = phase1PlanningStore.dailyPlan else { return [:] }
+        return Dictionary(uniqueKeysWithValues: dailyPlan.planItems.map { item in
+            (item.activityId, phase1PlanningStore.completedSessionCount(for: item.activityId))
+        })
+    }
+
+    var phase1RewardCredits: Int {
+        phase1PlanningStore.rewardCredits
+    }
+
+    var phase1Progression: ProgressionSnapshotModel {
+        phase1PlanningStore.progression
+    }
+
+    @discardableResult
+    func createPhase1Activity(
+        name: String,
+        category: ActivityCategory?,
+        colorToken: String?
+    ) -> ActivityModel? {
+        phase1PlanningStore.createActivity(name: name, category: category, colorToken: colorToken)
+    }
+
+    @discardableResult
+    func acceptPhase1DailyPlan(
+        intendedSessionCount: Int,
+        activityIds: [String],
+        timeBlocks: [PlanTimeBlockModel]?
+    ) -> DailyPlanModel {
+        phase1PlanningStore.acceptDailyPlan(
+            intendedSessionCount: intendedSessionCount,
+            activityIds: activityIds,
+            timeBlocks: timeBlocks
+        )
+    }
+
+    @discardableResult
+    func startPhase1FocusSession(activityId: String) -> FocusSessionModel? {
+        phase1PlanningStore.startFocusSession(activityId: activityId)
+    }
+
+    @discardableResult
+    func addPhase1ActivityToDailyPlan(
+        activityId: String,
+        sessionCount: Int
+    ) -> DailyPlanModel? {
+        phase1PlanningStore.addActivityToDailyPlan(
+            activityId: activityId,
+            sessionCount: sessionCount
+        )
+    }
+
+    @discardableResult
+    func updatePhase1DailyPlanItemCount(
+        activityId: String,
+        sessionCount: Int
+    ) -> DailyPlanModel? {
+        phase1PlanningStore.updateDailyPlanItemCount(
+            activityId: activityId,
+            sessionCount: sessionCount
+        )
+    }
+
+    @discardableResult
+    func removePhase1ActivityFromDailyPlan(activityId: String) -> DailyPlanModel? {
+        phase1PlanningStore.removeActivityFromDailyPlan(activityId: activityId)
     }
 
     // MARK: SHARED

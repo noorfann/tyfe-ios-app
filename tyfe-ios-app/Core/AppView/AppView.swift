@@ -109,8 +109,8 @@ extension CoreBuilder {
 
     private func coreModuleTabBarView() -> some View {
         let tabs: [TabBarTab] = [
-            TabBarTab(title: "Home", systemImage: "house.fill", destination: { router in
-                homeView(router: router, delegate: HomeDelegate())
+            TabBarTab(title: "Today", systemImage: "sun.max.fill", destination: { router in
+                todayView(router: router, delegate: TodayDelegate())
             }),
             TabBarTab(title: "Beta", systemImage: "heart.fill", destination: { router in
                 sampleGamificationViewForMock(router: router)
