@@ -6,7 +6,7 @@ import Testing
 struct Phase1PlanningTests {
 
     @Test func storeStartsWithStarterActivityAndNoPlan() {
-        let store = Phase1PlanningStore()
+        let store = TodayManager(repository: MockFocusRepository())
 
         #expect(store.dailyPlan == nil)
         #expect(store.activities.first?.name == "Study Swift")
@@ -15,7 +15,7 @@ struct Phase1PlanningTests {
     }
 
     @Test func creatingActivityTrimsNameAndKeepsStableIdentity() {
-        let store = Phase1PlanningStore()
+        let store = TodayManager(repository: MockFocusRepository())
 
         let activity = store.createActivity(
             name: "  Read a chapter  ",
@@ -42,7 +42,7 @@ struct Phase1PlanningTests {
     }
 
     @Test func acceptingPlanCanOmitTimeBlocks() {
-        let store = Phase1PlanningStore()
+        let store = TodayManager(repository: MockFocusRepository())
         let activityId = ActivityModel.mock.activityId
 
         let plan = store.acceptDailyPlan(
@@ -58,7 +58,7 @@ struct Phase1PlanningTests {
     }
 
     @Test func acceptingPlanPreservesOptionalFixedDurationTimeline() {
-        let store = Phase1PlanningStore()
+        let store = TodayManager(repository: MockFocusRepository())
         let start = Date(timeIntervalSince1970: 1_756_944_000 + 32_400)
         let blocks = [
             PlanTimeBlockModel(
@@ -85,7 +85,9 @@ struct Phase1PlanningTests {
     }
 
     @Test func startingPlannedActivityCreatesReadyFocusSession() {
-        let store = Phase1PlanningStore()
+        let repository = MockFocusRepository()
+        let store = TodayManager(repository: repository)
+        let focus = FocusManager(repository: repository)
         let activityId = ActivityModel.mock.activityId
         _ = store.acceptDailyPlan(
             intendedSessionCount: 3,
@@ -93,7 +95,7 @@ struct Phase1PlanningTests {
             timeBlocks: nil
         )
 
-        let session = store.startFocusSession(activityId: activityId)
+        let session = focus.startFocusSession(activityId: activityId)
 
         #expect(session?.state == .ready)
         #expect(session?.activityId == activityId)
@@ -102,7 +104,7 @@ struct Phase1PlanningTests {
     }
 
     @Test func dailyPlanItemsAggregateAndMergeByActivity() {
-        let store = Phase1PlanningStore()
+        let store = TodayManager(repository: MockFocusRepository())
         let secondActivity = store.createActivity(
             name: "Plan a walk",
             category: .personal,
@@ -136,13 +138,18 @@ struct Phase1PlanningTests {
     }
 
     @Test func dailyPlanItemCountCannotDropBelowCompletedSessions() {
-        let store = Phase1PlanningStore()
+        let clock = TestFocusClock()
+        let repository = MockFocusRepository()
+        let store = TodayManager(repository: repository, clock: clock)
+        let focus = FocusManager(repository: repository, clock: clock)
         _ = store.addActivityToDailyPlan(
             activityId: ActivityModel.mock.activityId,
             sessionCount: 3
         )
-        let session = store.startFocusSession(activityId: ActivityModel.mock.activityId)!
-        _ = store.completeFocusSession(focusSessionId: session.focusSessionId)
+        let session = focus.startFocusSession(activityId: ActivityModel.mock.activityId)!
+        _ = try? focus.beginFocusSession(focusSessionId: session.focusSessionId)
+        clock.advance(by: TimeInterval(session.durationSeconds))
+        _ = try? focus.refreshFocusSession(focusSessionId: session.focusSessionId)
 
         _ = store.updateDailyPlanItemCount(
             activityId: ActivityModel.mock.activityId,
@@ -154,7 +161,10 @@ struct Phase1PlanningTests {
     }
 
     @Test func emptyActivityCanBeRemovedButCompletedActivityRemains() {
-        let store = Phase1PlanningStore()
+        let clock = TestFocusClock()
+        let repository = MockFocusRepository()
+        let store = TodayManager(repository: repository, clock: clock)
+        let focus = FocusManager(repository: repository, clock: clock)
         let secondActivity = store.createActivity(
             name: "Plan a walk",
             category: .personal,
@@ -172,8 +182,10 @@ struct Phase1PlanningTests {
         _ = store.removeActivityFromDailyPlan(activityId: secondActivity.activityId)
         #expect(store.dailyPlan?.planItems.map(\.activityId) == [ActivityModel.mock.activityId])
 
-        let session = store.startFocusSession(activityId: ActivityModel.mock.activityId)!
-        _ = store.completeFocusSession(focusSessionId: session.focusSessionId)
+        let session = focus.startFocusSession(activityId: ActivityModel.mock.activityId)!
+        _ = try? focus.beginFocusSession(focusSessionId: session.focusSessionId)
+        clock.advance(by: TimeInterval(session.durationSeconds))
+        _ = try? focus.refreshFocusSession(focusSessionId: session.focusSessionId)
         _ = store.removeActivityFromDailyPlan(activityId: ActivityModel.mock.activityId)
         #expect(store.dailyPlan?.planItems.map(\.activityId) == [ActivityModel.mock.activityId])
     }
