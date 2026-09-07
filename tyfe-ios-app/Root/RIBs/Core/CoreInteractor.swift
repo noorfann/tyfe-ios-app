@@ -400,6 +400,49 @@ struct CoreInteractor: GlobalInteractor {
         todayManager.removeActivityFromDailyPlan(activityId: activityId)
     }
 
+    // MARK: Home Dashboard
+
+    var dashboardState: HomeDashboardState {
+        let activeFocusSession = focusManager.activeFocusSession
+        let activeFocusActivity = activeFocusSession.flatMap { session in
+            todayManager.activities.first { activity in
+                activity.activityId == session.activityId
+            }
+        }
+
+        return HomeDashboardState(
+            nextActivity: nextHomeActivity,
+            plannedSessionCount: todayManager.dailyPlan?.intendedSessionCount ?? 0,
+            completedSessionCount: todayManager.completedSessionCount,
+            rewardCredits: todayManager.rewardCredits,
+            activeFocusSession: activeFocusSession,
+            activeFocusActivity: activeFocusActivity
+        )
+    }
+
+    @discardableResult
+    func startFocusFromHome() -> FocusSessionModel? {
+        if let activeFocusSession = focusManager.activeFocusSession {
+            return activeFocusSession
+        }
+
+        guard let nextHomeActivity else { return nil }
+        return focusManager.startFocusSession(activityId: nextHomeActivity.activityId)
+    }
+
+    private var nextHomeActivity: ActivityModel? {
+        guard let dailyPlan = todayManager.dailyPlan else { return nil }
+
+        return dailyPlan.planItems.compactMap { item in
+            guard todayManager.completedSessionCount(for: item.activityId) < item.plannedSessionCount else {
+                return nil
+            }
+            return todayManager.activities.first { activity in
+                activity.activityId == item.activityId && !activity.isArchived
+            }
+        }.first
+    }
+
     // MARK: SHARED
 
     func logIn(user: UserAuthInfo, isNewUser: Bool) async throws {
