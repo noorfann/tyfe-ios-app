@@ -47,6 +47,7 @@ enum TyfeMotion {
 enum TyfeSurfaceRole: CaseIterable {
     case warmCanvas
     case paper
+    case disabled
     case focusChamber
     case celebration
     case warning
@@ -55,6 +56,7 @@ enum TyfeSurfaceRole: CaseIterable {
         switch self {
         case .warmCanvas: return TyfeEditorialPalette.canvas
         case .paper: return TyfeEditorialPalette.paper
+        case .disabled: return TyfeEditorialPalette.disabledFill
         case .focusChamber: return TyfeEditorialPalette.navy
         case .celebration: return TyfeEditorialPalette.focus
         case .warning: return TyfeEditorialPalette.saffron
@@ -64,6 +66,7 @@ enum TyfeSurfaceRole: CaseIterable {
     var foreground: Color {
         switch self {
         case .focusChamber: return TyfeEditorialPalette.onDark
+        case .disabled: return TyfeEditorialPalette.disabledInk
         default: return TyfeEditorialPalette.ink
         }
     }

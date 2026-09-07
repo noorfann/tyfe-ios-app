@@ -4,6 +4,14 @@ struct TyfeSurfaceView<Content: View>: View {
     let role: TyfeSurfaceRole
     private let content: Content
 
+    private var strokeColor: Color {
+        switch role {
+        case .focusChamber: return TyfeEditorialPalette.onDark
+        case .disabled: return TyfeEditorialPalette.disabledInk
+        default: return TyfeEditorialPalette.ink
+        }
+    }
+
     init(
         role: TyfeSurfaceRole = .paper,
         @ViewBuilder content: () -> Content
@@ -22,7 +30,7 @@ struct TyfeSurfaceView<Content: View>: View {
             .overlay {
                 RoundedRectangle(cornerRadius: TyfeRadius.card)
                     .stroke(
-                        role == .focusChamber ? TyfeEditorialPalette.onDark : TyfeEditorialPalette.ink,
+                        strokeColor,
                         lineWidth: TyfeStroke.standard
                     )
             }

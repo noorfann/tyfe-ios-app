@@ -411,14 +411,14 @@ struct TodayPlanCardView: View {
     }
 
     var body: some View {
-        TyfeSurfaceView(role: .paper) {
+        TyfeSurfaceView(role: isComplete ? .disabled : .paper) {
             VStack(alignment: .leading, spacing: TyfeSpacing.control) {
                 HStack(alignment: .top, spacing: TyfeSpacing.small) {
                     VStack(alignment: .leading, spacing: TyfeSpacing.unit) {
                         Text(isNext && !isComplete ? "NEXT UP" : "ACTIVITY")
                             .font(TyfeTypography.eyebrow)
                             .tracking(1.1)
-                            .foregroundStyle(TyfeEditorialPalette.muted)
+                            .foregroundStyle(isComplete ? TyfeEditorialPalette.disabledInk : TyfeEditorialPalette.muted)
 
                         Text(activity.name)
                             .font(TyfeTypography.displayCompact)
@@ -430,7 +430,7 @@ struct TodayPlanCardView: View {
                     if isComplete {
                         Label("Complete", systemImage: "checkmark.circle.fill")
                             .font(TyfeTypography.caption)
-                            .foregroundStyle(TyfeEditorialPalette.success)
+                            .foregroundStyle(TyfeEditorialPalette.disabledInk)
                     } else if completedCount > 0 {
                         Text("In progress")
                             .font(TyfeTypography.caption)
@@ -443,7 +443,7 @@ struct TodayPlanCardView: View {
                         .font(TyfeTypography.interfaceStrong)
                     Text("· \(item.plannedSessionCount * FocusSessionModel.durationMinutes) min focus")
                         .font(TyfeTypography.caption)
-                        .foregroundStyle(TyfeEditorialPalette.muted)
+                        .foregroundStyle(isComplete ? TyfeEditorialPalette.disabledInk : TyfeEditorialPalette.muted)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
 
@@ -485,7 +485,6 @@ struct TodayPlanCardView: View {
                 )
             }
         }
-        .opacity(isComplete ? 0.62 : 1)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("\(activity.name), \(completedCount) of \(item.plannedSessionCount) sessions")
     }
