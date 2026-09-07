@@ -90,6 +90,22 @@ struct FocusManagerTests {
         #expect(relaunchedManager.focusSessions.count == 1)
         #expect(relaunchedManager.startFocusSession(activityId: ActivityModel.mock.activityId)?.focusSessionId == session.focusSessionId)
     }
+
+#if MOCK
+    @Test func mockCompletionFinishesAReadySessionAndAwardsTheSameRewards() throws {
+        let manager = FocusManager(repository: MockFocusRepository(), clock: TestFocusClock())
+        let session = try #require(manager.startFocusSession(activityId: ActivityModel.mock.activityId))
+
+        let completed = try manager.markFocusSessionCompleteForTesting(
+            focusSessionId: session.focusSessionId
+        )
+
+        #expect(completed.state == .completed)
+        #expect(manager.rewardCredits == 3)
+        #expect(manager.progression.totalXP == 50)
+        #expect(manager.completedSessionCount == 1)
+    }
+#endif
 }
 
 @MainActor

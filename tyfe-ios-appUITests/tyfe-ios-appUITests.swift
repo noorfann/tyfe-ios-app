@@ -74,4 +74,69 @@ final class TyfeappUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["FOCUS CHAMBER"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["Begin Focus"].waitForExistence(timeout: 5))
     }
+
+    @MainActor
+    func testBeginningFocusRequiresConfirmationBeforeStarting() throws {
+        let app = XCUIApplication()
+        app.launchArguments.append("PHASE1_FLOW")
+        app.launch()
+
+        XCTAssertTrue(app.buttons["Create today’s plan"].waitForExistence(timeout: 5))
+        app.buttons["Create today’s plan"].tap()
+
+        XCTAssertTrue(app.buttons["Continue to today’s plan"].waitForExistence(timeout: 5))
+        app.buttons["Continue to today’s plan"].tap()
+
+        XCTAssertTrue(app.buttons["Set today’s plan"].waitForExistence(timeout: 5))
+        app.buttons["Set today’s plan"].tap()
+
+        XCTAssertTrue(app.buttons["Start Focus"].firstMatch.waitForExistence(timeout: 5))
+        app.buttons["Start Focus"].firstMatch.tap()
+
+        XCTAssertTrue(app.buttons["Begin Focus"].waitForExistence(timeout: 5))
+        app.buttons["Begin Focus"].tap()
+
+        let alert = app.alerts["Start Focus Session?"]
+        XCTAssertTrue(alert.waitForExistence(timeout: 5))
+        XCTAssertTrue(
+            alert.staticTexts[
+                "Once you begin, you can't browse the app until you finish or abandon this session."
+            ].waitForExistence(timeout: 5)
+        )
+
+        alert.buttons["Cancel"].tap()
+        XCTAssertTrue(app.buttons["Begin Focus"].waitForExistence(timeout: 5))
+
+        app.buttons["Begin Focus"].tap()
+        XCTAssertTrue(alert.buttons["Start Focus"].waitForExistence(timeout: 5))
+        alert.buttons["Start Focus"].tap()
+        XCTAssertTrue(app.buttons["Pause once"].waitForExistence(timeout: 5))
+    }
+
+#if MOCK
+    @MainActor
+    func testMockCanMarkFocusCompleteWithoutWaitingForTheTimer() throws {
+        let app = XCUIApplication()
+        app.launchArguments.append("PHASE1_FLOW")
+        app.launch()
+
+        XCTAssertTrue(app.buttons["Create today’s plan"].waitForExistence(timeout: 5))
+        app.buttons["Create today’s plan"].tap()
+
+        XCTAssertTrue(app.buttons["Continue to today’s plan"].waitForExistence(timeout: 5))
+        app.buttons["Continue to today’s plan"].tap()
+
+        XCTAssertTrue(app.buttons["Set today’s plan"].waitForExistence(timeout: 5))
+        app.buttons["Set today’s plan"].tap()
+
+        XCTAssertTrue(app.buttons["Start Focus"].firstMatch.waitForExistence(timeout: 5))
+        app.buttons["Start Focus"].firstMatch.tap()
+
+        XCTAssertTrue(app.buttons["Mark complete"].waitForExistence(timeout: 5))
+        app.buttons["Mark complete"].tap()
+
+        XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["You earned +1 Reward Credit and +10 XP."].waitForExistence(timeout: 5))
+    }
+#endif
 }
