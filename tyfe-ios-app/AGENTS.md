@@ -7,3 +7,7 @@ Apply the repository-wide instructions in [`../AGENTS.md`](../AGENTS.md) for wor
 Builds, test runs, simulator launches, and other potentially long-running verification commands are opt-in. Run them only when the user explicitly requests build or test verification, or when the user provides a specific command to execute.
 
 When verification is not requested, perform read-only inspection and static checks only, and report that runtime verification was intentionally skipped.
+
+## SwiftLint
+
+Follow the repository-root `.swiftlint.yml` for every Swift change. Run SwiftLint for modified Swift files and resolve violations introduced by the change before completion.
