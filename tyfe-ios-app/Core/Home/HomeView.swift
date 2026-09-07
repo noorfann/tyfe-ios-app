@@ -95,26 +95,32 @@ struct HomeView: View {
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 16) {
-                Text("TUESDAY · YOUR PLAN")
+                Text(presenter.heroEyebrow)
                     .font(.caption2.weight(.black))
                     .tracking(1.4)
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
-                Text("Make room\nfor a good hour.")
+                Text(presenter.heroTitle)
                     .font(.system(.largeTitle, design: .serif, weight: .black))
                     .tracking(-1.8)
                     .lineSpacing(-3)
                     .foregroundStyle(TyfeEditorialPalette.ink)
                     .minimumScaleFactor(0.7)
 
-                Text("Small effort. Real downtime. Ready when you are.")
+                if presenter.canStartFocus {
+                    Text(presenter.activityTitle)
+                        .font(.headline.weight(.black))
+                        .foregroundStyle(TyfeEditorialPalette.focus)
+                }
+
+                Text(presenter.heroSubtitle)
                     .font(.body.weight(.semibold))
                     .foregroundStyle(TyfeEditorialPalette.ink.opacity(0.72))
                     .frame(maxWidth: 210, alignment: .leading)
 
                 HStack(spacing: 8) {
-                    Text("Start next")
-                    Image(systemName: "arrow.right")
+                    Text(presenter.focusActionTitle)
+                    Image(systemName: presenter.focusActionSystemImage)
                         .font(.subheadline.weight(.black))
                         .accessibilityHidden(true)
                 }
@@ -132,8 +138,9 @@ struct HomeView: View {
                 .asButton(.press) {
                     presenter.onStartFocusPressed()
                 }
-                .accessibilityLabel("Start next Focus Session")
-                .accessibilityHint("Begins a 25-minute Focus Session for Study Swift")
+                .disabled(!presenter.canStartFocus)
+                .accessibilityLabel(presenter.focusActionAccessibilityLabel)
+                .accessibilityHint(presenter.focusActionAccessibilityHint)
             }
             .padding(24)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -205,6 +212,10 @@ struct HomeView: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Today progress")
+        .accessibilityValue(
+            "\(presenter.planCompleted) of \(presenter.planTotal) sessions complete, "
+                + "\(presenter.rewardCredits) Reward Credits"
+        )
     }
 
     private var circleSnapshot: some View {

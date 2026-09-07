@@ -7,10 +7,84 @@ class HomePresenter {
     private let interactor: HomeInteractor
     private let router: HomeRouter
 
-    private(set) var activityTitle = "Study Swift"
-    private(set) var planCompleted = 1
-    private(set) var planTotal = 3
-    private(set) var rewardCredits = 2
+    private(set) var dashboardState = HomeDashboardState.empty
+
+    var activityTitle: String {
+        dashboardState.activeFocusActivity?.name ?? dashboardState.nextActivity?.name ?? "No activity planned"
+    }
+
+    var planCompleted: Int {
+        dashboardState.completedSessionCount
+    }
+
+    var planTotal: Int {
+        dashboardState.plannedSessionCount
+    }
+
+    var rewardCredits: Int {
+        dashboardState.rewardCredits
+    }
+
+    var canStartFocus: Bool {
+        dashboardState.activeFocusActivity != nil || dashboardState.nextActivity != nil
+    }
+
+    var heroEyebrow: String {
+        if dashboardState.activeFocusSession != nil {
+            return "FOCUS IN PROGRESS"
+        }
+        return canStartFocus ? "TUESDAY · YOUR PLAN" : "NO PLAN YET"
+    }
+
+    var heroTitle: String {
+        if dashboardState.activeFocusSession != nil {
+            return "Return to\n\(activityTitle)."
+        }
+        if canStartFocus {
+            return "Make room\nfor a good hour."
+        }
+        return "Create your\nnext focus plan."
+    }
+
+    var heroSubtitle: String {
+        if dashboardState.activeFocusSession != nil {
+            return "Your current Focus Session is ready to continue."
+        }
+        if canStartFocus {
+            return "Small effort. Real downtime. Ready when you are."
+        }
+        return "Create a plan in Today to unlock Focus."
+    }
+
+    var focusActionTitle: String {
+        if dashboardState.activeFocusSession != nil {
+            return "Resume Focus"
+        }
+        return canStartFocus ? "Start Focus" : "Focus unavailable"
+    }
+
+    var focusActionSystemImage: String {
+        if dashboardState.activeFocusSession != nil {
+            return "arrow.clockwise"
+        }
+        return canStartFocus ? "arrow.right" : "lock.fill"
+    }
+
+    var focusActionAccessibilityLabel: String {
+        if dashboardState.activeFocusSession != nil {
+            return "Resume Focus Session"
+        }
+        return canStartFocus ? "Start Focus for \(activityTitle)" : "Focus unavailable"
+    }
+
+    var focusActionAccessibilityHint: String {
+        if dashboardState.activeFocusSession != nil {
+            return "Returns to the Focus Session for \(activityTitle)."
+        }
+        return canStartFocus
+            ? "Begins a 25-minute Focus Session for \(activityTitle)."
+            : "Create a plan in Today to start a Focus Session."
+    }
     
     init(interactor: HomeInteractor, router: HomeRouter) {
         self.interactor = interactor
@@ -18,6 +92,7 @@ class HomePresenter {
     }
     
     func onViewAppear(delegate: HomeDelegate) {
+        reload()
         interactor.trackScreenEvent(event: Event.onAppear(delegate: delegate))
     }
     
@@ -35,8 +110,19 @@ class HomePresenter {
     }
 
     func onStartFocusPressed() {
+        guard let session = interactor.startFocusFromHome() else {
+            reload()
+            return
+        }
+
+        reload()
+        guard let activity = dashboardState.activeFocusActivity else { return }
         interactor.trackEvent(event: Event.onStartFocus)
-        router.showFocusView(delegate: FocusDelegate(activityTitle: activityTitle))
+        router.showFocusView(delegate: FocusDelegate(activity: activity, session: session))
+    }
+
+    private func reload() {
+        dashboardState = interactor.dashboardState
     }
 }
 

@@ -99,7 +99,10 @@ struct Dependencies {
         soundEffectManager = SoundEffectManager(logger: logManager)
         switch config {
         case .mock:
-            repository = MockFocusRepository()
+            let snapshot = ProcessInfo.processInfo.arguments.contains("HOME_FLOW")
+                ? FocusManagerSnapshot.homeFlowMock
+                : FocusManagerSnapshot.mock
+            repository = MockFocusRepository(snapshot: snapshot)
         case .dev, .prod:
             repository = LocalFocusRepository(persistence: LocalFocusRepositoryPersistence())
         }

@@ -48,6 +48,38 @@ struct FocusManagerSnapshot: Codable, Hashable {
         )
     }
 
+    static var homeFlowMock: Self {
+        let activity = ActivityModel.mock
+        let plan = DailyPlanModel(
+            dailyPlanId: "daily-plan-home-flow",
+            localDate: activity.createdAt,
+            intendedSessionCount: 2,
+            originalIntendedSessionCount: 2,
+            activityIds: [activity.activityId],
+            planItems: [
+                DailyPlanItemModel(
+                    planItemId: "plan-item-home-flow",
+                    activityId: activity.activityId,
+                    plannedSessionCount: 2
+                )
+            ],
+            timeBlocks: nil
+        )
+
+        return Self(
+            activities: [activity],
+            dailyPlan: plan,
+            completedSessionCount: 0,
+            rewardCredits: 2,
+            progression: .mock,
+            focusSessions: [],
+            creditLedger: [],
+            progressionAwards: [],
+            nextActivityNumber: 2,
+            nextSessionNumber: 1
+        )
+    }
+
     init(
         schemaVersion: Int = 1,
         activities: [ActivityModel],
