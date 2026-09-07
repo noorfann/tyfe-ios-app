@@ -115,6 +115,54 @@ final class TyfeappUITests: XCTestCase {
 
 #if MOCK
     @MainActor
+    func testHomeFlowDisplaysLivePlanAndReachesFocusReady() throws {
+        let app = XCUIApplication()
+        app.launchArguments.append("HOME_FLOW")
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["Study Swift"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["DAILY PLAN, 0/2, sessions complete"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["CREDITS, 2, Reward Credits"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Start Focus for Study Swift"].waitForExistence(timeout: 5))
+
+        app.buttons["Start Focus for Study Swift"].tap()
+
+        XCTAssertTrue(app.staticTexts["FOCUS CHAMBER"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Begin Focus"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testHomeFlowCompletionUpdatesProgressAndCredits() throws {
+        let app = XCUIApplication()
+        app.launchArguments.append("HOME_FLOW")
+        app.launch()
+
+        XCTAssertTrue(app.buttons["Start Focus for Study Swift"].waitForExistence(timeout: 5))
+        app.buttons["Start Focus for Study Swift"].tap()
+
+        XCTAssertTrue(app.buttons["Mark complete"].waitForExistence(timeout: 5))
+        app.buttons["Mark complete"].tap()
+
+        XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 5))
+        app.buttons["Back to Today"].tap()
+
+        XCTAssertTrue(app.staticTexts["DAILY PLAN, 1/2, sessions complete"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["CREDITS, 3, Reward Credits"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testEmptyHomeFlowDisablesFocusAndExplainsHowToStart() throws {
+        let app = XCUIApplication()
+        app.launchArguments.append("HOME_EMPTY_FLOW")
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["Create a plan in Today to unlock Focus."].waitForExistence(timeout: 5))
+        let focusButton = app.buttons["Focus unavailable"]
+        XCTAssertTrue(focusButton.waitForExistence(timeout: 5))
+        XCTAssertFalse(focusButton.isEnabled)
+    }
+
+    @MainActor
     func testMockCanMarkFocusCompleteWithoutWaitingForTheTimer() throws {
         let app = XCUIApplication()
         app.launchArguments.append("PHASE1_FLOW")
