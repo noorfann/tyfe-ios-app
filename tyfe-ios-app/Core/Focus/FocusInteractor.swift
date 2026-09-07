@@ -10,6 +10,9 @@ protocol FocusInteractor: GlobalInteractor {
     func resumeFocusSession(focusSessionId: String) throws -> FocusSessionModel
     func abandonFocusSession(focusSessionId: String) throws -> FocusSessionModel
     func startAnotherFocusSession(activityId: String) throws -> FocusSessionModel
+#if MOCK
+    func markFocusSessionCompleteForTesting(focusSessionId: String) throws -> FocusSessionModel
+#endif
 }
 
 extension CoreInteractor: FocusInteractor {
@@ -40,4 +43,10 @@ extension CoreInteractor: FocusInteractor {
     func startAnotherFocusSession(activityId: String) throws -> FocusSessionModel {
         try focusManager.startAnotherFocusSession(activityId: activityId)
     }
+
+#if MOCK
+    func markFocusSessionCompleteForTesting(focusSessionId: String) throws -> FocusSessionModel {
+        try focusManager.markFocusSessionCompleteForTesting(focusSessionId: focusSessionId)
+    }
+#endif
 }

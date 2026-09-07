@@ -39,6 +39,7 @@ struct FocusView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
     @State private var showWarmSurface = true
+    @State private var showCompletionConfetti = false
 
     private var chamberAnimation: Animation {
         reduceMotion
@@ -62,6 +63,11 @@ struct FocusView: View {
                     .transition(.opacity)
                     .accessibilityHidden(true)
             }
+
+            if showCompletionConfetti && !reduceMotion {
+                FocusConfettiView()
+                    .transition(.opacity)
+            }
         }
         .preferredColorScheme(.dark)
         .toolbar(.hidden, for: .navigationBar)
@@ -75,6 +81,15 @@ struct FocusView: View {
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
                 presenter.onSceneBecameActive()
+            }
+        }
+        .onChange(of: presenter.session.state) { oldState, newState in
+            if newState == .completed && oldState != .completed {
+                withAnimation(.easeOut(duration: 0.2)) {
+                    showCompletionConfetti = true
+                }
+            } else if newState != .completed {
+                showCompletionConfetti = false
             }
         }
     }
@@ -226,6 +241,17 @@ struct FocusView: View {
             }
             .accessibilityLabel(presenter.primaryActionTitle)
 
+#if MOCK
+            Text("Mark complete")
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(TyfeEditorialPalette.onDark.opacity(0.66))
+                .frame(minHeight: 44)
+                .asButton(.press) {
+                    presenter.onMarkCompletePressed()
+                }
+                .accessibilityLabel("Mark complete")
+#endif
+
             Text("Abandon Session")
                 .font(.subheadline.weight(.bold))
                 .underline()
@@ -273,8 +299,8 @@ struct FocusView: View {
                         .font(TyfeTypography.interfaceStrong)
                         .frame(maxWidth: .infinity)
                         .frame(minHeight: 48)
-                        .background(TyfeEditorialPalette.onDark.opacity(0.82))
-                        .foregroundStyle(presenter.session.state == .completed ? TyfeEditorialPalette.onDark : TyfeEditorialPalette.ink)
+                        .background(TyfeEditorialPalette.navy)
+                        .foregroundStyle(TyfeEditorialPalette.onDark)
                         .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
                         .asButton(.press) {
                             presenter.onBackToTodayPressed()

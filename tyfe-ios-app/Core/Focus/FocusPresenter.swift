@@ -89,10 +89,7 @@ final class FocusPresenter {
         do {
             switch session.state {
             case .ready:
-                session = try interactor.beginFocusSession(focusSessionId: session.focusSessionId)
-                refresh()
-                startTicker()
-                interactor.trackEvent(event: Event.onBegin)
+                requestBeginConfirmation()
             case .paused:
                 session = try interactor.resumeFocusSession(focusSessionId: session.focusSessionId)
                 refresh()
@@ -107,6 +104,35 @@ final class FocusPresenter {
             case .completed, .abandoned:
                 break
             }
+        } catch {
+            showPersistenceAlert()
+        }
+    }
+
+    private func requestBeginConfirmation() {
+        router.showAlert(
+            .alert,
+            title: "Start Focus Session?",
+            subtitle: "Once you begin, you can't browse the app until you finish or abandon this session.",
+            buttons: {
+                AnyView(
+                    Group {
+                        Button("Start Focus") {
+                            self.beginFocusAfterConfirmation()
+                        }
+                        Button("Cancel", role: .cancel) { }
+                    }
+                )
+            }
+        )
+    }
+
+    private func beginFocusAfterConfirmation() {
+        do {
+            session = try interactor.beginFocusSession(focusSessionId: session.focusSessionId)
+            refresh()
+            startTicker()
+            interactor.trackEvent(event: Event.onBegin)
         } catch {
             showPersistenceAlert()
         }
@@ -130,6 +156,20 @@ final class FocusPresenter {
             showPersistenceAlert()
         }
     }
+
+#if MOCK
+    func onMarkCompletePressed() {
+        do {
+            session = try interactor.markFocusSessionCompleteForTesting(
+                focusSessionId: session.focusSessionId
+            )
+            refresh()
+            stopTicker()
+        } catch {
+            showPersistenceAlert()
+        }
+    }
+#endif
 
     func onBackToTodayPressed() {
         router.dismissScreen()

@@ -212,6 +212,22 @@ final class FocusManager {
         return abandonedSession
     }
 
+#if MOCK
+    @discardableResult
+    func markFocusSessionCompleteForTesting(focusSessionId: String) throws -> FocusSessionModel {
+        let session = try session(for: focusSessionId)
+        guard session.state != .completed && session.state != .abandoned else {
+            return session
+        }
+
+        let runningSession = session.updated(
+            state: .running,
+            focusEndsAt: clock.now
+        )
+        return try completeNaturally(runningSession)
+    }
+#endif
+
     func completedSessionCount(for activityId: String) -> Int {
         focusSessions.filter {
             $0.activityId == activityId && $0.state == .completed
