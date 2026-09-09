@@ -143,14 +143,27 @@ protocol FocusRepositoryPersistence {
 
 @MainActor
 struct LocalFocusRepositoryPersistence: FocusRepositoryPersistence {
-    private let key = "focus-manager-snapshot-v1"
+    private let fileURL: URL
+
+    static var defaultFileURL: URL {
+        let directory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
+            ?? FileManager.default.temporaryDirectory
+        return directory.appendingPathComponent("focus-manager-snapshot-v1.txt")
+    }
+
+    init(fileURL: URL = LocalFocusRepositoryPersistence.defaultFileURL) {
+        self.fileURL = fileURL
+    }
 
     func load() throws -> FocusManagerSnapshot? {
-        try FileManager.getDocument(key: key)
+        guard FileManager.default.fileExists(atPath: fileURL.path) else { return nil }
+        let data = try Data(contentsOf: fileURL)
+        return try JSONDecoder().decode(FocusManagerSnapshot.self, from: data)
     }
 
     func save(_ snapshot: FocusManagerSnapshot) throws {
-        try FileManager.saveDocument(key: key, value: snapshot)
+        let data = try JSONEncoder().encode(snapshot)
+        try data.write(to: fileURL, options: .atomic)
     }
 }
 

@@ -138,15 +138,7 @@ final class FocusManager {
             )
         }
 
-        let remainingFocusSeconds: Int
-        switch session.state {
-        case .ready:
-            remainingFocusSeconds = session.durationSeconds
-        case .running, .paused, .completed, .abandoned:
-            remainingFocusSeconds = remainingSeconds(
-                until: session.focusEndsAt ?? session.startedAt.addingTimeInterval(TimeInterval(session.durationSeconds))
-            )
-        }
+        let remainingFocusSeconds = self.remainingFocusSeconds(for: session)
 
         let remainingPauseSeconds = pauseRemaining(for: session)
         let visibleSession = session.updated(
@@ -256,6 +248,22 @@ final class FocusManager {
     private func remainingSeconds(until endDate: Date?) -> Int {
         guard let endDate else { return FocusSessionModel.durationMinutes * 60 }
         return max(Int(ceil(endDate.timeIntervalSince(clock.now))), 0)
+    }
+
+    private func remainingFocusSeconds(for session: FocusSessionModel) -> Int {
+        switch session.state {
+        case .ready:
+            return session.durationSeconds
+        case .running:
+            return remainingSeconds(until: session.focusEndsAt)
+        case .paused:
+            return remainingSeconds(
+                until: session.focusEndsAt
+                    ?? session.startedAt.addingTimeInterval(TimeInterval(session.durationSeconds))
+            )
+        case .completed, .abandoned:
+            return 0
+        }
     }
 
     private func pauseRemaining(for session: FocusSessionModel) -> Int {

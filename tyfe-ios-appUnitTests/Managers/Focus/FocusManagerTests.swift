@@ -91,6 +91,193 @@ struct FocusManagerTests {
         #expect(relaunchedManager.startFocusSession(activityId: ActivityModel.mock.activityId)?.focusSessionId == session.focusSessionId)
     }
 
+    @Test func relaunchRestoresRunningSessionAndDerivesRemainingFromClock() throws {
+        let clock = TestFocusClock()
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("tyfe-focus-\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: fileURL) }
+
+        let persistence = LocalFocusRepositoryPersistence(fileURL: fileURL)
+        let firstRepository = LocalFocusRepository(persistence: persistence)
+        let firstManager = FocusManager(repository: firstRepository, clock: clock)
+        let session = try #require(firstManager.startFocusSession(activityId: ActivityModel.mock.activityId))
+        let runningSession = try firstManager.beginFocusSession(focusSessionId: session.focusSessionId)
+
+        clock.advance(by: 90)
+
+        let relaunchedRepository = LocalFocusRepository(persistence: persistence)
+        let reloadedSession = try #require(
+            relaunchedRepository.snapshot.focusSessions.first {
+                $0.focusSessionId == session.focusSessionId
+            }
+        )
+        #expect(reloadedSession.focusEndsAt != nil)
+        #expect(reloadedSession.focusEndsAt == runningSession.focusEndsAt)
+
+        let relaunchedManager = FocusManager(repository: relaunchedRepository, clock: clock)
+        let refresh = try relaunchedManager.refreshFocusSession(focusSessionId: session.focusSessionId)
+
+        #expect(refresh.session.focusSessionId == session.focusSessionId)
+        #expect(refresh.session.state == .running)
+        #expect(refresh.remainingFocusSeconds == 1_410)
+        #expect(relaunchedManager.activeFocusSession?.focusSessionId == session.focusSessionId)
+    }
+
+    @Test func refreshBeforeDeadlineDoesNotCompleteSession() throws {
+        let clock = TestFocusClock()
+        let manager = FocusManager(repository: MockFocusRepository(), clock: clock)
+        let session = try #require(manager.startFocusSession(activityId: ActivityModel.mock.activityId))
+        _ = try manager.beginFocusSession(focusSessionId: session.focusSessionId)
+
+        clock.advance(by: 1_499)
+        let refresh = try manager.refreshFocusSession(focusSessionId: session.focusSessionId)
+
+        #expect(refresh.session.state == .running)
+        #expect(refresh.remainingFocusSeconds == 1)
+        #expect(manager.creditLedger.isEmpty)
+        #expect(manager.progressionAwards.isEmpty)
+    }
+
+    @Test func relaunchAtDeadlineAwardsCompletionExactlyOnce() throws {
+        let clock = TestFocusClock()
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("tyfe-focus-\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: fileURL) }
+
+        let persistence = LocalFocusRepositoryPersistence(fileURL: fileURL)
+        let firstRepository = LocalFocusRepository(persistence: persistence)
+        let firstManager = FocusManager(repository: firstRepository, clock: clock)
+        let session = try #require(firstManager.startFocusSession(activityId: ActivityModel.mock.activityId))
+        _ = try firstManager.beginFocusSession(focusSessionId: session.focusSessionId)
+        clock.advance(by: TimeInterval(session.durationSeconds))
+
+        let relaunchedManager = FocusManager(
+            repository: LocalFocusRepository(persistence: persistence),
+            clock: clock
+        )
+        let firstRefresh = try relaunchedManager.refreshFocusSession(focusSessionId: session.focusSessionId)
+        let recreatedRepository = LocalFocusRepository(
+            persistence: LocalFocusRepositoryPersistence(fileURL: fileURL)
+        )
+        let recreatedManager = FocusManager(repository: recreatedRepository, clock: clock)
+        let secondRefresh = try recreatedManager.refreshFocusSession(focusSessionId: session.focusSessionId)
+
+        #expect(firstRefresh.session.state == .completed)
+        #expect(secondRefresh.session.state == .completed)
+        #expect(recreatedManager.creditLedger.count == 1)
+        #expect(recreatedManager.progressionAwards.count == 1)
+        #expect(recreatedManager.completedSessionCount == 1)
+        #expect(recreatedManager.rewardCredits == 3)
+        #expect(recreatedManager.progression.totalXP == 50)
+    }
+
+    @Test func relaunchRestoresPausedSessionWithoutAwards() throws {
+        let clock = TestFocusClock()
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("tyfe-focus-\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: fileURL) }
+
+        let persistence = LocalFocusRepositoryPersistence(fileURL: fileURL)
+        let firstManager = FocusManager(
+            repository: LocalFocusRepository(persistence: persistence),
+            clock: clock
+        )
+        let session = try #require(firstManager.startFocusSession(activityId: ActivityModel.mock.activityId))
+        _ = try firstManager.beginFocusSession(focusSessionId: session.focusSessionId)
+        clock.advance(by: 60)
+        _ = try firstManager.pauseFocusSession(focusSessionId: session.focusSessionId)
+
+        let relaunchedManager = FocusManager(
+            repository: LocalFocusRepository(persistence: persistence),
+            clock: clock
+        )
+        let refresh = try relaunchedManager.refreshFocusSession(focusSessionId: session.focusSessionId)
+
+        #expect(refresh.session.focusSessionId == session.focusSessionId)
+        #expect(refresh.session.state == .paused)
+        #expect(refresh.completion == nil)
+        #expect(relaunchedManager.rewardCredits == 2)
+        #expect(relaunchedManager.progression.totalXP == 40)
+    }
+
+    @Test func terminalSessionsReportNoRemainingFocusTime() throws {
+        let clock = TestFocusClock()
+        let deadline = clock.now.addingTimeInterval(60)
+        let snapshot = FocusManagerSnapshot(
+            activities: [ActivityModel.mock],
+            dailyPlan: nil,
+            completedSessionCount: 1,
+            rewardCredits: 2,
+            progression: .mock,
+            focusSessions: [
+                FocusSessionModel.completedMock.updated(
+                    state: .completed,
+                    focusEndsAt: deadline
+                ),
+                FocusSessionModel.abandonedMock.updated(
+                    state: .abandoned,
+                    focusEndsAt: deadline
+                )
+            ],
+            creditLedger: [],
+            progressionAwards: [],
+            nextActivityNumber: 2,
+            nextSessionNumber: 3
+        )
+        let manager = FocusManager(
+            repository: MockFocusRepository(snapshot: snapshot),
+            clock: clock
+        )
+
+        let completedRefresh = try manager.refreshFocusSession(
+            focusSessionId: FocusSessionModel.completedMock.focusSessionId
+        )
+        let abandonedRefresh = try manager.refreshFocusSession(
+            focusSessionId: FocusSessionModel.abandonedMock.focusSessionId
+        )
+
+        #expect(completedRefresh.remainingFocusSeconds == 0)
+        #expect(abandonedRefresh.remainingFocusSeconds == 0)
+    }
+
+    @Test func legacyPausedSessionUsesStartedAtFallbackForRemainingTime() throws {
+        let clock = TestFocusClock()
+        clock.advance(by: 60)
+        let session = FocusSessionModel(
+            focusSessionId: "focus-session-paused-legacy",
+            activityId: ActivityModel.mock.activityId,
+            state: .paused,
+            startedAt: clock.now.addingTimeInterval(-60),
+            pausedAt: clock.now.addingTimeInterval(-10),
+            focusEndsAt: nil,
+            pauseUsed: true,
+            pauseRemainingSeconds: 290
+        )
+        let snapshot = FocusManagerSnapshot(
+            activities: [ActivityModel.mock],
+            dailyPlan: nil,
+            completedSessionCount: 0,
+            rewardCredits: 2,
+            progression: .mock,
+            focusSessions: [session],
+            creditLedger: [],
+            progressionAwards: [],
+            nextActivityNumber: 2,
+            nextSessionNumber: 2
+        )
+        let manager = FocusManager(
+            repository: MockFocusRepository(snapshot: snapshot),
+            clock: clock
+        )
+
+        let refresh = try manager.refreshFocusSession(focusSessionId: session.focusSessionId)
+
+        #expect(refresh.session.state == .paused)
+        #expect(refresh.session.focusEndsAt == nil)
+        #expect(refresh.remainingFocusSeconds == session.durationSeconds - 60)
+        #expect(refresh.completion == nil)
+    }
+
 #if MOCK
     @Test func mockCompletionFinishesAReadySessionAndAwardsTheSameRewards() throws {
         let manager = FocusManager(repository: MockFocusRepository(), clock: TestFocusClock())
