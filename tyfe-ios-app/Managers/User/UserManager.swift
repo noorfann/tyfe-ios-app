@@ -69,22 +69,7 @@ class UserManager {
     }
 
     func saveUserProfileImage(image: UIImage) async throws {
-        let uid = try userSyncEngine.getDocumentId()
-
-        // Upload the image
-        let path = "users/\(uid)/profile"
-        let url = try await FirebaseImageUploadService().uploadImage(image: image, path: path)
-
-        // Update user document with image url
-        try await userSyncEngine.updateDocument(data: [
-            UserModel.CodingKeys.submittedProfileImage.rawValue: url.absoluteString
-        ])
-    }
-
-    func saveUserFCMToken(token: String) async throws {
-        try await userSyncEngine.updateDocument(data: [
-            UserModel.CodingKeys.fcmToken.rawValue: token
-        ])
+        throw UserManagerError.profileImageUploadUnavailable
     }
 
     func signOut() {
@@ -116,6 +101,7 @@ class UserManager {
     enum UserManagerError: LocalizedError {
         case noUserId
         case userIdChanged
+        case profileImageUploadUnavailable
     }
 
     static func mock(user: UserModel? = nil) -> UserManager {

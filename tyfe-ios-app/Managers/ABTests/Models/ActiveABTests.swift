@@ -40,30 +40,3 @@ struct ActiveABTests: Codable {
         enumTest = newValue
     }
 }
-
-// MARK: REMOTE CONFIG
-
-import FirebaseRemoteConfig
-
-extension ActiveABTests {
-    
-    init(config: RemoteConfig) {
-        let boolTest = config.configValue(forKey: ActiveABTests.CodingKeys.boolTest.rawValue).boolValue
-        self.boolTest = boolTest
-        
-        let enumTestStringValue = config.configValue(forKey: ActiveABTests.CodingKeys.enumTest.rawValue).stringValue
-        if let option = EnumTestOption(rawValue: enumTestStringValue) {
-            self.enumTest = option
-        } else {
-            self.enumTest = .default
-        }
-    }
-    
-    // Converted to a NSObject dictionary to setDefaults within FirebaseABTestService
-    var asNSObjectDictionary: [String: NSObject]? {
-        [
-            CodingKeys.boolTest.rawValue: boolTest as NSObject,
-            CodingKeys.enumTest.rawValue: enumTest.rawValue as NSObject
-        ]
-    }
-}

@@ -7,7 +7,6 @@
 import SwiftUI
 import SwiftfulRouting
 import SwiftfulDataManagers
-import SwiftfulDataManagersFirebase
 
 @MainActor
 struct Dependencies {
@@ -62,29 +61,21 @@ struct Dependencies {
             if case .dev = config {
                 logManager = LogManager(services: [
                     ConsoleService(printParameters: true),
-                    FirebaseAnalyticsService(),
-                    MixpanelService(token: Keys.mixpanelToken),
-                    FirebaseCrashlyticsService()
+                    MixpanelService(token: Keys.mixpanelToken)
                 ])
             } else {
                 logManager = LogManager(services: [
-                    FirebaseAnalyticsService(),
-                    MixpanelService(token: Keys.mixpanelToken),
-                    FirebaseCrashlyticsService()
+                    MixpanelService(token: Keys.mixpanelToken)
                 ])
             }
-            authManager = AuthManager(service: FirebaseAuthService(), logger: logManager)
+            authManager = AuthManager(service: MockAuthService(user: nil), logger: logManager)
             userManager = UserManager(userSyncEngine: DocumentSyncEngine<UserModel>(
-                remote: FirebaseRemoteDocumentService(collectionPath: { "users" }),
+                remote: MockRemoteDocumentService(document: nil),
                 managerKey: "UserMan",
                 enableLocalPersistence: true,
                 logger: logManager
             ))
-            if case .dev = config {
-                abTestManager = ABTestManager(service: LocalABTestService(), logManager: logManager)
-            } else {
-                abTestManager = ABTestManager(service: FirebaseABTestService(), logManager: logManager)
-            }
+            abTestManager = ABTestManager(service: LocalABTestService(), logManager: logManager)
             purchaseManager = PurchaseManager(
                 service: RevenueCatPurchaseService(apiKey: Keys.revenueCatAPIKey),
                 logger: logManager

@@ -24,21 +24,4 @@ struct Constants {
         #endif
     }
     
-    static var firebaseAnalyticsAppInstanceID: String? {
-        #if MOCK
-        return nil
-        #else
-        return FirebaseAnalyticsService.appInstanceID
-        #endif
-    }
-
-    @MainActor
-    static var firebaseAppClientId: String? {
-        #if MOCK
-        return nil
-        #else
-        return FirebaseAuthService.clientId
-        #endif
-    }
-
 }

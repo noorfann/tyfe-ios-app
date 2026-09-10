@@ -59,10 +59,7 @@ struct CoreInteractor: GlobalInteractor {
     }
     
     func signInGoogle() async throws -> (user: UserAuthInfo, isNewUser: Bool) {
-        guard let clientId = Constants.firebaseAppClientId else {
-            throw AppError("Firebase not configured or clientID missing")
-        }
-        return try await authManager.signInGoogle(GIDClientID: clientId)
+        throw AppError("Google sign-in is unavailable until Supabase authentication is integrated.")
     }
     
     // MARK: UserManager
@@ -91,10 +88,6 @@ struct CoreInteractor: GlobalInteractor {
         try await userManager.saveUserProfileImage(image: image)
     }
     
-    func saveUserFCMToken(token: String) async throws {
-        try await userManager.saveUserFCMToken(token: token)
-    }
-
     // MARK: LogManager
     
     func identifyUser(userId: String, name: String?, email: String?) {
@@ -453,7 +446,7 @@ struct CoreInteractor: GlobalInteractor {
             userAttributes: PurchaseProfileAttributes(
                 email: user.email,
                 mixpanelDistinctId: Constants.mixpanelDistinctId,
-                firebaseAppInstanceId: Constants.firebaseAnalyticsAppInstanceID
+                firebaseAppInstanceId: nil
             )
         )
         async let streakLogin: Void = streakManager.logIn(userId: user.uid)
@@ -483,16 +476,13 @@ struct CoreInteractor: GlobalInteractor {
         var option: SignInOption = .anonymous
         if auth.authProviders.contains(.apple) {
             option = .apple
-        } else if auth.authProviders.contains(.google), let clientId = Constants.firebaseAppClientId {
-            option = .google(GIDClientID: clientId)
+        } else if auth.authProviders.contains(.google) {
+            throw AppError("Google account deletion is unavailable until Supabase authentication is integrated.")
         }
         
         // Delete auth
         try await authManager.deleteAccountWithReauthentication(option: option, revokeToken: false) {
-            // Delete User profile (Firestore)
-            // Note: this must be done within this closure
-            // So that it completes before auth is revoked
-            // Once auth is revoked, security rules may restrict user from reading/writing to Firestore
+            // Delete the local user profile before revoking authentication.
             try await userManager.deleteCurrentUser()
         }
         

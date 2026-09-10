@@ -31,7 +31,7 @@ This is the canonical project guidance for Codex and other coding agents working
 - Persistence and services belong behind Managers and protocol-based services.
 - Build configurations: `Mock`, `Development`, and `Production`.
 
-Use `Mock` for local development, previews, and UI tests. Mock code must not initialize Firebase, Supabase, or other remote services. `Development` uses development services and credentials; `Production` uses production services and credentials. Keep secrets out of the repository and client source.
+Use `Mock` for local development, previews, and UI tests. Mock code must not initialize Firebase, Supabase, or other remote services. Development and Production currently use local fallback services pending Supabase integration. Keep secrets out of the repository and client source.
 
 ## Architecture rules
 

@@ -31,7 +31,6 @@ public struct UserModel: DataSyncModelProtocol {
     let submittedEmail: String?
     let submittedName: String?
     let submittedProfileImage: String?
-    let fcmToken: String?
     private(set) var didCompleteOnboarding: Bool?
     
     init(
@@ -50,7 +49,6 @@ public struct UserModel: DataSyncModelProtocol {
         submittedEmail: String? = nil,
         submittedName: String? = nil,
         submittedProfileImage: String? = nil,
-        fcmToken: String? = nil,
         didCompleteOnboarding: Bool? = nil
     ) {
         self.userId = userId
@@ -68,7 +66,6 @@ public struct UserModel: DataSyncModelProtocol {
         self.submittedName = submittedName
         self.submittedEmail = submittedEmail
         self.submittedProfileImage = submittedProfileImage
-        self.fcmToken = fcmToken
         self.didCompleteOnboarding = didCompleteOnboarding
     }
     
@@ -105,7 +102,6 @@ public struct UserModel: DataSyncModelProtocol {
         case submittedName = "submitted_name"
         case submittedEmail = "submitted_email"
         case submittedProfileImage = "submitted_profile_image"
-        case fcmToken = "fcm_token"
         case didCompleteOnboarding = "did_complete_onboarding"
     }
     
@@ -128,7 +124,6 @@ public struct UserModel: DataSyncModelProtocol {
             "user_\(CodingKeys.submittedName.rawValue)": submittedName,
             "user_\(CodingKeys.submittedEmail.rawValue)": submittedEmail,
             "user_\(CodingKeys.submittedProfileImage.rawValue)": submittedProfileImage,
-            "user_has_\(CodingKeys.fcmToken.rawValue)": (fcmToken?.count ?? 0) > 0,
             "user_\(CodingKeys.didCompleteOnboarding.rawValue)": didCompleteOnboarding
         ]
         return dict.compactMapValues({ $0 })

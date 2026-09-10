@@ -74,11 +74,11 @@ Logout is orchestrated in `CoreInteractor.signOut()` — sequential, not paralle
 `CoreInteractor.deleteAccount()` handles account deletion:
 
 1. Reauthenticate user (Apple/Google/Anonymous)
-2. Delete user data from Firestore INSIDE the auth closure (before auth is revoked) — though prefer moving deletion logic to a backend function if one exists
+2. Delete user data INSIDE the auth closure (before auth is revoked) — prefer moving deletion logic to a backend function when Supabase is integrated
 3. Log out of PurchaseManager
 4. Delete LogManager user profile
 
-IMPORTANT: Firestore deletion must happen before auth revocation — security rules may block access after.
+IMPORTANT: Data deletion must happen before auth revocation so the active user session remains available.
 
 ## Analytics Tracking
 

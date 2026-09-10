@@ -181,7 +181,7 @@ func logIn(user: UserAuthInfo, isNewUser: Bool) async throws {
         userAttributes: PurchaseProfileAttributes(
             email: user.email,
             mixpanelDistinctId: Constants.mixpanelDistinctId,
-            firebaseAppInstanceId: Constants.firebaseAnalyticsAppInstanceID
+            firebaseAppInstanceId: nil
         )
     )
 }

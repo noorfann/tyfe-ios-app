@@ -5,15 +5,12 @@
 	};
 	objectVersion = 77;
 	objects = {
-
 /* Begin PBXBuildFile section */
 		0200345B2EAC73C700D87C8F /* SwiftfulOnboarding in Frameworks */ = {isa = PBXBuildFile; productRef = 0200345A2EAC73C700D87C8F /* SwiftfulOnboarding */; };
-		0207BD952EA0958200E46D93 /* SwiftfulGamificationFirebase in Frameworks */ = {isa = PBXBuildFile; productRef = 0207BD942EA0958200E46D93 /* SwiftfulGamificationFirebase */; };
 		0207BD982EA0958B00E46D93 /* SwiftfulGamification in Frameworks */ = {isa = PBXBuildFile; productRef = 0207BD972EA0958B00E46D93 /* SwiftfulGamification */; };
 		0210A6CA2DB4DCE40072B2FC /* SwiftfulRouting in Frameworks */ = {isa = PBXBuildFile; productRef = 0210A6C92DB4DCE40072B2FC /* SwiftfulRouting */; };
 		0229588C2CEE932F00765488 /* SDWebImageSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 0229588B2CEE932F00765488 /* SDWebImageSwiftUI */; };
 		0270C23D2F3852780039CF25 /* SwiftfulDataManagers in Frameworks */ = {isa = PBXBuildFile; productRef = 0270C23C2F3852780039CF25 /* SwiftfulDataManagers */; };
-		0270C2402F3853020039CF25 /* SwiftfulDataManagersFirebase in Frameworks */ = {isa = PBXBuildFile; productRef = 0270C23F2F3853020039CF25 /* SwiftfulDataManagersFirebase */; };
 		028744422D3396FC00C2C3E1 /* SwiftfulHaptics in Frameworks */ = {isa = PBXBuildFile; productRef = 028744412D3396FC00C2C3E1 /* SwiftfulHaptics */; };
 		028744482D33A58F00C2C3E1 /* SwiftfulSoundEffects in Frameworks */ = {isa = PBXBuildFile; productRef = 028744472D33A58F00C2C3E1 /* SwiftfulSoundEffects */; };
 		028F9B862CECF666009B9F48 /* SwiftfulUtilities in Frameworks */ = {isa = PBXBuildFile; productRef = 028F9B852CECF666009B9F48 /* SwiftfulUtilities */; };
@@ -24,13 +21,6 @@
 		028F9BD72CED155A009B9F48 /* SwiftfulAuthUI in Frameworks */ = {isa = PBXBuildFile; productRef = 028F9BD62CED155A009B9F48 /* SwiftfulAuthUI */; };
 		028F9BD92CED155A009B9F48 /* SwiftfulAuthenticating in Frameworks */ = {isa = PBXBuildFile; productRef = 028F9BD82CED155A009B9F48 /* SwiftfulAuthenticating */; };
 		028F9BDF2CED1617009B9F48 /* SwiftfulUI in Frameworks */ = {isa = PBXBuildFile; productRef = 028F9BDE2CED1617009B9F48 /* SwiftfulUI */; };
-		02B62BA22E662DC3008FB7FF /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 02B62BA12E662DC3008FB7FF /* FirebaseMessaging */; };
-		02B62BA52E662DD7008FB7FF /* SwiftfulAuthenticatingFirebase in Frameworks */ = {isa = PBXBuildFile; productRef = 02B62BA42E662DD7008FB7FF /* SwiftfulAuthenticatingFirebase */; };
-		02B62BA82E662DE7008FB7FF /* SwiftfulLoggingFirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 02B62BA72E662DE7008FB7FF /* SwiftfulLoggingFirebaseAnalytics */; };
-		02B62BAB2E662DF3008FB7FF /* SwiftfulLoggingFirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 02B62BAA2E662DF3008FB7FF /* SwiftfulLoggingFirebaseCrashlytics */; };
-		02B62BAE2E662E14008FB7FF /* SwiftfulFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 02B62BAD2E662E14008FB7FF /* SwiftfulFirestore */; };
-		02B62BB02E662E60008FB7FF /* FirebaseRemoteConfig in Frameworks */ = {isa = PBXBuildFile; productRef = 02B62BAF2E662E60008FB7FF /* FirebaseRemoteConfig */; };
-		02B62BB22E662E85008FB7FF /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 02B62BB12E662E85008FB7FF /* FirebaseStorage */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -39,14 +29,14 @@
 			containerPortal = 028F9B4B2CECF2C2009B9F48 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 028F9B522CECF2C2009B9F48;
-			remoteInfo = tyfe-ios-app;
+			remoteInfo = "tyfe-ios-app";
 		};
 		022958432CEE7FF900765488 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 028F9B4B2CECF2C2009B9F48 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 028F9B522CECF2C2009B9F48;
-			remoteInfo = tyfe-ios-app;
+			remoteInfo = "tyfe-ios-app";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -69,12 +59,12 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		022958302CEE7FEF00765488 /* tyfe-ios-appUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = tyfe-ios-appUITests;
+			path = "tyfe-ios-appUITests";
 			sourceTree = "<group>";
 		};
 		022958402CEE7FF900765488 /* tyfe-ios-appUnitTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = tyfe-ios-appUnitTests;
+			path = "tyfe-ios-appUnitTests";
 			sourceTree = "<group>";
 		};
 		028F9B552CECF2C2009B9F48 /* tyfe-ios-app */ = {
@@ -82,7 +72,7 @@
 			exceptions = (
 				028743182D336F3800C2C3E1 /* Exceptions for "tyfe-ios-app" folder in "tyfe-ios-app" target */,
 			);
-			path = tyfe-ios-app;
+			path = "tyfe-ios-app";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -109,27 +99,18 @@
 				028F9BDF2CED1617009B9F48 /* SwiftfulUI in Frameworks */,
 				028744422D3396FC00C2C3E1 /* SwiftfulHaptics in Frameworks */,
 				028F9BCE2CED152A009B9F48 /* SwiftfulLoggingMixpanel in Frameworks */,
-				02B62BAB2E662DF3008FB7FF /* SwiftfulLoggingFirebaseCrashlytics in Frameworks */,
-				02B62BA52E662DD7008FB7FF /* SwiftfulAuthenticatingFirebase in Frameworks */,
 				028744482D33A58F00C2C3E1 /* SwiftfulSoundEffects in Frameworks */,
 				0270C23D2F3852780039CF25 /* SwiftfulDataManagers in Frameworks */,
 				0229588C2CEE932F00765488 /* SDWebImageSwiftUI in Frameworks */,
 				028F9B862CECF666009B9F48 /* SwiftfulUtilities in Frameworks */,
-				0207BD952EA0958200E46D93 /* SwiftfulGamificationFirebase in Frameworks */,
 				0207BD982EA0958B00E46D93 /* SwiftfulGamification in Frameworks */,
 				028F9BD72CED155A009B9F48 /* SwiftfulAuthUI in Frameworks */,
-				02B62BB22E662E85008FB7FF /* FirebaseStorage in Frameworks */,
-				02B62BB02E662E60008FB7FF /* FirebaseRemoteConfig in Frameworks */,
 				028F9BD12CED1539009B9F48 /* SwiftfulPurchasing in Frameworks */,
-				02B62BA22E662DC3008FB7FF /* FirebaseMessaging in Frameworks */,
 				028F9BC52CED14CA009B9F48 /* SwiftfulLogging in Frameworks */,
-				0270C2402F3853020039CF25 /* SwiftfulDataManagersFirebase in Frameworks */,
 				0200345B2EAC73C700D87C8F /* SwiftfulOnboarding in Frameworks */,
 				028F9BD42CED1547009B9F48 /* SwiftfulPurchasingRevenueCat in Frameworks */,
 				028F9BD92CED155A009B9F48 /* SwiftfulAuthenticating in Frameworks */,
-				02B62BA82E662DE7008FB7FF /* SwiftfulLoggingFirebaseAnalytics in Frameworks */,
 				0210A6CA2DB4DCE40072B2FC /* SwiftfulRouting in Frameworks */,
-				02B62BAE2E662E14008FB7FF /* SwiftfulFirestore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -183,10 +164,10 @@
 			fileSystemSynchronizedGroups = (
 				022958302CEE7FEF00765488 /* tyfe-ios-appUITests */,
 			);
-			name = tyfe-ios-appUITests;
+			name = "tyfe-ios-appUITests";
 			packageProductDependencies = (
 			);
-			productName = tyfe-ios-appUITests;
+			productName = "tyfe-ios-appUITests";
 			productReference = 0229582F2CEE7FEF00765488 /* tyfe-ios-appUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
@@ -206,10 +187,10 @@
 			fileSystemSynchronizedGroups = (
 				022958402CEE7FF900765488 /* tyfe-ios-appUnitTests */,
 			);
-			name = tyfe-ios-appUnitTests;
+			name = "tyfe-ios-appUnitTests";
 			packageProductDependencies = (
 			);
-			productName = tyfe-ios-appUnitTests;
+			productName = "tyfe-ios-appUnitTests";
 			productReference = 0229583F2CEE7FF900765488 /* tyfe-ios-appUnitTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
@@ -221,7 +202,6 @@
 				028F9B502CECF2C2009B9F48 /* Frameworks */,
 				028F9B512CECF2C2009B9F48 /* Resources */,
 				022958C32CEFA29900765488 /* ShellScript */,
-				022958C42CEFA2DB00765488 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -230,7 +210,7 @@
 			fileSystemSynchronizedGroups = (
 				028F9B552CECF2C2009B9F48 /* tyfe-ios-app */,
 			);
-			name = tyfe-ios-app;
+			name = "tyfe-ios-app";
 			packageProductDependencies = (
 				028F9B852CECF666009B9F48 /* SwiftfulUtilities */,
 				028F9BC42CED14CA009B9F48 /* SwiftfulLogging */,
@@ -244,20 +224,11 @@
 				028744412D3396FC00C2C3E1 /* SwiftfulHaptics */,
 				028744472D33A58F00C2C3E1 /* SwiftfulSoundEffects */,
 				0210A6C92DB4DCE40072B2FC /* SwiftfulRouting */,
-				02B62BA12E662DC3008FB7FF /* FirebaseMessaging */,
-				02B62BA42E662DD7008FB7FF /* SwiftfulAuthenticatingFirebase */,
-				02B62BA72E662DE7008FB7FF /* SwiftfulLoggingFirebaseAnalytics */,
-				02B62BAA2E662DF3008FB7FF /* SwiftfulLoggingFirebaseCrashlytics */,
-				02B62BAD2E662E14008FB7FF /* SwiftfulFirestore */,
-				02B62BAF2E662E60008FB7FF /* FirebaseRemoteConfig */,
-				02B62BB12E662E85008FB7FF /* FirebaseStorage */,
-				0207BD942EA0958200E46D93 /* SwiftfulGamificationFirebase */,
 				0207BD972EA0958B00E46D93 /* SwiftfulGamification */,
 				0200345A2EAC73C700D87C8F /* SwiftfulOnboarding */,
 				0270C23C2F3852780039CF25 /* SwiftfulDataManagers */,
-				0270C23F2F3853020039CF25 /* SwiftfulDataManagersFirebase */,
 			);
-			productName = tyfe-ios-app;
+			productName = "tyfe-ios-app";
 			productReference = 028F9B532CECF2C2009B9F48 /* tyfe-ios-app.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -305,16 +276,9 @@
 				028744402D3396FC00C2C3E1 /* XCRemoteSwiftPackageReference "SwiftfulHaptics" */,
 				028744462D33A58F00C2C3E1 /* XCRemoteSwiftPackageReference "SwiftfulSoundEffects" */,
 				0210A6C82DB4DCE40072B2FC /* XCRemoteSwiftPackageReference "SwiftfulRouting" */,
-				02B62BA02E662DC3008FB7FF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
-				02B62BA32E662DD7008FB7FF /* XCRemoteSwiftPackageReference "SwiftfulAuthenticatingFirebase" */,
-				02B62BA62E662DE7008FB7FF /* XCRemoteSwiftPackageReference "SwiftfulLoggingFirebaseAnalytics" */,
-				02B62BA92E662DF3008FB7FF /* XCRemoteSwiftPackageReference "SwiftfulLoggingFirebaseCrashlytics" */,
-				02B62BAC2E662E14008FB7FF /* XCRemoteSwiftPackageReference "SwiftfulFirestore" */,
-				0207BD932EA0958200E46D93 /* XCRemoteSwiftPackageReference "SwiftfulGamificationFirebase" */,
 				0207BD962EA0958B00E46D93 /* XCRemoteSwiftPackageReference "SwiftfulGamification" */,
 				020034592EAC73C700D87C8F /* XCRemoteSwiftPackageReference "SwiftfulOnboarding" */,
 				0270C23B2F3852780039CF25 /* XCRemoteSwiftPackageReference "SwiftfulDataManagers" */,
-				0270C23E2F3853020039CF25 /* XCRemoteSwiftPackageReference "SwiftfulDataManagersFirebase" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 028F9B542CECF2C2009B9F48 /* Products */;
@@ -371,29 +335,6 @@
 			shellPath = /bin/sh;
 			shellScript = "# Check if running Xcode Cloud\nif [[ -z \"$CI\" ]]; then\n    if [[ \"$(uname -m)\" == arm64 ]]; then\n        export PATH=\"/opt/homebrew/bin:$PATH\"\n    fi\n\n    # Check if running in a SwiftUI preview\n    if [ \"$XCODE_RUNNING_FOR_PREVIEWS\" != \"1\" ]; then\n        if which swiftlint > /dev/null; then\n            swiftlint # Uncomment if you want to auto-fix: swiftlint --fix &&\n        else\n            echo \"warning: SwiftLint not installed, install it via HomeBrew.\"\n        fi\n    fi\nelse \n    # Running Xcode Cloud\n    echo \"Running in Xcode Cloud. Skipping SwiftLint.\"\nfi\n";
 			showEnvVarsInLog = 0;
-		};
-		022958C42CEFA2DB00765488 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}",
-				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${PRODUCT_NAME}",
-				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Info.plist",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/GoogleService-Info.plist",
-				"$(TARGET_BUILD_DIR)/$(EXECUTABLE_PATH)",
-			);
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if [ \"${CONFIGURATION}\" == \"Debug\" ]; then\n  GOOGLE_SERVICE_INFO_PLIST=\"${PROJECT_DIR}/tyfe-ios-app/SupportingFiles/GoogleServicePLists/GoogleService-Info-Dev.plist\"\nelif [ \"${CONFIGURATION}\" == \"Mock\" ]; then\n  echo \"Skipping Crashlytics upload for Mock configuration.\"\n  exit 0  # Use `exit 0` if `return` does not work in your environment\nelif [ \"${CONFIGURATION}\" == \"Release\" ]; then\n  GOOGLE_SERVICE_INFO_PLIST=\"${PROJECT_DIR}/tyfe-ios-app/SupportingFiles/GoogleServicePLists/GoogleService-Info-Prod.plist\"\nelse\n  echo \"No matching build configuration found for GoogleService-Info.plist!\"\n  exit 1\nfi\n\n# Run the Crashlytics script with the selected plist file\n\"${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\" -gsp \"${GOOGLE_SERVICE_INFO_PLIST}\"\n\n\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -503,20 +444,20 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = tyfe-ios-app/SupportingFiles/tyfe-ios-app.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "tyfe-ios-app/SupportingFiles/tyfe-ios-app.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"tyfe-ios-app/SupportingFiles/Preview Content\"";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 33SAUV8RDC;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = tyfe-ios-app/Info.plist;
+				INFOPLIST_FILE = "tyfe-ios-app/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "tyfe-ios-app - Dev";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -535,7 +476,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.5;
 				MARKETING_VERSION = 1.0;
 				OTHER_SWIFT_FLAGS = "-DMOCK";
-				PRODUCT_BUNDLE_IDENTIFIER = com.organization.tyfe-ios-app.mock;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.organization.tyfe-ios-app.mock";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
@@ -551,12 +492,12 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 9JN8RSJMX3;
+				DEVELOPMENT_TEAM = 33SAUV8RDC;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.swiftfulthinking.tyfe-ios-appUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.swiftfulthinking.tyfe-ios-appUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -571,12 +512,12 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 9JN8RSJMX3;
+				DEVELOPMENT_TEAM = 33SAUV8RDC;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.swiftfulthinking.tyfe-ios-appUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.swiftfulthinking.tyfe-ios-appUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -592,12 +533,12 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 9JN8RSJMX3;
+				DEVELOPMENT_TEAM = 33SAUV8RDC;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.swiftfulthinking.tyfe-ios-appUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.swiftfulthinking.tyfe-ios-appUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -614,12 +555,12 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 9JN8RSJMX3;
+				DEVELOPMENT_TEAM = 33SAUV8RDC;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.swiftfulthinking.tyfe-ios-appUnitTests;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.swiftfulthinking.tyfe-ios-appUnitTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -635,12 +576,12 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 9JN8RSJMX3;
+				DEVELOPMENT_TEAM = 33SAUV8RDC;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.swiftfulthinking.tyfe-ios-appUnitTests;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.swiftfulthinking.tyfe-ios-appUnitTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -657,12 +598,12 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 9JN8RSJMX3;
+				DEVELOPMENT_TEAM = 33SAUV8RDC;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.swiftfulthinking.tyfe-ios-appUnitTests;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.swiftfulthinking.tyfe-ios-appUnitTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -796,20 +737,20 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = tyfe-ios-app/SupportingFiles/tyfe-ios-app.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "tyfe-ios-app/SupportingFiles/tyfe-ios-app.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"tyfe-ios-app/SupportingFiles/Preview Content\"";
-				DEVELOPMENT_TEAM = 9JN8RSJMX3;
+				DEVELOPMENT_TEAM = 33SAUV8RDC;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = tyfe-ios-app/Info.plist;
+				INFOPLIST_FILE = "tyfe-ios-app/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "tyfe-ios-app - Dev";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -828,7 +769,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.5;
 				MARKETING_VERSION = 1.0;
 				OTHER_SWIFT_FLAGS = "-DDEV";
-				PRODUCT_BUNDLE_IDENTIFIER = com.organization.tyfe-ios-app.dev;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.organization.tyfe-ios-app.dev";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
@@ -844,20 +785,20 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = tyfe-ios-app/SupportingFiles/tyfe-ios-app.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "tyfe-ios-app/SupportingFiles/tyfe-ios-app.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"tyfe-ios-app/SupportingFiles/Preview Content\"";
-				DEVELOPMENT_TEAM = 9JN8RSJMX3;
+				DEVELOPMENT_TEAM = 33SAUV8RDC;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = tyfe-ios-app/Info.plist;
+				INFOPLIST_FILE = "tyfe-ios-app/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "tyfe-ios-app - Dev";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -875,7 +816,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.5;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.organization.tyfe-ios-app;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.organization.tyfe-ios-app";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
@@ -940,14 +881,6 @@
 				minimumVersion = 1.0.0;
 			};
 		};
-		0207BD932EA0958200E46D93 /* XCRemoteSwiftPackageReference "SwiftfulGamificationFirebase" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SwiftfulThinking/SwiftfulGamificationFirebase.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.1;
-			};
-		};
 		0207BD962EA0958B00E46D93 /* XCRemoteSwiftPackageReference "SwiftfulGamification" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/SwiftfulThinking/SwiftfulGamification.git";
@@ -978,14 +911,6 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 2.0.0;
-			};
-		};
-		0270C23E2F3853020039CF25 /* XCRemoteSwiftPackageReference "SwiftfulDataManagersFirebase" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SwiftfulThinking/SwiftfulDataManagersFirebase.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.0.2;
 			};
 		};
 		028744402D3396FC00C2C3E1 /* XCRemoteSwiftPackageReference "SwiftfulHaptics" */ = {
@@ -1060,58 +985,12 @@
 				minimumVersion = 1.2.0;
 			};
 		};
-		02B62BA02E662DC3008FB7FF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 12.2.0;
-			};
-		};
-		02B62BA32E662DD7008FB7FF /* XCRemoteSwiftPackageReference "SwiftfulAuthenticatingFirebase" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SwiftfulThinking/SwiftfulAuthenticatingFirebase";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.12;
-			};
-		};
-		02B62BA62E662DE7008FB7FF /* XCRemoteSwiftPackageReference "SwiftfulLoggingFirebaseAnalytics" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SwiftfulThinking/SwiftfulLoggingFirebaseAnalytics";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.1.4;
-			};
-		};
-		02B62BA92E662DF3008FB7FF /* XCRemoteSwiftPackageReference "SwiftfulLoggingFirebaseCrashlytics" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SwiftfulThinking/SwiftfulLoggingFirebaseCrashlytics";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.1.1;
-			};
-		};
-		02B62BAC2E662E14008FB7FF /* XCRemoteSwiftPackageReference "SwiftfulFirestore" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SwiftfulThinking/SwiftfulFirestore";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 11.0.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		0200345A2EAC73C700D87C8F /* SwiftfulOnboarding */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 020034592EAC73C700D87C8F /* XCRemoteSwiftPackageReference "SwiftfulOnboarding" */;
 			productName = SwiftfulOnboarding;
-		};
-		0207BD942EA0958200E46D93 /* SwiftfulGamificationFirebase */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 0207BD932EA0958200E46D93 /* XCRemoteSwiftPackageReference "SwiftfulGamificationFirebase" */;
-			productName = SwiftfulGamificationFirebase;
 		};
 		0207BD972EA0958B00E46D93 /* SwiftfulGamification */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -1132,11 +1011,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 0270C23B2F3852780039CF25 /* XCRemoteSwiftPackageReference "SwiftfulDataManagers" */;
 			productName = SwiftfulDataManagers;
-		};
-		0270C23F2F3853020039CF25 /* SwiftfulDataManagersFirebase */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 0270C23E2F3853020039CF25 /* XCRemoteSwiftPackageReference "SwiftfulDataManagersFirebase" */;
-			productName = SwiftfulDataManagersFirebase;
 		};
 		028744412D3396FC00C2C3E1 /* SwiftfulHaptics */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -1187,41 +1061,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 028F9BDD2CED1617009B9F48 /* XCRemoteSwiftPackageReference "SwiftfulUI" */;
 			productName = SwiftfulUI;
-		};
-		02B62BA12E662DC3008FB7FF /* FirebaseMessaging */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 02B62BA02E662DC3008FB7FF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseMessaging;
-		};
-		02B62BA42E662DD7008FB7FF /* SwiftfulAuthenticatingFirebase */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 02B62BA32E662DD7008FB7FF /* XCRemoteSwiftPackageReference "SwiftfulAuthenticatingFirebase" */;
-			productName = SwiftfulAuthenticatingFirebase;
-		};
-		02B62BA72E662DE7008FB7FF /* SwiftfulLoggingFirebaseAnalytics */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 02B62BA62E662DE7008FB7FF /* XCRemoteSwiftPackageReference "SwiftfulLoggingFirebaseAnalytics" */;
-			productName = SwiftfulLoggingFirebaseAnalytics;
-		};
-		02B62BAA2E662DF3008FB7FF /* SwiftfulLoggingFirebaseCrashlytics */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 02B62BA92E662DF3008FB7FF /* XCRemoteSwiftPackageReference "SwiftfulLoggingFirebaseCrashlytics" */;
-			productName = SwiftfulLoggingFirebaseCrashlytics;
-		};
-		02B62BAD2E662E14008FB7FF /* SwiftfulFirestore */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 02B62BAC2E662E14008FB7FF /* XCRemoteSwiftPackageReference "SwiftfulFirestore" */;
-			productName = SwiftfulFirestore;
-		};
-		02B62BAF2E662E60008FB7FF /* FirebaseRemoteConfig */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 02B62BA02E662DC3008FB7FF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseRemoteConfig;
-		};
-		02B62BB12E662E85008FB7FF /* FirebaseStorage */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 02B62BA02E662DC3008FB7FF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseStorage;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

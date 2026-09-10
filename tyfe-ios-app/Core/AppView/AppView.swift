@@ -44,9 +44,6 @@ struct AppView<Content: View>: View {
                     }
             }
         )
-        .onNotificationReceived(name: .fcmToken, action: { notification in
-            presenter.onFCMTokenRecieved(notification: notification)
-        })
         .onAppear {
             presenter.onViewAppear()
         }

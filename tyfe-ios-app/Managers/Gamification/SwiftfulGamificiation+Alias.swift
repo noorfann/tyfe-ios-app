@@ -5,7 +5,6 @@
 //  Created by Nick Sarno on 10/4/25.
 //
 import SwiftfulGamification
-import SwiftfulGamificationFirebase
 
 typealias GamificationDictionaryValue = SwiftfulGamification.GamificationDictionaryValue
 
@@ -17,16 +16,7 @@ typealias StreakEvent = SwiftfulGamification.StreakEvent
 typealias CurrentStreakData = SwiftfulGamification.CurrentStreakData
 typealias StreakFreeze = SwiftfulGamification.StreakFreeze
 
-@MainActor
-public struct ProdStreakServices: StreakServices {
-    public let remote: RemoteStreakService
-    public let local: LocalStreakPersistence
-
-    public init() {
-        self.remote = FirebaseRemoteStreakService(rootCollectionName: "st_streaks")
-        self.local = FileManagerStreakPersistence()
-    }
-}
+typealias ProdStreakServices = SwiftfulGamification.MockStreakServices
 
 // Experience Points
 
@@ -36,16 +26,7 @@ typealias ExperiencePointsConfiguration = SwiftfulGamification.ExperiencePointsC
 typealias CurrentExperiencePointsData = SwiftfulGamification.CurrentExperiencePointsData
 typealias ExperiencePointsEvent = SwiftfulGamification.ExperiencePointsEvent
 
-@MainActor
-public struct ProdExperiencePointsServices: ExperiencePointsServices {
-    public let remote: RemoteExperiencePointsService
-    public let local: LocalExperiencePointsPersistence
-
-    public init() {
-        self.remote = FirebaseRemoteExperiencePointsService(rootCollectionName: "st_experience")
-        self.local = FileManagerExperiencePointsPersistence()
-    }
-}
+typealias ProdExperiencePointsServices = SwiftfulGamification.MockExperiencePointsServices
 
 // Progress
 
@@ -54,16 +35,7 @@ typealias ProgressConfiguration = SwiftfulGamification.ProgressConfiguration
 typealias MockProgressServices = SwiftfulGamification.MockProgressServices
 typealias ProgressItem = SwiftfulGamification.ProgressItem
 
-@MainActor
-public struct ProdProgressServices: ProgressServices {
-    public let remote: RemoteProgressService
-    public let local: LocalProgressPersistence
-
-    public init() {
-        self.remote = FirebaseRemoteProgressService(rootCollectionName: "st_progress")
-        self.local = SwiftDataProgressPersistence()
-    }
-}
+typealias ProdProgressServices = SwiftfulGamification.MockProgressServices
 
 extension GamificationLogType {
     

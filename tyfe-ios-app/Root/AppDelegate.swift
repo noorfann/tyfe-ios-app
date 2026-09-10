@@ -5,8 +5,6 @@
 //  
 //
 import SwiftUI
-import Firebase
-import FirebaseMessaging
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     var dependencies: Dependencies!
@@ -34,9 +32,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             config = .mock(isSignedIn: isSignedIn)
         }
         
-        config.configure()
-        
-        // Must be called AFTER configuring Firebase
         registerForRemotePushNotifications(application: application)
         
         let dependencies = Dependencies(config: config)
@@ -47,39 +42,21 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     
     private func registerForRemotePushNotifications(application: UIApplication) {
         UNUserNotificationCenter.current().delegate = self
-        #if !MOCK
-        // Only need to set Firebase Messaging if Firebase is configured
-        Messaging.messaging().delegate = self
-        #endif
         application.registerForRemoteNotifications()
     }
 }
 
-/// Firbase Cloud Messaging Docs: https://firebase.google.com/docs/cloud-messaging/ios/client
 extension AppDelegate: UNUserNotificationCenterDelegate {
     
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-        Messaging.messaging().apnsToken = deviceToken
     }
     
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: any Error) {
-        #if DEBUG
-        print("🚨 didFailToRegisterForRemoteNotificationsWithError: \(error.localizedDescription)")
-        #endif
     }
     
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
-        // Firebase push notifications put the payload within "aps" sub-dictionary.
-        // This may not be the case for other push notification services
         let userInfo = response.notification.request.content.userInfo["aps"] as? [String: Any]
         NotificationCenter.default.post(name: .pushNotification, object: nil, userInfo: userInfo)
-    }
-}
-
-extension AppDelegate: MessagingDelegate {
-    
-    nonisolated func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
-        NotificationCenter.default.postFCMToken(token: fcmToken ?? "")
     }
 }
 
@@ -87,18 +64,6 @@ enum BuildConfiguration {
     case mock(isSignedIn: Bool, addLogging: Bool = true), dev, prod
     
     func configure() {
-        switch self {
-        case .mock:
-            // Mock build does NOT run Firebase
-            break
-        case .dev:
-            let plist = Bundle.main.path(forResource: "GoogleService-Info-Dev", ofType: "plist")!
-            let options = FirebaseOptions(contentsOfFile: plist)!
-            FirebaseApp.configure(options: options)
-        case .prod:
-            let plist = Bundle.main.path(forResource: "GoogleService-Info-Prod", ofType: "plist")!
-            let options = FirebaseOptions(contentsOfFile: plist)!
-            FirebaseApp.configure(options: options)
-        }
+        // Remote service configuration will be added with the Supabase integration.
     }
 }

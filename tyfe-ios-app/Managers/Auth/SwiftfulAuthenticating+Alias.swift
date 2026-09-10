@@ -5,12 +5,10 @@
 //  
 //
 import SwiftfulAuthenticating
-import SwiftfulAuthenticatingFirebase
 
 public typealias UserAuthInfo = SwiftfulAuthenticating.UserAuthInfo
 typealias AuthManager = SwiftfulAuthenticating.AuthManager
 typealias MockAuthService = SwiftfulAuthenticating.MockAuthService
-typealias FirebaseAuthService = SwiftfulAuthenticatingFirebase.FirebaseAuthService
 typealias SignInOption = SwiftfulAuthenticating.SignInOption
 
 extension AuthLogType {

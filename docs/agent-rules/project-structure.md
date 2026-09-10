@@ -12,7 +12,7 @@ This project uses Xcode file system synchronization. Any `.swift` file created i
 tyfe-ios-app/
 ├── Root/                          # App entry point and infrastructure
 │   ├── tyfe-ios-appApp.swift
-│   ├── AppDelegate.swift          # Firebase config, push notifications
+│   ├── AppDelegate.swift          # Push notifications and app lifecycle
 │   ├── Dependencies/              # DependencyContainer, Dependencies, DevPreview
 │   ├── RIBs/
 │   │   ├── Core/                  # CoreRouter, CoreInteractor, CoreBuilder
@@ -53,7 +53,6 @@ tyfe-ios-app/
 │   ├── Assets.xcassets/           # App icons, colors, images
 │   │   ├── AppIcon.appiconset/   # App icon
 │   │   └── AccentColor.colorset/ # Accent color
-│   ├── GoogleServicePLists/       # Firebase configs (Dev + Prod)
 │   ├── Preview Content/           # Preview-only assets
 │   └── tyfe-ios-app.entitlements  # App capabilities
 │
@@ -74,11 +73,11 @@ Before creating a new manager, check if the functionality belongs in an existing
 | Manager | Responsibility |
 |---------|---------------|
 | AuthManager | Sign in, sign out, reauthenticate, delete account |
-| UserManager | User profile data, Firestore sync |
-| LogManager | Analytics and logging (Firebase, Mixpanel, Crashlytics) |
+| UserManager | User profile data and local sync (Supabase planned) |
+| LogManager | Analytics and logging (Mixpanel, console) |
 | AppState | Global app state, current module |
 | PurchaseManager | In-app purchases, entitlements (RevenueCat) |
-| ABTestManager | A/B test values (Firebase Remote Config or local) |
+| ABTestManager | A/B test values (local) |
 | PushManager | Push notification registration and handling |
 | HapticManager | Haptic feedback |
 | SoundEffectManager | Sound effect playback |
@@ -109,20 +108,20 @@ Then register in `Dependencies.swift` and resolve in `CoreInteractor` — see `m
 
 ## Build Configurations
 
-| Scheme | Flag | Firebase | Use Case |
+| Scheme | Flag | Services | Use Case |
 |--------|------|----------|----------|
-| Mock | `MOCK` | No | Fast dev, previews, UI tests |
-| Development | `DEV` | Dev credentials | Integration testing |
-| Production | (default) | Prod credentials | Release |
+| Mock | `MOCK` | Local mocks | Fast dev, previews, UI tests |
+| Development | `DEV` | Local fallback (Supabase planned) | Development |
+| Production | (default) | Local fallback (Supabase planned) | Release |
 
 Use Mock for most development. Conditional compilation:
 ```swift
 #if MOCK
-// No Firebase
+// Local mocks
 #elseif DEV
-// Dev Firebase
+// Development services
 #else
-// Prod Firebase
+// Production services
 #endif
 ```
 
