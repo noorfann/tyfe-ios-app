@@ -63,6 +63,7 @@ struct FocusManagerTests {
         #expect(secondRefresh.session.state == .completed)
         #expect(secondRefresh.completion?.rewardCreditsAwarded == 1)
         #expect(manager.rewardCredits == 3)
+        #expect(manager.rewardCredits == manager.creditLedger.reduce(0) { $0 + $1.amount })
         #expect(manager.progression.totalXP == 50)
         #expect(manager.completedSessionCount == 1)
         #expect(manager.creditLedger.count == 1)
@@ -302,7 +303,6 @@ struct FocusManagerTests {
             activities: [ActivityModel.mock],
             dailyPlan: nil,
             completedSessionCount: 1,
-            rewardCredits: 2,
             progression: .mock,
             focusSessions: [
                 FocusSessionModel.completedMock.updated(
@@ -314,7 +314,7 @@ struct FocusManagerTests {
                     focusEndsAt: deadline
                 )
             ],
-            creditLedger: [],
+            creditLedger: RewardCreditLedger(),
             progressionAwards: [],
             nextActivityNumber: 2,
             nextSessionNumber: 3
@@ -352,10 +352,9 @@ struct FocusManagerTests {
             activities: [ActivityModel.mock],
             dailyPlan: nil,
             completedSessionCount: 0,
-            rewardCredits: 2,
             progression: .mock,
             focusSessions: [session],
-            creditLedger: [],
+            creditLedger: RewardCreditLedger(),
             progressionAwards: [],
             nextActivityNumber: 2,
             nextSessionNumber: 2

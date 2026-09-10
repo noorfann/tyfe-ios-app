@@ -43,7 +43,7 @@ final class TodayManager {
     }
 
     var rewardCredits: Int {
-        repository.snapshot.rewardCredits
+        repository.snapshot.creditLedger.balance
     }
 
     var progression: ProgressionSnapshotModel {

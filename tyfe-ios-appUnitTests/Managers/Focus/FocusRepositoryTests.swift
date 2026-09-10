@@ -25,9 +25,7 @@ struct FocusRepositoryTests {
             activities: [ActivityModel.mock],
             dailyPlan: plan,
             focusSessions: [session],
-            rewardCredits: 2,
             progression: .mock,
-            creditLedger: [],
             progressionAwards: [],
             nextActivityNumber: 2,
             nextSessionNumber: 2
@@ -62,7 +60,7 @@ struct FocusRepositoryTests {
         #expect(migrated.schemaVersion == 2)
         #expect(migrated.dailyPlans.count == 1)
         #expect(migrated.focusSessions.count == 1)
-        #expect(migrated.rewardCredits == currentSnapshot.rewardCredits)
+        #expect(migrated.creditLedger.balance == currentSnapshot.creditLedger.balance)
         #expect(migrated.progression == currentSnapshot.progression)
     }
 }

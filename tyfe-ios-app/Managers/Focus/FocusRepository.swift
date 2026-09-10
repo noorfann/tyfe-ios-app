@@ -10,24 +10,13 @@ struct SystemFocusClock: FocusClock {
     var now: Date { Date() }
 }
 
-struct RewardCreditLedgerEntry: Identifiable, Codable, Hashable {
-    let ledgerEntryId: String
-    let focusSessionId: String
-    let amount: Int
-    let awardedAt: Date
-    let idempotencyKey: String
-
-    var id: String { ledgerEntryId }
-}
-
 struct FocusManagerSnapshot: Codable, Hashable {
     var schemaVersion: Int
     var activities: [ActivityModel]
     var dailyPlans: [DailyPlanModel]
-    var rewardCredits: Int
     var progression: ProgressionSnapshotModel
     var focusSessions: [FocusSessionModel]
-    var creditLedger: [RewardCreditLedgerEntry]
+    var creditLedger: RewardCreditLedger
     var progressionAwards: [ProgressionAwardModel]
     var nextActivityNumber: Int
     var nextSessionNumber: Int
@@ -38,7 +27,6 @@ struct FocusManagerSnapshot: Codable, Hashable {
         case dailyPlans
         case dailyPlan
         case completedSessionCount
-        case rewardCredits
         case progression
         case focusSessions
         case creditLedger
@@ -60,10 +48,9 @@ struct FocusManagerSnapshot: Codable, Hashable {
         Self(
             activities: [ActivityModel.mock],
             dailyPlans: [],
-            rewardCredits: 2,
             progression: .mock,
             focusSessions: [],
-            creditLedger: [],
+            creditLedger: .openingBalance(amount: 2),
             progressionAwards: [],
             nextActivityNumber: 2,
             nextSessionNumber: 1
@@ -92,10 +79,9 @@ struct FocusManagerSnapshot: Codable, Hashable {
         return Self(
             activities: [activity],
             dailyPlans: [plan],
-            rewardCredits: 2,
             progression: .mock,
             focusSessions: [],
-            creditLedger: [],
+            creditLedger: .openingBalance(amount: 2),
             progressionAwards: [],
             nextActivityNumber: 2,
             nextSessionNumber: 1
@@ -108,10 +94,9 @@ struct FocusManagerSnapshot: Codable, Hashable {
         dailyPlan: DailyPlanModel? = nil,
         completedSessionCount: Int = 0,
         dailyPlans: [DailyPlanModel]? = nil,
-        rewardCredits: Int,
         progression: ProgressionSnapshotModel,
         focusSessions: [FocusSessionModel],
-        creditLedger: [RewardCreditLedgerEntry],
+        creditLedger: RewardCreditLedger = RewardCreditLedger(),
         progressionAwards: [ProgressionAwardModel],
         nextActivityNumber: Int,
         nextSessionNumber: Int
@@ -119,7 +104,6 @@ struct FocusManagerSnapshot: Codable, Hashable {
         self.schemaVersion = schemaVersion
         self.activities = activities
         self.dailyPlans = dailyPlans ?? dailyPlan.map { [$0] } ?? []
-        self.rewardCredits = rewardCredits
         self.progression = progression
         self.focusSessions = focusSessions
         self.creditLedger = creditLedger
@@ -135,10 +119,9 @@ struct FocusManagerSnapshot: Codable, Hashable {
             activities: try container.decode([ActivityModel].self, forKey: .activities),
             dailyPlan: try container.decodeIfPresent(DailyPlanModel.self, forKey: .dailyPlan),
             dailyPlans: try container.decodeIfPresent([DailyPlanModel].self, forKey: .dailyPlans),
-            rewardCredits: try container.decode(Int.self, forKey: .rewardCredits),
             progression: try container.decode(ProgressionSnapshotModel.self, forKey: .progression),
             focusSessions: try container.decode([FocusSessionModel].self, forKey: .focusSessions),
-            creditLedger: try container.decode([RewardCreditLedgerEntry].self, forKey: .creditLedger),
+            creditLedger: try container.decode(RewardCreditLedger.self, forKey: .creditLedger),
             progressionAwards: try container.decode([ProgressionAwardModel].self, forKey: .progressionAwards),
             nextActivityNumber: try container.decode(Int.self, forKey: .nextActivityNumber),
             nextSessionNumber: try container.decode(Int.self, forKey: .nextSessionNumber)
@@ -150,7 +133,6 @@ struct FocusManagerSnapshot: Codable, Hashable {
         try container.encode(2, forKey: .schemaVersion)
         try container.encode(activities, forKey: .activities)
         try container.encode(dailyPlans, forKey: .dailyPlans)
-        try container.encode(rewardCredits, forKey: .rewardCredits)
         try container.encode(progression, forKey: .progression)
         try container.encode(focusSessions, forKey: .focusSessions)
         try container.encode(creditLedger, forKey: .creditLedger)
@@ -165,7 +147,7 @@ protocol FocusRepository {
     var snapshot: FocusManagerSnapshot { get }
 
     func transaction(
-        _ update: (inout FocusManagerSnapshot) -> Void
+        _ update: (inout FocusManagerSnapshot) throws -> Void
     ) throws
 }
 
@@ -179,10 +161,10 @@ final class MockFocusRepository: FocusRepository {
     }
 
     func transaction(
-        _ update: (inout FocusManagerSnapshot) -> Void
+        _ update: (inout FocusManagerSnapshot) throws -> Void
     ) throws {
         var nextSnapshot = snapshot
-        update(&nextSnapshot)
+        try update(&nextSnapshot)
         snapshot = nextSnapshot
         transactionCount += 1
     }
@@ -240,10 +222,10 @@ final class LocalFocusRepository: FocusRepository {
     }
 
     func transaction(
-        _ update: (inout FocusManagerSnapshot) -> Void
+        _ update: (inout FocusManagerSnapshot) throws -> Void
     ) throws {
         var nextSnapshot = snapshot
-        update(&nextSnapshot)
+        try update(&nextSnapshot)
         do {
             try persistence.save(nextSnapshot)
         } catch {
