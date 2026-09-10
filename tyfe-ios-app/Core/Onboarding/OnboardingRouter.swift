@@ -2,7 +2,8 @@ import SwiftUI
 
 @MainActor
 protocol OnboardingRouter: GlobalRouter {
-    func showOnboardingCompletedView(delegate: OnboardingCompletedDelegate)
+    func showStarterActivityView(delegate: StarterActivityDelegate)
+    func switchToCoreModule()
 }
 
 extension CoreRouter: OnboardingRouter { }

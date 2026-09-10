@@ -9,6 +9,7 @@ final class DailyPlanPresenter {
 
     let activity: ActivityModel
     let existingPlan: DailyPlanModel?
+    private let onComplete: (() -> Void)?
 
     var intendedSessionCount: Int
 
@@ -21,6 +22,7 @@ final class DailyPlanPresenter {
         self.router = router
         self.activity = delegate.activity
         self.existingPlan = delegate.existingPlan
+        self.onComplete = delegate.onComplete
         self.intendedSessionCount = max(delegate.existingPlan?.intendedSessionCount ?? 3, 1)
     }
 
@@ -58,7 +60,12 @@ final class DailyPlanPresenter {
             timeBlocks: nil
         )
         interactor.trackEvent(event: Event.planAccepted)
-        router.dismissPushStack()
+
+        if let onComplete {
+            onComplete()
+        } else {
+            router.dismissPushStack()
+        }
     }
 
     func onBackPressed() {
