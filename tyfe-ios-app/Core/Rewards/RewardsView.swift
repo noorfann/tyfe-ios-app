@@ -43,6 +43,7 @@ struct RewardsView: View {
                 onSave: presenter.onCreateReward,
                 onCancel: presenter.onDismissCreateSheet
             )
+            .presentationDetents([.medium])
         }
         .onAppear {
             presenter.onViewAppear(delegate: delegate)

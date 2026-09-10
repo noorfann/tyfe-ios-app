@@ -45,6 +45,7 @@ struct TodayView: View {
                 initialSessionCount: presenter.addActivitySessionCount,
                 onSave: presenter.saveActivity
             )
+            .presentationDetents([.medium])
         }
         .onAppear {
             presenter.onViewAppear(delegate: delegate)
