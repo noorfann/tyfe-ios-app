@@ -17,7 +17,10 @@ This is the canonical project guidance for Codex and other coding agents working
 - Keep the project runnable after every coherent slice.
 - Use `apply_patch` for source and documentation edits. Use the repository's existing scripts and Xcode tooling for generation, builds, tests, and diagnostics.
 - Treat commits, pushes, remote changes, history rewrites, dependency upgrades, and destructive filesystem operations as explicit user actions. The project commit rule requires the user to say `commit` before committing.
-- Before reporting completion, run the command that proves the claim, read its exit status and failures, and report blockers plainly.
+- Do not run builds, unit tests, UI tests, simulator launches, application launches, or other runtime verification unless the user explicitly requests it.
+- Adding or editing test source does not authorize executing tests.
+- When verification is not requested, use read-only/static checks and non-rewriting SwiftLint only; state clearly in the handoff that runtime verification was skipped by policy.
+- Before reporting completion, run only the permitted static command that proves the claim, read its exit status and failures, and report blockers plainly.
 
 ## Project facts
 
