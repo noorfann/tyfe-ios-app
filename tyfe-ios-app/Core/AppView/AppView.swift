@@ -7,27 +7,17 @@
 import SwiftUI
 import SwiftfulUI
 
-struct AppView<Content: View, SplashContent: View>: View {
+struct AppView<Content: View>: View {
 
     @State private var presenter: AppPresenter
-    @State private var isShowingSplash = true
     private let content: () -> Content
-    private let splashContent: (@escaping () -> Void) -> SplashContent
-
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    private var splashAnimation: Animation? {
-        reduceMotion ? nil : TyfeMotion.normalAnimation
-    }
 
     init(
         presenter: AppPresenter,
-        @ViewBuilder content: @escaping () -> Content,
-        @ViewBuilder splashContent: @escaping (@escaping () -> Void) -> SplashContent
+        @ViewBuilder content: @escaping () -> Content
     ) {
         _presenter = State(initialValue: presenter)
         self.content = content
-        self.splashContent = splashContent
     }
 
     var body: some View {
@@ -69,19 +59,8 @@ struct AppView<Content: View, SplashContent: View>: View {
             .onDisappear {
                 presenter.onViewDisappear()
             }
-
-            if isShowingSplash {
-                splashContent {
-                    withAnimation(splashAnimation) {
-                        isShowingSplash = false
-                    }
-                }
-                .transition(.opacity)
-                .zIndex(1)
-            }
         }
         .preferredColorScheme(presenter.colorScheme)
-        .animation(splashAnimation, value: isShowingSplash)
     }
 }
 
@@ -120,9 +99,6 @@ extension CoreBuilder {
                         onboardingModuleEntryView(router: router, delegate: delegate)
                     }
                 }
-            },
-            splashContent: { onFinished in
-                splashView(onFinished: onFinished)
             }
         )
     }
