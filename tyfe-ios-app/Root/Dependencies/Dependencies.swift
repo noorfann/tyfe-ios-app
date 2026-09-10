@@ -86,7 +86,19 @@ struct Dependencies {
             xpManager = ExperiencePointsManager(services: ProdExperiencePointsServices(), configuration: Dependencies.xpConfiguration, logger: logManager)
             progressManager = ProgressManager(services: ProdProgressServices(), configuration: Dependencies.progressConfiguration, logger: logManager)
         }
-        pushManager = PushManager(logManager: logManager)
+        switch config {
+        case .mock:
+            pushManager = PushManager(
+                service: MockLocalNotificationService(),
+                logManager: logManager
+            )
+        case .dev, .prod:
+            pushManager = PushManager(
+                service: SystemLocalNotificationService(),
+                logManager: logManager,
+                userDefaults: .standard
+            )
+        }
         soundEffectManager = SoundEffectManager(logger: logManager)
         switch config {
         case .mock:
@@ -97,8 +109,14 @@ struct Dependencies {
         case .dev, .prod:
             repository = LocalFocusRepository(persistence: LocalFocusRepositoryPersistence())
         }
-        todayManager = TodayManager(repository: repository)
-        focusManager = FocusManager(repository: repository)
+        todayManager = TodayManager(
+            repository: repository,
+            notificationScheduler: pushManager
+        )
+        focusManager = FocusManager(
+            repository: repository,
+            notificationScheduler: pushManager
+        )
         
         let container = DependencyContainer()
         container.register(AuthManager.self, service: authManager)

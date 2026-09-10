@@ -8,15 +8,22 @@ final class FocusManager {
     private let repository: FocusRepository
     private let clock: FocusClock
     private let calendar: Calendar
+    private let notificationScheduler: LocalTimerNotificationScheduling?
 
     init(
         repository: FocusRepository = MockFocusRepository(),
         clock: FocusClock = SystemFocusClock(),
-        calendar: Calendar = .autoupdatingCurrent
+        calendar: Calendar = .autoupdatingCurrent,
+        notificationScheduler: LocalTimerNotificationScheduling? = nil
     ) {
         self.repository = repository
         self.clock = clock
         self.calendar = calendar
+        self.notificationScheduler = notificationScheduler
+
+        if let activeFocusSession, activeFocusSession.state == .running {
+            notificationScheduler?.scheduleFocusCompletion(for: activeFocusSession)
+        }
     }
 
     var activities: [ActivityModel] {
@@ -164,6 +171,7 @@ final class FocusManager {
             focusEndsAt: clock.now.addingTimeInterval(TimeInterval(session.durationSeconds))
         )
         try replace(runningSession)
+        notificationScheduler?.scheduleFocusCompletion(for: runningSession)
         return runningSession
     }
 
@@ -174,6 +182,7 @@ final class FocusManager {
             let focusEndsAt = session.startedAt.addingTimeInterval(TimeInterval(session.durationSeconds))
             session = session.updated(state: .running, focusEndsAt: focusEndsAt)
             try replace(session)
+            notificationScheduler?.scheduleFocusCompletion(for: session)
         }
 
         if session.state == .running,
@@ -219,6 +228,7 @@ final class FocusManager {
             pauseRemainingSeconds: FocusSessionModel.pauseAllowanceSeconds
         )
         try replace(pausedSession)
+        notificationScheduler?.cancelFocusCompletion(focusSessionId: pausedSession.focusSessionId)
         return pausedSession
     }
 
@@ -239,6 +249,7 @@ final class FocusManager {
             pauseRemainingSeconds: FocusSessionModel.pauseAllowanceSeconds - Int(elapsedPause)
         )
         try replace(resumedSession)
+        notificationScheduler?.scheduleFocusCompletion(for: resumedSession)
         return resumedSession
     }
 
@@ -251,6 +262,7 @@ final class FocusManager {
 
         let abandonedSession = session.updated(state: .abandoned)
         try replace(abandonedSession)
+        notificationScheduler?.cancelFocusCompletion(focusSessionId: abandonedSession.focusSessionId)
         return abandonedSession
     }
 
@@ -371,6 +383,7 @@ final class FocusManager {
                 snapshot.progression = ProgressionSnapshotModel(totalXP: snapshot.progression.totalXP + 10)
             }
         }
+        notificationScheduler?.cancelFocusCompletion(focusSessionId: completedSession.focusSessionId)
         return completedSession
     }
 

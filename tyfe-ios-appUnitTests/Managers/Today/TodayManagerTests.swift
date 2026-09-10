@@ -93,6 +93,29 @@ struct TodayManagerTests {
         #expect(focus.dailyPlan(for: firstDay)?.intendedSessionCount == 1)
     }
 
+    @Test func acceptingTimedPlanSchedulesItsLocalReminders() {
+        let clock = TestFocusClock()
+        let scheduler = RecordingLocalTimerNotificationScheduler()
+        let manager = TodayManager(
+            repository: MockFocusRepository(),
+            clock: clock,
+            notificationScheduler: scheduler
+        )
+        let timeBlock = PlanTimeBlockModel(
+            timeBlockId: "time-block-reminder",
+            activityId: ActivityModel.mock.activityId,
+            plannedStart: clock.now.addingTimeInterval(600)
+        )
+
+        let plan = manager.acceptDailyPlan(
+            intendedSessionCount: 1,
+            activityIds: [ActivityModel.mock.activityId],
+            timeBlocks: [timeBlock]
+        )
+
+        #expect(scheduler.scheduledPlans == [plan])
+    }
+
     @Test func successfulDayExcludesBonusCompletions() throws {
         let clock = TestFocusClock()
         let calendar = utcCalendar()

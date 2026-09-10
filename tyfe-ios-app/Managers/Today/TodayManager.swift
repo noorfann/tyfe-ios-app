@@ -8,15 +8,22 @@ final class TodayManager {
     private let repository: FocusRepository
     private let clock: FocusClock
     private let calendar: Calendar
+    private let notificationScheduler: LocalTimerNotificationScheduling?
 
     init(
         repository: FocusRepository = MockFocusRepository(),
         clock: FocusClock = SystemFocusClock(),
-        calendar: Calendar = .autoupdatingCurrent
+        calendar: Calendar = .autoupdatingCurrent,
+        notificationScheduler: LocalTimerNotificationScheduling? = nil
     ) {
         self.repository = repository
         self.clock = clock
         self.calendar = calendar
+        self.notificationScheduler = notificationScheduler
+
+        if let dailyPlan {
+            notificationScheduler?.schedulePlanReminders(for: dailyPlan)
+        }
     }
 
     var currentLocalDay: LocalDay {
@@ -114,8 +121,13 @@ final class TodayManager {
             timeBlocks: normalizedTimeBlocks,
             isRevised: existingPlan != nil
         )
-        try? repository.transaction { snapshot in
-            upsert(plan, in: &snapshot)
+        do {
+            try repository.transaction { snapshot in
+                upsert(plan, in: &snapshot)
+            }
+            notificationScheduler?.schedulePlanReminders(for: plan)
+        } catch {
+            return plan
         }
         return plan
     }
@@ -195,8 +207,13 @@ final class TodayManager {
 
         let items = dailyPlan.planItems.filter { $0.activityId != activityId }
         if items.isEmpty {
-            try? repository.transaction { snapshot in
-                snapshot.dailyPlans.removeAll { $0.localDay == currentLocalDay }
+            do {
+                try repository.transaction { snapshot in
+                    snapshot.dailyPlans.removeAll { $0.localDay == currentLocalDay }
+                }
+                notificationScheduler?.cancelPlanReminders(dailyPlanId: dailyPlan.dailyPlanId)
+            } catch {
+                return dailyPlan
             }
             return nil
         }
@@ -260,8 +277,13 @@ final class TodayManager {
             timeBlocks: plan.timeBlocks,
             isRevised: true
         )
-        try? repository.transaction { snapshot in
-            upsert(updatedPlan, in: &snapshot)
+        do {
+            try repository.transaction { snapshot in
+                upsert(updatedPlan, in: &snapshot)
+            }
+            notificationScheduler?.schedulePlanReminders(for: updatedPlan)
+        } catch {
+            return plan
         }
         return updatedPlan
     }

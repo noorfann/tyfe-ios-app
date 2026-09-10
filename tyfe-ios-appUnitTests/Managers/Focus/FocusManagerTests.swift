@@ -145,6 +145,33 @@ struct FocusManagerTests {
         #expect(manager.activeFocusSession == nil)
     }
 
+    @Test func timerLifecycleSchedulesReschedulesAndCancelsCompletionNotification() throws {
+        let clock = TestFocusClock()
+        let scheduler = RecordingLocalTimerNotificationScheduler()
+        let manager = FocusManager(
+            repository: MockFocusRepository(),
+            clock: clock,
+            notificationScheduler: scheduler
+        )
+        let session = try #require(manager.startFocusSession(activityId: ActivityModel.mock.activityId))
+
+        let running = try manager.beginFocusSession(focusSessionId: session.focusSessionId)
+        clock.advance(by: 60)
+        _ = try manager.pauseFocusSession(focusSessionId: session.focusSessionId)
+        clock.advance(by: 30)
+        let resumed = try manager.resumeFocusSession(focusSessionId: session.focusSessionId)
+        _ = try manager.abandonFocusSession(focusSessionId: session.focusSessionId)
+
+        #expect(scheduler.scheduledFocusSessions.map(\.focusEndsAt) == [
+            running.focusEndsAt,
+            resumed.focusEndsAt
+        ])
+        #expect(scheduler.cancelledFocusSessionIds == [
+            session.focusSessionId,
+            session.focusSessionId
+        ])
+    }
+
     @Test func persistedActiveSessionIsRecoveredWithoutCreatingADuplicate() throws {
         let clock = TestFocusClock()
         let repository = MockFocusRepository()
