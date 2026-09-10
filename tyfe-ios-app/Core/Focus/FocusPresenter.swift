@@ -76,12 +76,14 @@ final class FocusPresenter {
 
     func onViewAppear(delegate: FocusDelegate) {
         interactor.trackScreenEvent(event: Event.onAppear(delegate: delegate))
+        interactor.setFocusScreenVisible(true)
         refresh()
         startTicker()
     }
 
     func onViewDisappear(delegate: FocusDelegate) {
         stopTicker()
+        interactor.setFocusScreenVisible(false)
         interactor.trackEvent(event: Event.onDisappear(delegate: delegate))
     }
 
@@ -173,6 +175,11 @@ final class FocusPresenter {
 
     func onBackToTodayPressed() {
         router.dismissScreen()
+    }
+
+    func onClaimRewardPressed() {
+        interactor.trackEvent(event: Event.onClaimReward)
+        router.showRewardsView(delegate: RewardsDelegate())
     }
 
     private func refresh() {
@@ -281,6 +288,7 @@ extension FocusPresenter {
         case onResume
         case onAbandonStart
         case onAbandonConfirmed
+        case onClaimReward
 
         var eventName: String {
             switch self {
@@ -298,6 +306,8 @@ extension FocusPresenter {
                 return "FocusView_Abandon_Start"
             case .onAbandonConfirmed:
                 return "FocusView_Abandon_Confirmed"
+            case .onClaimReward:
+                return "FocusView_ClaimReward"
             }
         }
 

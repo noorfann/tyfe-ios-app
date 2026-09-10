@@ -67,4 +67,34 @@ struct DesignSystemTests {
             motif
         }
     }
+
+    @Test func rewardsComponentsAcceptDomainFixtures() {
+        let reward = TyfeRewardCardView(reward: .mock, balance: 2, onTap: {})
+        let readyClaim = TyfeClaimCardView(
+            claim: .mock,
+            remainingSeconds: 0,
+            endText: "3:05 PM",
+            onStart: {}
+        )
+        let activeClaim = TyfeClaimCardView(
+            claim: .activeMock,
+            remainingSeconds: 300,
+            endText: "3:05 PM",
+            onStart: {}
+        )
+        let tiers = TyfeTierLegendView()
+        let statusBar = TyfeRewardStatusBarView(
+            title: "Reward in progress",
+            timeText: "12:30",
+            systemImage: "clock.fill"
+        )
+
+        _ = Group {
+            reward
+            readyClaim
+            activeClaim
+            tiers
+            statusBar
+        }
+    }
 }

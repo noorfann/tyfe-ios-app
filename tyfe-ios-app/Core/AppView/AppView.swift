@@ -109,11 +109,11 @@ extension CoreBuilder {
             TabBarTab(title: "Today", systemImage: "sun.max.fill", destination: { router in
                 todayView(router: router, delegate: TodayDelegate())
             }),
-            TabBarTab(title: "Beta", systemImage: "heart.fill", destination: { router in
-                sampleGamificationViewForMock(router: router)
+            TabBarTab(title: "Rewards", systemImage: "gift.fill", destination: { router in
+                rewardsView(router: router, delegate: RewardsDelegate())
             }),
-            TabBarTab(title: "Profile", systemImage: "person.fill", destination: { router in
-                profileView(router: router, delegate: ProfileDelegate())
+            TabBarTab(title: "Circles", systemImage: "person.3.fill", destination: { router in
+                circlesView(router: router, delegate: CirclesDelegate())
             })
         ]
         
@@ -123,27 +123,6 @@ extension CoreBuilder {
                 startingTabId: tabs.first?.id
             )
         )
-    }
-
-    private func sampleGamificationViewForMock(router: AnyRouter) -> some View {
-        List {
-            Button("Streaks") {
-                router.showScreen { router in
-                    streakExampleView(router: router, delegate: StreakExampleDelegate())
-                }
-            }
-            Button("Experience Points") {
-                router.showScreen { router in
-                    experiencePointsExampleView(router: router, delegate: ExperiencePointsExampleDelegate())
-                }
-            }
-            Button("Progress") {
-                router.showScreen { router in
-                    progressExampleView(router: router, delegate: ProgressExampleDelegate())
-                }
-            }
-        }
-        .navigationTitle("Gamification Examples")
     }
 }
 

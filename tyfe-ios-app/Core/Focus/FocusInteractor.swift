@@ -4,6 +4,7 @@ import SwiftUI
 protocol FocusInteractor: GlobalInteractor {
     var activeFocusSession: FocusSessionModel? { get }
 
+    func setFocusScreenVisible(_ isVisible: Bool)
     func refreshFocusSession(focusSessionId: String) throws -> FocusSessionRefresh
     func beginFocusSession(focusSessionId: String) throws -> FocusSessionModel
     func pauseFocusSession(focusSessionId: String) throws -> FocusSessionModel

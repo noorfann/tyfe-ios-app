@@ -12,6 +12,7 @@ import SwiftfulRouting
 class AppState {
     
     let startingModuleId: String
+    var isFocusScreenVisible = false
     
     init(startingModuleId: String = UserDefaults.lastModuleId) {
         self.startingModuleId = startingModuleId

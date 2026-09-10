@@ -281,6 +281,19 @@ struct FocusView: View {
                         .font(TyfeTypography.interfaceStrong)
                 }
 
+                if presenter.session.state == .completed {
+                    Text("Claim a Reward")
+                        .font(TyfeTypography.interfaceStrong)
+                        .frame(maxWidth: .infinity)
+                        .frame(minHeight: 48)
+                        .background(TyfeEditorialPalette.saffron)
+                        .foregroundStyle(TyfeEditorialPalette.ink)
+                        .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
+                        .asButton(.press) {
+                            presenter.onClaimRewardPressed()
+                        }
+                }
+
                 HStack(spacing: TyfeSpacing.small) {
                     if presenter.session.state == .completed {
                         Text("Start another")

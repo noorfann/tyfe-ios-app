@@ -41,20 +41,36 @@ struct TabBarView: View {
     }
 
     var body: some View {
-        TabView(selection: selectionHandler) {
-            ForEach(delegate.tabs) { tab in
-                tab.content
-                    .tabItem {
-                        Label(tab.title, systemImage: tab.systemImage)
-                    }
-                    .tag(tab.id)
+        ZStack(alignment: .top) {
+            TabView(selection: selectionHandler) {
+                ForEach(delegate.tabs) { tab in
+                    tab.content
+                        .tabItem {
+                            Label(tab.title, systemImage: tab.systemImage)
+                        }
+                        .tag(tab.id)
+                }
+            }
+
+            if presenter.isRewardStatusVisible {
+                TyfeRewardStatusBarView(
+                    title: "Reward in progress",
+                    timeText: presenter.rewardStatusTimeText,
+                    systemImage: "clock.fill"
+                )
+                .padding(.top, TyfeSpacing.small)
+                .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
+        .animation(.easeInOut(duration: TyfeMotion.normalDuration), value: presenter.isRewardStatusVisible)
         .onAppear {
             presenter.onViewAppear(delegate: delegate)
         }
         .onDisappear {
             presenter.onViewDisappear(delegate: delegate)
+        }
+        .onChange(of: presenter.isRewardStatusVisible) { _, _ in
+            presenter.syncRewardTicker()
         }
     }
 }

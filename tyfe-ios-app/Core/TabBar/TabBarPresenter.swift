@@ -51,12 +51,27 @@ class TabBarPresenter {
         self.tabs = delegate.tabs
         self.selectedTab = delegate.startingTabId ?? ""
     }
+
+    private(set) var rewardRemainingSeconds = 0
+    private var rewardTickerTask: Task<Void, Never>?
+
+    var isRewardStatusVisible: Bool {
+        guard let claim = interactor.activeRewardClaim else { return false }
+        return claim.state == .active && !interactor.isFocusScreenVisible
+    }
+
+    var rewardStatusTimeText: String {
+        let safeSeconds = max(rewardRemainingSeconds, 0)
+        return String(format: "%d:%02d", safeSeconds / 60, safeSeconds % 60)
+    }
     
     func onViewAppear(delegate: TabBarDelegate) {
         interactor.trackScreenEvent(event: Event.onAppear(delegate: delegate))
+        syncRewardTicker()
     }
 
     func onViewDisappear(delegate: TabBarDelegate) {
+        stopRewardTicker()
         interactor.trackEvent(event: Event.onDisappear(delegate: delegate))
     }
 
@@ -72,6 +87,47 @@ class TabBarPresenter {
 
         // Update selection
         selectedTab = tabId
+    }
+
+    func syncRewardTicker() {
+        _ = try? interactor.refreshRewardClaim()
+        if isRewardStatusVisible {
+            startRewardTicker()
+        } else {
+            stopRewardTicker()
+        }
+    }
+
+    private func startRewardTicker() {
+        guard rewardTickerTask == nil else { return }
+        updateRewardRemaining()
+        rewardTickerTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(1))
+                guard !Task.isCancelled else { return }
+                self?.tickReward()
+            }
+        }
+    }
+
+    private func stopRewardTicker() {
+        rewardTickerTask?.cancel()
+        rewardTickerTask = nil
+    }
+
+    private func tickReward() {
+        _ = try? interactor.refreshRewardClaim()
+        updateRewardRemaining()
+    }
+
+    private func updateRewardRemaining() {
+        guard let claim = interactor.activeRewardClaim,
+              claim.state == .active,
+              let endsAt = claim.endsAt else {
+            rewardRemainingSeconds = 0
+            return
+        }
+        rewardRemainingSeconds = max(Int(ceil(endsAt.timeIntervalSinceNow)), 0)
     }
 }
 

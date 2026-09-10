@@ -42,6 +42,14 @@ struct CoreInteractor: GlobalInteractor {
         appState.startingModuleId
     }
 
+    var isFocusScreenVisible: Bool {
+        appState.isFocusScreenVisible
+    }
+
+    func setFocusScreenVisible(_ isVisible: Bool) {
+        appState.isFocusScreenVisible = isVisible
+    }
+
     // MARK: AuthManager
     
     var auth: UserAuthInfo? {
@@ -442,6 +450,10 @@ struct CoreInteractor: GlobalInteractor {
 
     var rewards: [RewardModel] {
         rewardManager.rewards
+    }
+
+    var rewardCredits: Int {
+        rewardManager.rewardCredits
     }
 
     var activeRewardClaim: RewardClaimModel? {
