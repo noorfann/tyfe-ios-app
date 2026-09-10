@@ -43,7 +43,7 @@ struct RewardsView: View {
                 onSave: presenter.onCreateReward,
                 onCancel: presenter.onDismissCreateSheet
             )
-            .presentationDetents([.medium])
+            .presentationDetents([.fraction(0.8)])
         }
         .onAppear {
             presenter.onViewAppear(delegate: delegate)

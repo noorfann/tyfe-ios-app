@@ -21,8 +21,8 @@ struct RewardManagerTests {
         let manager = makeManager()
         let starters = manager.rewards.filter { $0.kind == .starter }
 
-        #expect(starters.map(\.name) == ["Play a game", "Watch an episode", "Scroll social media"])
-        #expect(starters.map(\.durationTier) == [.sixtyMinutes, .thirtyMinutes, .fifteenMinutes])
+        #expect(starters.map(\.name) == ["Scroll social media", "Watch an episode", "Play a game"])
+        #expect(starters.map(\.durationTier) == [.fifteenMinutes, .thirtyMinutes, .sixtyMinutes])
     }
 
     @Test func customRewardTrimsNameAndKeepsOneTier() throws {

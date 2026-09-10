@@ -29,6 +29,7 @@ final class RewardManager {
                 availability: availability(for: reward)
             )
         }
+        .sorted { $0.durationTier.durationMinutes < $1.durationTier.durationMinutes }
     }
 
     var rewardClaims: [RewardClaimModel] {
