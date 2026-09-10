@@ -67,7 +67,7 @@ struct TodayView: View {
                 .font(TyfeTypography.interfaceStrong)
                 .foregroundStyle(TyfeEditorialPalette.muted)
 
-            Image(systemName: presenter.isDarkAppearance ? "sun.max.fill" : "moon.stars.fill")
+            Image(systemName: presenter.isDarkAppearance ? "moon.stars.fill" : "sun.max.fill")
                 .font(.subheadline.weight(.black))
                 .foregroundStyle(TyfeEditorialPalette.onAccent)
                 .frame(width: 40, height: 40)
