@@ -4,10 +4,12 @@ import SwiftfulUI
 struct DailyPlanDelegate {
     let activity: ActivityModel
     let existingPlan: DailyPlanModel?
+    let onComplete: (() -> Void)?
 
-    init(activity: ActivityModel, existingPlan: DailyPlanModel? = nil) {
+    init(activity: ActivityModel, existingPlan: DailyPlanModel? = nil, onComplete: (() -> Void)? = nil) {
         self.activity = activity
         self.existingPlan = existingPlan
+        self.onComplete = onComplete
     }
 
     var eventParameters: [String: Any]? { nil }

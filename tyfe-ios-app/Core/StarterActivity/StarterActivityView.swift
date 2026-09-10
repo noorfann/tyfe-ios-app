@@ -2,6 +2,12 @@ import SwiftUI
 import SwiftfulUI
 
 struct StarterActivityDelegate {
+    let onComplete: (() -> Void)?
+
+    init(onComplete: (() -> Void)? = nil) {
+        self.onComplete = onComplete
+    }
+
     var eventParameters: [String: Any]? { nil }
 }
 

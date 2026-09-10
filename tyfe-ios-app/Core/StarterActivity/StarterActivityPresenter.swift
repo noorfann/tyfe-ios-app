@@ -7,6 +7,8 @@ final class StarterActivityPresenter {
     private let interactor: StarterActivityInteractor
     private let router: StarterActivityRouter
 
+    private var onComplete: (() -> Void)?
+
     private(set) var activities: [ActivityModel] = []
     var activityName = ActivityModel.mock.name
     var selectedCategory: ActivityCategory = .study
@@ -23,6 +25,7 @@ final class StarterActivityPresenter {
 
     func onViewAppear(delegate: StarterActivityDelegate) {
         activities = interactor.phase1Activities
+        onComplete = delegate.onComplete
         interactor.trackScreenEvent(event: Event.onAppear(delegate: delegate))
     }
 
@@ -46,7 +49,9 @@ final class StarterActivityPresenter {
         }
 
         interactor.trackEvent(event: Event.activityCreated)
-        router.showDailyPlanView(delegate: DailyPlanDelegate(activity: activity))
+        router.showDailyPlanView(
+            delegate: DailyPlanDelegate(activity: activity, onComplete: onComplete)
+        )
     }
 
     func onBackPressed() {

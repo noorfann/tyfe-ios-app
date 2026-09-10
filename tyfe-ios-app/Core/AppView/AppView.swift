@@ -7,49 +7,74 @@
 import SwiftUI
 import SwiftfulUI
 
-struct AppView<Content: View>: View {
+struct AppView<Content: View, SplashContent: View>: View {
 
-    @State var presenter: AppPresenter
-    @ViewBuilder var content: () -> Content
+    @State private var presenter: AppPresenter
+    @State private var isShowingSplash = true
+    private let content: () -> Content
+    private let splashContent: (@escaping () -> Void) -> SplashContent
+
+    init(
+        presenter: AppPresenter,
+        @ViewBuilder content: @escaping () -> Content,
+        @ViewBuilder splashContent: @escaping (@escaping () -> Void) -> SplashContent
+    ) {
+        _presenter = State(initialValue: presenter)
+        self.content = content
+        self.splashContent = splashContent
+    }
 
     var body: some View {
-        RootView(
-            delegate: RootDelegate(
-                onApplicationDidAppear: nil,
-                onApplicationWillEnterForeground: { _ in
-                    Task {
-                        await presenter.checkUserStatus()
-                    }
-                },
-                onApplicationDidBecomeActive: nil,
-                onApplicationWillResignActive: nil,
-                onApplicationDidEnterBackground: nil,
-                onApplicationWillTerminate: nil
-            ),
-            content: {
-                content()
-                    .task {
-                        await presenter.checkUserStatus()
-                    }
-                    .task {
-                        try? await Task.sleep(for: .seconds(2))
-                        await presenter.showATTPromptIfNeeded()
-                    }
-                    .onChange(of: presenter.auth?.uid) { _, newValue in
-                        if newValue == nil || newValue?.isEmpty == true {
-                            Task {
-                                await presenter.checkUserStatus()
+        ZStack {
+            RootView(
+                delegate: RootDelegate(
+                    onApplicationDidAppear: nil,
+                    onApplicationWillEnterForeground: { _ in
+                        Task {
+                            await presenter.checkUserStatus()
+                        }
+                    },
+                    onApplicationDidBecomeActive: nil,
+                    onApplicationWillResignActive: nil,
+                    onApplicationDidEnterBackground: nil,
+                    onApplicationWillTerminate: nil
+                ),
+                content: {
+                    content()
+                        .task {
+                            await presenter.checkUserStatus()
+                        }
+                        .task {
+                            try? await Task.sleep(for: .seconds(2))
+                            await presenter.showATTPromptIfNeeded()
+                        }
+                        .onChange(of: presenter.auth?.uid) { _, newValue in
+                            if newValue == nil || newValue?.isEmpty == true {
+                                Task {
+                                    await presenter.checkUserStatus()
+                                }
                             }
                         }
-                    }
+                }
+            )
+            .onAppear {
+                presenter.onViewAppear()
             }
-        )
-        .onAppear {
-            presenter.onViewAppear()
+            .onDisappear {
+                presenter.onViewDisappear()
+            }
+
+            if isShowingSplash {
+                splashContent {
+                    withAnimation(TyfeMotion.normalAnimation) {
+                        isShowingSplash = false
+                    }
+                }
+                .transition(.opacity)
+                .zIndex(1)
+            }
         }
-        .onDisappear {
-            presenter.onViewDisappear()
-        }
+        .animation(TyfeMotion.normalAnimation, value: isShowingSplash)
     }
 }
 
@@ -88,6 +113,9 @@ extension CoreBuilder {
                         onboardingModuleEntryView(router: router, delegate: delegate)
                     }
                 }
+            },
+            splashContent: { onFinished in
+                splashView(onFinished: onFinished)
             }
         )
     }

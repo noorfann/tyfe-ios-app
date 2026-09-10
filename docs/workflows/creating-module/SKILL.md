@@ -13,7 +13,7 @@ The app ships with two modules:
 
 | Module | ID | Content |
 |--------|----|---------|
-| Onboarding | `Constants.onboardingModuleId` | `onboardingFlow()` — WelcomeView → sign in/up → OnboardingCompletedView |
+| Onboarding | `Constants.onboardingModuleId` | `onboardingFlow()` — OnboardingView (3-page intro) → StarterActivityView → DailyPlanView → core module |
 | Tabbar | `Constants.tabbarModuleId` | `coreModuleTabBarView()` — TabBarView with Home, Beta, Profile tabs |
 
 ## ModuleWrapperView
