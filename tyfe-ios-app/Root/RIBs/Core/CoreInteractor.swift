@@ -426,7 +426,7 @@ struct CoreInteractor: GlobalInteractor {
     private var nextHomeActivity: ActivityModel? {
         guard let dailyPlan = todayManager.dailyPlan else { return nil }
 
-        return dailyPlan.planItems.compactMap { item in
+        return dailyPlan.planItems.compactMap { item -> ActivityModel? in
             guard todayManager.completedSessionCount(for: item.activityId) < item.plannedSessionCount else {
                 return nil
             }
