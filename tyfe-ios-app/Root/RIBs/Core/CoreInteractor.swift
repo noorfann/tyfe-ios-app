@@ -48,6 +48,14 @@ struct CoreInteractor: GlobalInteractor {
         appState.isFocusScreenVisible = isVisible
     }
 
+    var colorScheme: ColorScheme {
+        appState.colorScheme
+    }
+
+    func toggleColorScheme() {
+        appState.toggleColorScheme()
+    }
+
     // MARK: AuthManager
     
     var auth: UserAuthInfo? {

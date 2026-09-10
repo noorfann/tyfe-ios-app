@@ -8,6 +8,9 @@ protocol TodayInteractor: GlobalInteractor {
     var phase1CompletedSessionCount: Int { get }
     var phase1CompletedSessionCounts: [String: Int] { get }
     var phase1RewardCredits: Int { get }
+    var colorScheme: ColorScheme { get }
+
+    func toggleColorScheme()
 
     @discardableResult
     func createPhase1Activity(

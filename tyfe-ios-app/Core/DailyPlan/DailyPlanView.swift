@@ -97,10 +97,10 @@ struct DailyPlanView: View {
                     .frame(width: 52, height: 52)
                     .overlay {
                         RoundedRectangle(cornerRadius: TyfeRadius.control)
-                            .stroke(TyfeEditorialPalette.ink, lineWidth: TyfeStroke.standard)
+                            .stroke(TyfeEditorialPalette.onAccent, lineWidth: TyfeStroke.standard)
                         Image(systemName: presenter.activity.iconToken ?? "square.grid.2x2")
                             .font(.title3.weight(.bold))
-                            .foregroundStyle(TyfeEditorialPalette.ink)
+                            .foregroundStyle(TyfeEditorialPalette.onAccent)
                     }
 
                 VStack(alignment: .leading, spacing: TyfeSpacing.unit) {

@@ -20,17 +20,17 @@ struct TyfeRewardStatusBarView: View {
                 .font(TyfeTypography.interfaceStrong)
                 .monospacedDigit()
         }
-        .foregroundStyle(TyfeEditorialPalette.ink)
+        .foregroundStyle(TyfeEditorialPalette.onAccent)
         .padding(.horizontal, TyfeSpacing.control)
         .frame(minHeight: 40)
         .background(TyfeEditorialPalette.saffron)
         .clipShape(Capsule())
         .overlay {
             Capsule()
-                .stroke(TyfeEditorialPalette.ink, lineWidth: TyfeStroke.standard)
+                .stroke(TyfeEditorialPalette.onAccent, lineWidth: TyfeStroke.standard)
         }
         .shadow(
-            color: TyfeEditorialPalette.ink.opacity(TyfeShadow.opacity),
+            color: TyfeEditorialPalette.shadow.opacity(TyfeShadow.opacity),
             radius: TyfeShadow.radius,
             x: TyfeShadow.offset.width,
             y: TyfeShadow.offset.height

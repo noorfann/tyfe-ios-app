@@ -17,6 +17,14 @@ class AppPresenter {
         interactor.auth
     }
     
+    var colorScheme: ColorScheme {
+        interactor.colorScheme
+    }
+    
+    func toggleColorScheme() {
+        interactor.toggleColorScheme()
+    }
+    
     init(interactor: AppViewInteractor) {
         self.interactor = interactor
     }

@@ -14,6 +14,7 @@ final class TodayPresenter {
     private(set) var completedSessionCounts: [String: Int] = [:]
     private(set) var rewardCredits = 0
     private(set) var activeFocusSession: FocusSessionModel?
+    var colorScheme: ColorScheme = .light
 
     var selectedPlanItemId: String?
     var isAddActivitySheetPresented = false
@@ -22,6 +23,17 @@ final class TodayPresenter {
     init(interactor: TodayInteractor, router: TodayRouter) {
         self.interactor = interactor
         self.router = router
+        self.colorScheme = interactor.colorScheme
+    }
+
+    var isDarkAppearance: Bool {
+        colorScheme == .dark
+    }
+
+    func onToggleAppearancePressed() {
+        interactor.toggleColorScheme()
+        colorScheme = interactor.colorScheme
+        interactor.trackEvent(event: Event.toggleAppearance)
     }
 
     var greeting: String {
@@ -231,6 +243,7 @@ extension TodayPresenter {
         case addActivity
         case editPlan
         case startFocus
+        case toggleAppearance
 
         var eventName: String {
             switch self {
@@ -240,6 +253,7 @@ extension TodayPresenter {
             case .addActivity: return "Today_AddActivity"
             case .editPlan: return "Today_EditPlan"
             case .startFocus: return "Today_StartFocus"
+            case .toggleAppearance: return "Today_ToggleAppearance"
             }
         }
 
@@ -247,7 +261,7 @@ extension TodayPresenter {
             switch self {
             case .onAppear(delegate: let delegate), .onDisappear(delegate: let delegate):
                 return delegate.eventParameters
-            case .createPlan, .addActivity, .editPlan, .startFocus:
+            case .createPlan, .addActivity, .editPlan, .startFocus, .toggleAppearance:
                 return nil
             }
         }

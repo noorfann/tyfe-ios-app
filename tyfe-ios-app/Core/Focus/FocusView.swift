@@ -38,6 +38,7 @@ struct FocusView: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
+    @ScaledMetric(relativeTo: .largeTitle) private var timerDiameter: CGFloat = 270
     @State private var showWarmSurface = true
     @State private var showCompletionConfetti = false
 
@@ -69,7 +70,6 @@ struct FocusView: View {
                     .transition(.opacity)
             }
         }
-        .preferredColorScheme(.dark)
         .toolbar(.hidden, for: .navigationBar)
         .onAppear {
             presenter.onViewAppear(delegate: delegate)
@@ -129,7 +129,7 @@ struct FocusView: View {
 
             Text("T")
                 .font(.headline.weight(.black))
-                .foregroundStyle(TyfeEditorialPalette.navy)
+                .foregroundStyle(TyfeEditorialPalette.onAccent)
                 .frame(width: 36, height: 36)
                 .background(TyfeEditorialPalette.focus)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -203,9 +203,11 @@ struct FocusView: View {
                 Text("25-minute Focus Session")
                     .font(.caption.weight(.bold))
                     .foregroundStyle(TyfeEditorialPalette.onDark.opacity(0.62))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
         }
-        .frame(width: 270, height: 270)
+        .frame(width: timerDiameter, height: timerDiameter)
         .frame(maxWidth: .infinity)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Focus Session timer")
@@ -230,7 +232,7 @@ struct FocusView: View {
                 Text(presenter.primaryActionTitle)
             }
             .font(.headline.weight(.black))
-            .foregroundStyle(TyfeEditorialPalette.navy)
+            .foregroundStyle(TyfeEditorialPalette.onAccent)
             .frame(maxWidth: .infinity)
             .frame(minHeight: 54)
             .background(TyfeEditorialPalette.focus)
@@ -287,7 +289,7 @@ struct FocusView: View {
                         .frame(maxWidth: .infinity)
                         .frame(minHeight: 48)
                         .background(TyfeEditorialPalette.saffron)
-                        .foregroundStyle(TyfeEditorialPalette.ink)
+                        .foregroundStyle(TyfeEditorialPalette.onAccent)
                         .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
                         .asButton(.press) {
                             presenter.onClaimRewardPressed()
@@ -346,6 +348,18 @@ struct FocusView: View {
     return RouterView { router in
         builder.focusView(router: router, delegate: delegate)
     }
+}
+
+#Preview("Running — Dark") {
+    let container = DevPreview.shared.container()
+    let interactor = CoreInteractor(container: container)
+    let builder = CoreBuilder(interactor: interactor)
+    let delegate = FocusDelegate(activity: .mock, session: .readyMock)
+
+    return RouterView { router in
+        builder.focusView(router: router, delegate: delegate)
+    }
+    .preferredColorScheme(.dark)
 }
 
 extension CoreBuilder {

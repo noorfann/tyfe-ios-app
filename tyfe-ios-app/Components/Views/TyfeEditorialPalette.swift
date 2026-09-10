@@ -1,26 +1,44 @@
 import SwiftUI
 
 enum TyfeEditorialPalette {
-    static let ink = Color(hex: "1E201C")
-    static let canvas = Color(hex: "F7F3EA")
-    static let paper = Color(hex: "FFFDF8")
-    static let navy = Color(hex: "172338")
-    static let charcoal = Color(hex: "2D3440")
-    static let onDark = Color(hex: "FFFDF7")
+
+    // Warm Canvas surfaces adapt to the system light/dark appearance.
+    static let ink = Color(dynamicLight: "1E201C", dark: "F7F3EA")
+    static let canvas = Color(dynamicLight: "F7F3EA", dark: "201F1A")
+    static let paper = Color(dynamicLight: "FFFDF8", dark: "2D3440")
+
+    // Focus Chamber surfaces. In light mode the chamber uses warm surfaces
+    // so the Focus screen follows the system; dark mode keeps the navy chamber.
+    static let navy = Color(dynamicLight: "F7F3EA", dark: "172338")
+    static let charcoal = Color(dynamicLight: "FFFDF8", dark: "2D3440")
+    static let onDark = Color(dynamicLight: "1E201C", dark: "FFFDF7")
+
+    // Brand accents stay constant so the game-board identity survives both modes.
     static let focus = Color(hex: "D7F36A")
     static let olive = Color(hex: "7A9568")
     static let slateBlue = Color(hex: "96AEC2")
     static let terracotta = Color(hex: "B84F39")
     static let saffron = Color(hex: "DDA13A")
     static let teal = Color(hex: "5FA9A6")
-    static let muted = Color(hex: "5B6460")
+
+    static let muted = Color(dynamicLight: "5B6460", dark: "A9B09B")
+
+    // Shadows stay dark in both modes so they read as depth rather than glow.
+    static let shadow = Color.black
+
+    // Text and icons that sit on the constant brand accent fills (lime, saffron,
+    // teal, terracotta). These accents stay the same in both modes, so their
+    // labels stay a fixed dark ink for contrast.
+    static let onAccent = Color(hex: "1E201C")
 
     // Semantic feedback colors keep state legible without making color the only cue.
-    static let success = Color(hex: "2E7D4F")
-    static let warning = Color(hex: "A66305")
-    static let error = Color(hex: "A33E2F")
-    static let disabledFill = Color(hex: "D8D6CF")
-    static let disabledInk = Color(hex: "727873")
+    static let success = Color(dynamicLight: "2E7D4F", dark: "6FCE92")
+    static let warning = Color(dynamicLight: "A66305", dark: "E5B25A")
+    static let error = Color(dynamicLight: "A33E2F", dark: "E5806F")
+    static let errorFill = Color(hex: "A33E2F")
+    static let onError = Color(hex: "FFFDF7")
+    static let disabledFill = Color(dynamicLight: "D8D6CF", dark: "3A3D38")
+    static let disabledInk = Color(dynamicLight: "727873", dark: "9AA19B")
     static let onLight = ink
 
     // Compatibility aliases for the first Editorial Board slice.

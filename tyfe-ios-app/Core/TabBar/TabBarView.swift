@@ -27,6 +27,12 @@ struct TabBarView: View {
     @State var presenter: TabBarPresenter
     let delegate: TabBarDelegate
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var statusBarAnimation: Animation? {
+        reduceMotion ? nil : .easeInOut(duration: TyfeMotion.normalDuration)
+    }
+
     // Custom binding to intercept tab selections
     private var selectionHandler: Binding<String> {
         Binding(
@@ -62,7 +68,7 @@ struct TabBarView: View {
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
-        .animation(.easeInOut(duration: TyfeMotion.normalDuration), value: presenter.isRewardStatusVisible)
+        .animation(statusBarAnimation, value: presenter.isRewardStatusVisible)
         .onAppear {
             presenter.onViewAppear(delegate: delegate)
         }

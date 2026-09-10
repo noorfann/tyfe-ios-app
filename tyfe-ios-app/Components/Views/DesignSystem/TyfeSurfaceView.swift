@@ -35,7 +35,7 @@ struct TyfeSurfaceView<Content: View>: View {
                     )
             }
             .shadow(
-                color: TyfeEditorialPalette.ink.opacity(TyfeShadow.opacity),
+                color: TyfeEditorialPalette.shadow.opacity(TyfeShadow.opacity),
                 radius: TyfeShadow.radius,
                 x: TyfeShadow.offset.width,
                 y: TyfeShadow.offset.height

@@ -12,6 +12,12 @@ struct OnboardingView: View {
     @State private var presenter: OnboardingPresenter
     let delegate: OnboardingDelegate
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var pageAnimation: Animation? {
+        reduceMotion ? nil : TyfeMotion.normalAnimation
+    }
+
     init(presenter: OnboardingPresenter, delegate: OnboardingDelegate) {
         _presenter = State(initialValue: presenter)
         self.delegate = delegate
@@ -52,7 +58,7 @@ struct OnboardingView: View {
             }
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
-        .animation(TyfeMotion.normalAnimation, value: presenter.currentIndex)
+        .animation(pageAnimation, value: presenter.currentIndex)
         .accessibilityLabel("Onboarding")
         .accessibilityValue("Step \(presenter.currentIndex + 1) of \(presenter.pages.count)")
     }
@@ -194,7 +200,7 @@ struct OnboardingView: View {
                 Text("25:00")
                     .font(TyfeTypography.timer)
                     .monospacedDigit()
-                    .foregroundStyle(TyfeEditorialPalette.focus)
+                    .foregroundStyle(TyfeEditorialPalette.onDark)
                 Text("Study Swift · One pause · up to 5 minutes")
                     .font(TyfeTypography.caption)
                     .foregroundStyle(TyfeEditorialPalette.onDark.opacity(0.82))
@@ -220,10 +226,10 @@ struct OnboardingView: View {
             .frame(width: 72, height: 72)
             .overlay {
                 RoundedRectangle(cornerRadius: TyfeRadius.control)
-                    .stroke(TyfeEditorialPalette.ink, lineWidth: TyfeStroke.standard)
+                    .stroke(TyfeEditorialPalette.onAccent, lineWidth: TyfeStroke.standard)
                 Image(systemName: symbolName)
                     .font(.largeTitle.weight(.black))
-                    .foregroundStyle(TyfeEditorialPalette.ink)
+                    .foregroundStyle(TyfeEditorialPalette.onAccent)
             }
     }
 }

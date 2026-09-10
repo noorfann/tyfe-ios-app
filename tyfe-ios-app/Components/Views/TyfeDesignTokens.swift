@@ -57,7 +57,7 @@ enum TyfeSurfaceRole: CaseIterable {
         case .warmCanvas: return TyfeEditorialPalette.canvas
         case .paper: return TyfeEditorialPalette.paper
         case .disabled: return TyfeEditorialPalette.disabledFill
-        case .focusChamber: return TyfeEditorialPalette.navy
+        case .focusChamber: return TyfeEditorialPalette.charcoal
         case .celebration: return TyfeEditorialPalette.focus
         case .warning: return TyfeEditorialPalette.saffron
         }
@@ -67,6 +67,7 @@ enum TyfeSurfaceRole: CaseIterable {
         switch self {
         case .focusChamber: return TyfeEditorialPalette.onDark
         case .disabled: return TyfeEditorialPalette.disabledInk
+        case .celebration, .warning: return TyfeEditorialPalette.onAccent
         default: return TyfeEditorialPalette.ink
         }
     }
@@ -111,11 +112,11 @@ private func tokenSwatch(_ label: String, _ color: Color) -> some View {
         .font(TyfeTypography.caption)
         .padding(.horizontal, TyfeSpacing.small)
         .padding(.vertical, TyfeSpacing.unit)
-        .foregroundStyle(TyfeEditorialPalette.ink)
+        .foregroundStyle(TyfeEditorialPalette.onAccent)
         .background(color)
         .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
         .overlay {
             RoundedRectangle(cornerRadius: TyfeRadius.control)
-                .stroke(TyfeEditorialPalette.ink, lineWidth: TyfeStroke.hairline)
+                .stroke(TyfeEditorialPalette.onAccent, lineWidth: TyfeStroke.hairline)
         }
 }

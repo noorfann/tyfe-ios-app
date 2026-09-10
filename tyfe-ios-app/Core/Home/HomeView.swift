@@ -68,15 +68,15 @@ struct HomeView: View {
 
             Text("T")
                 .font(.headline.weight(.black))
-                .foregroundStyle(TyfeEditorialPalette.ink)
+                .foregroundStyle(TyfeEditorialPalette.onAccent)
                 .frame(width: 36, height: 36)
                 .background(TyfeEditorialPalette.lavender)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .overlay {
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(TyfeEditorialPalette.ink, lineWidth: 2)
+                        .stroke(TyfeEditorialPalette.onAccent, lineWidth: 2)
                 }
-                .shadow(color: TyfeEditorialPalette.ink, radius: 0, x: 3, y: 3)
+                .shadow(color: TyfeEditorialPalette.shadow, radius: 0, x: 3, y: 3)
                 .accessibilityLabel("Profile")
         }
     }
@@ -89,7 +89,7 @@ struct HomeView: View {
                     RoundedRectangle(cornerRadius: 28, style: .continuous)
                         .stroke(TyfeEditorialPalette.ink, lineWidth: 2)
                 }
-                .shadow(color: TyfeEditorialPalette.ink, radius: 0, x: 5, y: 5)
+                .shadow(color: TyfeEditorialPalette.shadow, radius: 0, x: 5, y: 5)
 
             editorialMotifs
                 .accessibilityHidden(true)
@@ -125,16 +125,16 @@ struct HomeView: View {
                         .accessibilityHidden(true)
                 }
                 .font(.headline.weight(.black))
-                .foregroundStyle(TyfeEditorialPalette.ink)
+                .foregroundStyle(TyfeEditorialPalette.onAccent)
                 .frame(maxWidth: .infinity)
                 .frame(minHeight: 52)
                 .background(TyfeEditorialPalette.focus)
                 .clipShape(RoundedRectangle(cornerRadius: 17, style: .continuous))
                 .overlay {
                     RoundedRectangle(cornerRadius: 17, style: .continuous)
-                        .stroke(TyfeEditorialPalette.ink, lineWidth: 2)
+                        .stroke(TyfeEditorialPalette.onAccent, lineWidth: 2)
                 }
-                .shadow(color: TyfeEditorialPalette.ink, radius: 0, x: 3, y: 3)
+                .shadow(color: TyfeEditorialPalette.onAccent, radius: 0, x: 3, y: 3)
                 .asButton(.press) {
                     presenter.onStartFocusPressed()
                 }
@@ -285,16 +285,16 @@ private struct EditorialMetricCard: View {
             Text(detail)
                 .font(.caption.weight(.bold))
         }
-        .foregroundStyle(TyfeEditorialPalette.ink)
+        .foregroundStyle(TyfeEditorialPalette.onAccent)
         .frame(maxWidth: .infinity, minHeight: 112, alignment: .leading)
         .padding(16)
         .background(color)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(TyfeEditorialPalette.ink, lineWidth: 2)
+                .stroke(TyfeEditorialPalette.onAccent, lineWidth: 2)
         }
-        .shadow(color: TyfeEditorialPalette.ink, radius: 0, x: 4, y: 4)
+        .shadow(color: TyfeEditorialPalette.shadow, radius: 0, x: 4, y: 4)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(label), \(value), \(detail)")
     }
@@ -307,7 +307,7 @@ private struct CircleAvatar: View {
     var body: some View {
         Text(letter)
             .font(.caption.weight(.black))
-            .foregroundStyle(TyfeEditorialPalette.ink)
+            .foregroundStyle(TyfeEditorialPalette.onAccent)
             .frame(width: 32, height: 32)
             .background(color)
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))

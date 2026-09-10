@@ -179,6 +179,13 @@ struct TyfeDesignSystemGalleryView: View {
     }
 }
 
+#Preview("Mock gallery — Dark") {
+    NavigationStack {
+        TyfeDesignSystemGalleryView(presenter: TyfeDesignSystemGalleryPresenter())
+    }
+    .preferredColorScheme(.dark)
+}
+
 #Preview("Mock gallery — Large Dynamic Type") {
     NavigationStack {
         TyfeDesignSystemGalleryView(presenter: TyfeDesignSystemGalleryPresenter())

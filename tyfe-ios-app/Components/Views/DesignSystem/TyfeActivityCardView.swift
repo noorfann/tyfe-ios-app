@@ -30,10 +30,10 @@ struct TyfeActivityCardView: View {
                         .frame(width: 48, height: 48)
                         .overlay {
                             RoundedRectangle(cornerRadius: TyfeRadius.control)
-                                .stroke(TyfeEditorialPalette.ink, lineWidth: TyfeStroke.standard)
+                                .stroke(TyfeEditorialPalette.onAccent, lineWidth: TyfeStroke.standard)
                             Image(systemName: activity.iconToken ?? "square.grid.2x2")
                                 .font(.title3.weight(.bold))
-                                .foregroundStyle(TyfeEditorialPalette.ink)
+                                .foregroundStyle(TyfeEditorialPalette.onAccent)
                         }
                     VStack(alignment: .leading, spacing: TyfeSpacing.unit) {
                         Text(activity.name)

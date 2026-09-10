@@ -21,7 +21,8 @@ enum TyfePillTone {
 
     var foreground: Color {
         switch self {
-        case .neutral, .accent, .warning: return TyfeEditorialPalette.ink
+        case .accent: return TyfeEditorialPalette.onAccent
+        case .neutral, .warning: return TyfeEditorialPalette.ink
         case .success: return TyfeEditorialPalette.success
         case .error: return TyfeEditorialPalette.error
         case .dark: return TyfeEditorialPalette.onDark

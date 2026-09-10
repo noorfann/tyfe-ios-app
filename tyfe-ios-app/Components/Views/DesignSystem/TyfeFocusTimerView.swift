@@ -32,7 +32,7 @@ struct TyfeFocusTimerView: View {
                 Text(timeText)
                     .font(TyfeTypography.timer)
                     .monospacedDigit()
-                    .foregroundStyle(TyfeEditorialPalette.focus)
+                    .foregroundStyle(TyfeEditorialPalette.onDark)
                     .minimumScaleFactor(0.7)
                     .accessibilityLabel(Text("Focus timer"))
                     .accessibilityValue(Text(timeText))

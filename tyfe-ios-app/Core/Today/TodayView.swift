@@ -67,15 +67,32 @@ struct TodayView: View {
                 .font(TyfeTypography.interfaceStrong)
                 .foregroundStyle(TyfeEditorialPalette.muted)
 
-            Text("T")
-                .font(TyfeTypography.interfaceStrong)
-                .foregroundStyle(TyfeEditorialPalette.ink)
+            Image(systemName: presenter.isDarkAppearance ? "sun.max.fill" : "moon.stars.fill")
+                .font(.subheadline.weight(.black))
+                .foregroundStyle(TyfeEditorialPalette.onAccent)
                 .frame(width: 40, height: 40)
                 .background(TyfeEditorialPalette.teal)
                 .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
                 .overlay {
                     RoundedRectangle(cornerRadius: TyfeRadius.control)
-                        .stroke(TyfeEditorialPalette.ink, lineWidth: TyfeStroke.standard)
+                        .stroke(TyfeEditorialPalette.onAccent, lineWidth: TyfeStroke.standard)
+                }
+                .asButton(.press) {
+                    presenter.onToggleAppearancePressed()
+                }
+                .accessibilityLabel("Appearance")
+                .accessibilityValue(presenter.isDarkAppearance ? "Dark" : "Light")
+                .accessibilityHint("Switches between light and dark appearance")
+
+            Text("T")
+                .font(TyfeTypography.interfaceStrong)
+                .foregroundStyle(TyfeEditorialPalette.onAccent)
+                .frame(width: 40, height: 40)
+                .background(TyfeEditorialPalette.teal)
+                .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
+                .overlay {
+                    RoundedRectangle(cornerRadius: TyfeRadius.control)
+                        .stroke(TyfeEditorialPalette.onAccent, lineWidth: TyfeStroke.standard)
                 }
                 .accessibilityLabel("Profile")
         }
@@ -207,16 +224,16 @@ struct TodayView: View {
     private var floatingAddButton: some View {
         Image(systemName: "plus")
             .font(.title2.weight(.black))
-            .foregroundStyle(TyfeEditorialPalette.ink)
+            .foregroundStyle(TyfeEditorialPalette.onAccent)
             .frame(width: 58, height: 58)
             .background(TyfeEditorialPalette.focus)
             .clipShape(Circle())
             .overlay {
                 Circle()
-                    .stroke(TyfeEditorialPalette.ink, lineWidth: TyfeStroke.standard)
+                    .stroke(TyfeEditorialPalette.onAccent, lineWidth: TyfeStroke.standard)
             }
             .shadow(
-                color: TyfeEditorialPalette.ink.opacity(TyfeShadow.opacity),
+                color: TyfeEditorialPalette.shadow.opacity(TyfeShadow.opacity),
                 radius: TyfeShadow.radius,
                 x: TyfeShadow.offset.width,
                 y: TyfeShadow.offset.height
@@ -269,6 +286,12 @@ struct TodayActivityDeckView: View {
     let onPrevious: () -> Void
 
     @State private var dragOffset: CGFloat = 0
+    @ScaledMetric(relativeTo: .body) private var deckHeight: CGFloat = 284
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var deckAnimation: Animation? {
+        reduceMotion ? nil : .spring(response: 0.32, dampingFraction: 0.82)
+    }
 
     private var selectedIndex: Int? {
         guard let selectedPlanItemId else { return nil }
@@ -300,7 +323,7 @@ struct TodayActivityDeckView: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 284)
+            .frame(height: deckHeight)
             .contentShape(Rectangle())
             .gesture(deckGesture)
             .accessibilityElement(children: .contain)
@@ -343,7 +366,7 @@ struct TodayActivityDeckView: View {
         .opacity(1 - (Double(depth) * 0.12))
         .zIndex(Double(visibleCards.count - depth))
         .allowsHitTesting(depth == 0)
-        .animation(.spring(response: 0.32, dampingFraction: 0.82), value: selectedPlanItemId)
+        .animation(deckAnimation, value: selectedPlanItemId)
     }
 
     private var deckGesture: some Gesture {
@@ -358,13 +381,13 @@ struct TodayActivityDeckView: View {
                 let passedThreshold = abs(translation) > 80
 
                 guard isHorizontal, passedThreshold else {
-                    withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
+                    withAnimation(deckAnimation) {
                         dragOffset = 0
                     }
                     return
                 }
 
-                withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
+                withAnimation(deckAnimation) {
                     if translation < 0 {
                         onNext()
                     } else {
@@ -416,6 +439,7 @@ struct TodayPlanCardView: View {
                             .font(TyfeTypography.displayCompact)
                             .tracking(-0.8)
                             .lineLimit(2)
+                            .minimumScaleFactor(0.6)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -503,190 +527,6 @@ struct TodayPlanCardView: View {
             }
             .disabled(!isEnabled)
             .accessibilityLabel(label)
-    }
-}
-
-struct TodayAddActivitySheet: View {
-
-    @Environment(\.dismiss) private var dismiss
-
-    let initialSessionCount: Int
-    let onSave: (
-        _ name: String,
-        _ category: ActivityCategory,
-        _ sessionCount: Int
-    ) -> Void
-
-    @State private var activityName: String
-    @State private var selectedCategory: ActivityCategory
-    @State private var sessionCount: Int
-
-    init(
-        initialSessionCount: Int,
-        onSave: @escaping (
-            _ name: String,
-            _ category: ActivityCategory,
-            _ sessionCount: Int
-        ) -> Void
-    ) {
-        self.initialSessionCount = initialSessionCount
-        self.onSave = onSave
-        _activityName = State(initialValue: "")
-        _selectedCategory = State(initialValue: .personal)
-        _sessionCount = State(initialValue: max(initialSessionCount, 1))
-    }
-
-    private var canSave: Bool {
-        !activityName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
-
-    var body: some View {
-        ZStack {
-            TyfeEditorialPalette.canvas
-                .ignoresSafeArea()
-
-            ScrollView {
-                VStack(alignment: .leading, spacing: TyfeSpacing.section) {
-                    header
-                    activityForm
-                    sessionCountPicker
-                    TyfeActionButtonView(
-                        title: "Add to Today",
-                        systemImage: "checkmark",
-                        isEnabled: canSave,
-                        onTap: save
-                    )
-                }
-                .padding(.horizontal, TyfeSpacing.control)
-                .padding(.top, TyfeSpacing.control)
-                .padding(.bottom, TyfeSpacing.section)
-            }
-            .scrollIndicators(.hidden)
-        }
-        .toolbar(.hidden, for: .navigationBar)
-    }
-
-    private var header: some View {
-        HStack(spacing: TyfeSpacing.small) {
-            Text("ADD TO TODAY")
-                .font(TyfeTypography.eyebrow)
-                .tracking(1.2)
-                .foregroundStyle(TyfeEditorialPalette.muted)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            Image(systemName: "xmark")
-                .font(.headline.weight(.black))
-                .foregroundStyle(TyfeEditorialPalette.ink)
-                .frame(width: 44, height: 44)
-                .asButton(.press) {
-                    dismiss()
-                }
-                .accessibilityLabel("Close")
-        }
-    }
-
-    private var activityForm: some View {
-        TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
-                Text("ACTIVITY")
-                    .font(TyfeTypography.eyebrow)
-                    .tracking(1.1)
-                    .foregroundStyle(TyfeEditorialPalette.muted)
-
-                TextField("Study Swift", text: $activityName)
-                    .font(TyfeTypography.interfaceStrong)
-                    .textInputAutocapitalization(.sentences)
-                    .autocorrectionDisabled()
-                    .padding(.horizontal, TyfeSpacing.control)
-                    .frame(minHeight: 52)
-                    .background(TyfeEditorialPalette.canvas)
-                    .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: TyfeRadius.control)
-                            .stroke(TyfeEditorialPalette.ink, lineWidth: TyfeStroke.hairline)
-                    }
-
-                Picker("Category", selection: $selectedCategory) {
-                    ForEach(ActivityCategory.allCases, id: \.self) { category in
-                        Text(category.displayName)
-                            .tag(category)
-                    }
-                }
-                .pickerStyle(.menu)
-                .tint(TyfeEditorialPalette.ink)
-                .frame(minHeight: 44, alignment: .leading)
-            }
-        }
-    }
-
-    private var sessionCountPicker: some View {
-        TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
-                Text("HOW MANY SESSIONS?")
-                    .font(TyfeTypography.eyebrow)
-                    .tracking(1.1)
-                    .foregroundStyle(TyfeEditorialPalette.muted)
-
-                HStack(spacing: TyfeSpacing.control) {
-                    counterButton(
-                        systemImage: "minus",
-                        label: "Fewer sessions",
-                        isEnabled: sessionCount > 1
-                    ) {
-                        sessionCount -= 1
-                    }
-
-                    VStack(spacing: TyfeSpacing.unit) {
-                        Text("\(sessionCount)")
-                            .font(TyfeTypography.displayCompact)
-                        Text("\(sessionCount * FocusSessionModel.durationMinutes) minutes focus")
-                            .font(TyfeTypography.caption)
-                            .foregroundStyle(TyfeEditorialPalette.muted)
-                    }
-                    .frame(maxWidth: .infinity)
-
-                    counterButton(
-                        systemImage: "plus",
-                        label: "More sessions",
-                        isEnabled: true
-                    ) {
-                        sessionCount += 1
-                    }
-                }
-            }
-        }
-    }
-
-    private func counterButton(
-        systemImage: String,
-        label: String,
-        isEnabled: Bool,
-        action: @escaping () -> Void
-    ) -> some View {
-        Image(systemName: systemImage)
-            .font(.headline.weight(.black))
-            .foregroundStyle(isEnabled ? TyfeEditorialPalette.ink : TyfeEditorialPalette.disabledInk)
-            .frame(width: 48, height: 48)
-            .background(isEnabled ? TyfeEditorialPalette.canvas : TyfeEditorialPalette.disabledFill)
-            .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
-            .overlay {
-                RoundedRectangle(cornerRadius: TyfeRadius.control)
-                    .stroke(TyfeEditorialPalette.ink, lineWidth: TyfeStroke.hairline)
-            }
-            .asButton(.press) {
-                guard isEnabled else { return }
-                action()
-            }
-            .disabled(!isEnabled)
-            .accessibilityLabel(label)
-    }
-
-    private func save() {
-        onSave(
-            activityName,
-            selectedCategory,
-            sessionCount
-        )
     }
 }
 

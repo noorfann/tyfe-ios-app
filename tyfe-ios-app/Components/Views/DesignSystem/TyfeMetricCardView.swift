@@ -30,7 +30,7 @@ struct TyfeMetricCardView: View {
                         .frame(width: 12, height: 12)
                         .overlay {
                             RoundedRectangle(cornerRadius: TyfeSpacing.unit)
-                                .stroke(TyfeEditorialPalette.ink, lineWidth: TyfeStroke.hairline)
+                                .stroke(TyfeEditorialPalette.onAccent, lineWidth: TyfeStroke.hairline)
                         }
                     Text(title)
                         .font(TyfeTypography.eyebrow)

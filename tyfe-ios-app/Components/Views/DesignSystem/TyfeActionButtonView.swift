@@ -10,14 +10,15 @@ enum TyfeActionButtonRole {
         switch self {
         case .primary: return TyfeEditorialPalette.focus
         case .secondary: return TyfeEditorialPalette.paper
-        case .destructive: return TyfeEditorialPalette.error
+        case .destructive: return TyfeEditorialPalette.errorFill
         }
     }
 
     var foreground: Color {
         switch self {
-        case .primary, .secondary: return TyfeEditorialPalette.ink
-        case .destructive: return TyfeEditorialPalette.paper
+        case .primary: return TyfeEditorialPalette.onAccent
+        case .secondary: return TyfeEditorialPalette.ink
+        case .destructive: return TyfeEditorialPalette.onError
         }
     }
 }

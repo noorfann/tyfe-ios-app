@@ -53,13 +53,13 @@ struct TyfeMotifView: View {
                 context.fill(tile, with: .color(fillColor))
                 context.stroke(
                     tile,
-                    with: .color(TyfeEditorialPalette.ink),
+                    with: .color(TyfeEditorialPalette.onAccent),
                     style: StrokeStyle(lineWidth: TyfeStroke.standard)
                 )
             }
             Image(systemName: kind.symbolName)
                 .font(.title2.weight(.black))
-                .foregroundStyle(TyfeEditorialPalette.ink)
+                .foregroundStyle(TyfeEditorialPalette.onAccent)
         }
         .frame(width: kind.size, height: kind.size)
         .rotationEffect(reduceMotion ? .zero : .degrees(2))

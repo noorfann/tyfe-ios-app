@@ -14,6 +14,12 @@ struct AppView<Content: View, SplashContent: View>: View {
     private let content: () -> Content
     private let splashContent: (@escaping () -> Void) -> SplashContent
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var splashAnimation: Animation? {
+        reduceMotion ? nil : TyfeMotion.normalAnimation
+    }
+
     init(
         presenter: AppPresenter,
         @ViewBuilder content: @escaping () -> Content,
@@ -66,7 +72,7 @@ struct AppView<Content: View, SplashContent: View>: View {
 
             if isShowingSplash {
                 splashContent {
-                    withAnimation(TyfeMotion.normalAnimation) {
+                    withAnimation(splashAnimation) {
                         isShowingSplash = false
                     }
                 }
@@ -74,7 +80,8 @@ struct AppView<Content: View, SplashContent: View>: View {
                 .zIndex(1)
             }
         }
-        .animation(TyfeMotion.normalAnimation, value: isShowingSplash)
+        .preferredColorScheme(presenter.colorScheme)
+        .animation(splashAnimation, value: isShowingSplash)
     }
 }
 
