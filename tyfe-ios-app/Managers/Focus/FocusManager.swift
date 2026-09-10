@@ -5,13 +5,13 @@ import Observation
 @MainActor
 final class FocusManager {
 
-    private let repository: FocusRepository
+    private let repository: LocalAppRepository
     private let clock: FocusClock
     private let calendar: Calendar
     private let notificationScheduler: LocalTimerNotificationScheduling?
 
     init(
-        repository: FocusRepository = MockFocusRepository(),
+        repository: LocalAppRepository = MockLocalAppRepository(),
         clock: FocusClock = SystemFocusClock(),
         calendar: Calendar = .autoupdatingCurrent,
         notificationScheduler: LocalTimerNotificationScheduling? = nil
@@ -129,7 +129,7 @@ final class FocusManager {
         }.count
     }
 
-    private func legacyBonusStatus(for session: FocusSessionModel, in snapshot: FocusManagerSnapshot) -> Bool {
+    private func legacyBonusStatus(for session: FocusSessionModel, in snapshot: LocalAppSnapshot) -> Bool {
         guard !session.isBonusSession else { return true }
         let plan = snapshot.dailyPlans.last { plan in
             plan.localDay == session.localDay

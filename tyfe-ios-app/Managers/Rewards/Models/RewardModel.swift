@@ -67,6 +67,32 @@ struct RewardModel: Identifiable, Codable, Hashable {
         ]
     }
 
+    static var starters: [Self] {
+        [
+            RewardModel(
+                rewardId: "reward-starter-game",
+                name: "Play a game",
+                kind: .starter,
+                durationTier: .fifteenMinutes,
+                availability: .available
+            ),
+            RewardModel(
+                rewardId: "reward-starter-episode",
+                name: "Watch an episode",
+                kind: .starter,
+                durationTier: .thirtyMinutes,
+                availability: .available
+            ),
+            RewardModel(
+                rewardId: "reward-starter-social",
+                name: "Scroll social media",
+                kind: .starter,
+                durationTier: .sixtyMinutes,
+                availability: .available
+            )
+        ]
+    }
+
     static var mock: Self {
         mocks[0]
     }

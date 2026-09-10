@@ -12,7 +12,7 @@ struct TodayManagerTests {
     }
 
     @Test func todayManagerStartsWithStarterActivityAndNoPlan() {
-        let manager = TodayManager(repository: MockFocusRepository())
+        let manager = TodayManager(repository: MockLocalAppRepository())
 
         #expect(manager.dailyPlan == nil)
         #expect(manager.activities.first?.name == "Study Swift")
@@ -21,7 +21,7 @@ struct TodayManagerTests {
     }
 
     @Test func creatingActivityTrimsNameAndKeepsStableIdentity() throws {
-        let manager = TodayManager(repository: MockFocusRepository())
+        let manager = TodayManager(repository: MockLocalAppRepository())
 
         let activity = try #require(manager.createActivity(
             name: "  Read a chapter  ",
@@ -36,7 +36,7 @@ struct TodayManagerTests {
 
     @Test func planEditingPreservesCompletedSessionMinimum() throws {
         let clock = TestFocusClock()
-        let repository = MockFocusRepository()
+        let repository = MockLocalAppRepository()
         let today = TodayManager(repository: repository, clock: clock)
         let focus = FocusManager(repository: repository, clock: clock)
         let activityId = ActivityModel.mock.activityId
@@ -56,7 +56,7 @@ struct TodayManagerTests {
 
     @Test func todayProjectionReadsFocusCompletionFromTheSharedRepository() throws {
         let clock = TestFocusClock()
-        let repository = MockFocusRepository()
+        let repository = MockLocalAppRepository()
         let today = TodayManager(repository: repository, clock: clock)
         let focus = FocusManager(repository: repository, clock: clock)
         _ = today.addActivityToDailyPlan(
@@ -77,7 +77,7 @@ struct TodayManagerTests {
     @Test func plansRemainAvailableAcrossLocalDayRollover() throws {
         let clock = TestFocusClock(now: Date(timeIntervalSince1970: 1_756_941_600))
         let calendar = utcCalendar()
-        let repository = MockFocusRepository()
+        let repository = MockLocalAppRepository()
         let today = TodayManager(repository: repository, clock: clock, calendar: calendar)
         let focus = FocusManager(repository: repository, clock: clock, calendar: calendar)
         let activityId = ActivityModel.mock.activityId
@@ -97,7 +97,7 @@ struct TodayManagerTests {
         let clock = TestFocusClock()
         let scheduler = RecordingLocalTimerNotificationScheduler()
         let manager = TodayManager(
-            repository: MockFocusRepository(),
+            repository: MockLocalAppRepository(),
             clock: clock,
             notificationScheduler: scheduler
         )
@@ -119,7 +119,7 @@ struct TodayManagerTests {
     @Test func successfulDayExcludesBonusCompletions() throws {
         let clock = TestFocusClock()
         let calendar = utcCalendar()
-        let repository = MockFocusRepository()
+        let repository = MockLocalAppRepository()
         let today = TodayManager(repository: repository, clock: clock, calendar: calendar)
         let focus = FocusManager(repository: repository, clock: clock, calendar: calendar)
         let activityId = ActivityModel.mock.activityId

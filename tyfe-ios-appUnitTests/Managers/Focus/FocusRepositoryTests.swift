@@ -10,8 +10,8 @@ struct FocusRepositoryTests {
             .appendingPathComponent("tyfe-focus-\(UUID().uuidString).json")
         defer { try? FileManager.default.removeItem(at: fileURL) }
 
-        let persistence = LocalFocusRepositoryPersistence(fileURL: fileURL)
-        let snapshot = FocusManagerSnapshot.homeFlowMock
+        let persistence = LocalFileRepositoryPersistence(fileURL: fileURL)
+        let snapshot = LocalAppSnapshot.homeFlowMock
 
         try persistence.save(snapshot)
 
@@ -21,11 +21,11 @@ struct FocusRepositoryTests {
     @Test func versionOneSnapshotMigratesSingularPlanAndLegacySessionFields() throws {
         let plan = DailyPlanModel.mock
         let session = FocusSessionModel.readyMock
-        let currentSnapshot = FocusManagerSnapshot(
+        let currentSnapshot = LocalAppSnapshot(
             activities: [ActivityModel.mock],
             dailyPlan: plan,
-            focusSessions: [session],
             progression: .mock,
+            focusSessions: [session],
             progressionAwards: [],
             nextActivityNumber: 2,
             nextSessionNumber: 2
@@ -55,7 +55,7 @@ struct FocusRepositoryTests {
         }
 
         let data = try JSONSerialization.data(withJSONObject: object)
-        let migrated = try JSONDecoder().decode(FocusManagerSnapshot.self, from: data)
+        let migrated = try JSONDecoder().decode(LocalAppSnapshot.self, from: data)
 
         #expect(migrated.schemaVersion == 2)
         #expect(migrated.dailyPlans.count == 1)

@@ -5,13 +5,13 @@ import Observation
 @MainActor
 final class TodayManager {
 
-    private let repository: FocusRepository
+    private let repository: LocalAppRepository
     private let clock: FocusClock
     private let calendar: Calendar
     private let notificationScheduler: LocalTimerNotificationScheduling?
 
     init(
-        repository: FocusRepository = MockFocusRepository(),
+        repository: LocalAppRepository = MockLocalAppRepository(),
         clock: FocusClock = SystemFocusClock(),
         calendar: Calendar = .autoupdatingCurrent,
         notificationScheduler: LocalTimerNotificationScheduling? = nil
@@ -288,7 +288,7 @@ final class TodayManager {
         return updatedPlan
     }
 
-    private func upsert(_ plan: DailyPlanModel, in snapshot: inout FocusManagerSnapshot) {
+    private func upsert(_ plan: DailyPlanModel, in snapshot: inout LocalAppSnapshot) {
         if let index = snapshot.dailyPlans.firstIndex(where: { $0.localDay == plan.localDay }) {
             snapshot.dailyPlans[index] = plan
         } else {

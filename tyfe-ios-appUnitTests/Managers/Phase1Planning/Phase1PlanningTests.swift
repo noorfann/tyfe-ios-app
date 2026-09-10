@@ -6,7 +6,7 @@ import Testing
 struct Phase1PlanningTests {
 
     @Test func storeStartsWithStarterActivityAndNoPlan() {
-        let store = TodayManager(repository: MockFocusRepository())
+        let store = TodayManager(repository: MockLocalAppRepository())
 
         #expect(store.dailyPlan == nil)
         #expect(store.activities.first?.name == "Study Swift")
@@ -15,7 +15,7 @@ struct Phase1PlanningTests {
     }
 
     @Test func creatingActivityTrimsNameAndKeepsStableIdentity() {
-        let store = TodayManager(repository: MockFocusRepository())
+        let store = TodayManager(repository: MockLocalAppRepository())
 
         let activity = store.createActivity(
             name: "  Read a chapter  ",
@@ -42,7 +42,7 @@ struct Phase1PlanningTests {
     }
 
     @Test func acceptingPlanCanOmitTimeBlocks() {
-        let store = TodayManager(repository: MockFocusRepository())
+        let store = TodayManager(repository: MockLocalAppRepository())
         let activityId = ActivityModel.mock.activityId
 
         let plan = store.acceptDailyPlan(
@@ -58,7 +58,7 @@ struct Phase1PlanningTests {
     }
 
     @Test func acceptingPlanPreservesOptionalFixedDurationTimeline() {
-        let store = TodayManager(repository: MockFocusRepository())
+        let store = TodayManager(repository: MockLocalAppRepository())
         let start = Date(timeIntervalSince1970: 1_756_944_000 + 32_400)
         let blocks = [
             PlanTimeBlockModel(
@@ -85,7 +85,7 @@ struct Phase1PlanningTests {
     }
 
     @Test func startingPlannedActivityCreatesReadyFocusSession() {
-        let repository = MockFocusRepository()
+        let repository = MockLocalAppRepository()
         let store = TodayManager(repository: repository)
         let focus = FocusManager(repository: repository)
         let activityId = ActivityModel.mock.activityId
@@ -104,7 +104,7 @@ struct Phase1PlanningTests {
     }
 
     @Test func dailyPlanItemsAggregateAndMergeByActivity() {
-        let store = TodayManager(repository: MockFocusRepository())
+        let store = TodayManager(repository: MockLocalAppRepository())
         let secondActivity = store.createActivity(
             name: "Plan a walk",
             category: .personal,
@@ -139,7 +139,7 @@ struct Phase1PlanningTests {
 
     @Test func dailyPlanItemCountCannotDropBelowCompletedSessions() {
         let clock = TestFocusClock()
-        let repository = MockFocusRepository()
+        let repository = MockLocalAppRepository()
         let store = TodayManager(repository: repository, clock: clock)
         let focus = FocusManager(repository: repository, clock: clock)
         _ = store.addActivityToDailyPlan(
@@ -162,7 +162,7 @@ struct Phase1PlanningTests {
 
     @Test func emptyActivityCanBeRemovedButCompletedActivityRemains() {
         let clock = TestFocusClock()
-        let repository = MockFocusRepository()
+        let repository = MockLocalAppRepository()
         let store = TodayManager(repository: repository, clock: clock)
         let focus = FocusManager(repository: repository, clock: clock)
         let secondActivity = store.createActivity(

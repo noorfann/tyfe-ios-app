@@ -16,6 +16,7 @@ struct CoreInteractor: GlobalInteractor {
     private let progressManager: ProgressManager
     let todayManager: TodayManager
     let focusManager: FocusManager
+    let rewardManager: RewardManager
 
     init(container: DependencyContainer) {
         self.appState = container.resolve(AppState.self)!
@@ -32,6 +33,7 @@ struct CoreInteractor: GlobalInteractor {
         self.progressManager = container.resolve(ProgressManager.self, key: Dependencies.progressConfiguration.progressKey)!
         self.todayManager = container.resolve(TodayManager.self)!
         self.focusManager = container.resolve(FocusManager.self)!
+        self.rewardManager = container.resolve(RewardManager.self)!
     }
     
     // MARK: APP STATE
@@ -434,6 +436,43 @@ struct CoreInteractor: GlobalInteractor {
                 activity.activityId == item.activityId && !activity.isArchived
             }
         }.first
+    }
+
+    // MARK: Rewards
+
+    var rewards: [RewardModel] {
+        rewardManager.rewards
+    }
+
+    var activeRewardClaim: RewardClaimModel? {
+        rewardManager.activeRewardClaim
+    }
+
+    var rewardClaims: [RewardClaimModel] {
+        rewardManager.rewardClaims
+    }
+
+    @discardableResult
+    func createCustomReward(name: String, durationTier: RewardDurationTier) -> RewardModel? {
+        rewardManager.createCustomReward(name: name, durationTier: durationTier)
+    }
+
+    @discardableResult
+    func createRewardClaim(
+        rewardId: String,
+        durationTier: RewardDurationTier
+    ) throws -> RewardClaimModel {
+        try rewardManager.createRewardClaim(rewardId: rewardId, durationTier: durationTier)
+    }
+
+    @discardableResult
+    func startRewardClaim(rewardClaimId: String) throws -> RewardClaimModel {
+        try rewardManager.startRewardClaim(rewardClaimId: rewardClaimId)
+    }
+
+    @discardableResult
+    func refreshRewardClaim() throws -> RewardClaimModel? {
+        try rewardManager.refreshRewardClaim()
     }
 
     // MARK: SHARED

@@ -26,9 +26,10 @@ struct Dependencies {
         let streakManager: StreakManager
         let xpManager: ExperiencePointsManager
         let progressManager: ProgressManager
-        let repository: FocusRepository
+        let repository: LocalAppRepository
         let todayManager: TodayManager
         let focusManager: FocusManager
+        let rewardManager: RewardManager
         
         switch config {
         case .mock(isSignedIn: let isSignedIn, addLogging: let addLogging):
@@ -103,17 +104,21 @@ struct Dependencies {
         switch config {
         case .mock:
             let snapshot = ProcessInfo.processInfo.arguments.contains("HOME_FLOW")
-                ? FocusManagerSnapshot.homeFlowMock
-                : FocusManagerSnapshot.mock
-            repository = MockFocusRepository(snapshot: snapshot)
+                ? LocalAppSnapshot.homeFlowMock
+                : LocalAppSnapshot.mock
+            repository = MockLocalAppRepository(snapshot: snapshot)
         case .dev, .prod:
-            repository = LocalFocusRepository(persistence: LocalFocusRepositoryPersistence())
+            repository = LocalFileRepository(persistence: LocalFileRepositoryPersistence())
         }
         todayManager = TodayManager(
             repository: repository,
             notificationScheduler: pushManager
         )
         focusManager = FocusManager(
+            repository: repository,
+            notificationScheduler: pushManager
+        )
+        rewardManager = RewardManager(
             repository: repository,
             notificationScheduler: pushManager
         )
@@ -133,6 +138,7 @@ struct Dependencies {
         container.register(ProgressManager.self, key: Dependencies.progressConfiguration.progressKey, service: progressManager)
         container.register(TodayManager.self, service: todayManager)
         container.register(FocusManager.self, service: focusManager)
+        container.register(RewardManager.self, service: rewardManager)
 
         self.container = container
         
