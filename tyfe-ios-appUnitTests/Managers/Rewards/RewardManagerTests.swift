@@ -22,7 +22,7 @@ struct RewardManagerTests {
         let starters = manager.rewards.filter { $0.kind == .starter }
 
         #expect(starters.map(\.name) == ["Play a game", "Watch an episode", "Scroll social media"])
-        #expect(starters.map(\.durationTier) == [.fifteenMinutes, .thirtyMinutes, .sixtyMinutes])
+        #expect(starters.map(\.durationTier) == [.sixtyMinutes, .thirtyMinutes, .fifteenMinutes])
     }
 
     @Test func customRewardTrimsNameAndKeepsOneTier() throws {
@@ -73,12 +73,12 @@ struct RewardManagerTests {
         let game = try #require(manager.rewards.first { $0.rewardId == "reward-starter-game" })
         let social = try #require(manager.rewards.first { $0.rewardId == "reward-starter-social" })
 
-        #expect(manager.availability(for: game) == .available)
-        #expect(manager.availability(for: social) == .insufficientBalance)
+        #expect(manager.availability(for: social) == .available)
+        #expect(manager.availability(for: game) == .insufficientBalance)
 
-        _ = try manager.createRewardClaim(rewardId: game.rewardId, durationTier: .fifteenMinutes)
+        _ = try manager.createRewardClaim(rewardId: social.rewardId, durationTier: .fifteenMinutes)
 
-        #expect(manager.availability(for: game) == .unavailable)
+        #expect(manager.availability(for: social) == .unavailable)
     }
 
     @Test func createClaimDeductsCreditsImmediately() throws {
@@ -86,7 +86,7 @@ struct RewardManagerTests {
         let manager = makeManager(repository: repository)
 
         let claim = try manager.createRewardClaim(
-            rewardId: "reward-starter-game",
+            rewardId: "reward-starter-social",
             durationTier: .fifteenMinutes
         )
 
@@ -103,7 +103,7 @@ struct RewardManagerTests {
 
         #expect(throws: RewardManagerError.insufficientCredits) {
             try manager.createRewardClaim(
-                rewardId: "reward-starter-social",
+                rewardId: "reward-starter-game",
                 durationTier: .sixtyMinutes
             )
         }
@@ -116,13 +116,13 @@ struct RewardManagerTests {
     @Test func secondLiveClaimIsRejected() throws {
         let manager = makeManager()
         _ = try manager.createRewardClaim(
-            rewardId: "reward-starter-game",
+            rewardId: "reward-starter-social",
             durationTier: .fifteenMinutes
         )
 
         #expect(throws: RewardManagerError.activeClaimExists) {
             try manager.createRewardClaim(
-                rewardId: "reward-starter-game",
+                rewardId: "reward-starter-social",
                 durationTier: .fifteenMinutes
             )
         }
@@ -132,7 +132,7 @@ struct RewardManagerTests {
         let clock = TestFocusClock()
         let manager = makeManager(clock: clock)
         let claim = try manager.createRewardClaim(
-            rewardId: "reward-starter-game",
+            rewardId: "reward-starter-social",
             durationTier: .fifteenMinutes
         )
 
@@ -147,7 +147,7 @@ struct RewardManagerTests {
         let manager = makeManager()
 
         let claim = try manager.createRewardClaim(
-            rewardId: "reward-starter-game",
+            rewardId: "reward-starter-social",
             durationTier: .fifteenMinutes
         )
 
@@ -160,7 +160,7 @@ struct RewardManagerTests {
         let clock = TestFocusClock()
         let manager = makeManager(clock: clock)
         let claim = try manager.createRewardClaim(
-            rewardId: "reward-starter-game",
+            rewardId: "reward-starter-social",
             durationTier: .fifteenMinutes
         )
         _ = try manager.startRewardClaim(rewardClaimId: claim.rewardClaimId)
@@ -178,7 +178,7 @@ struct RewardManagerTests {
         let clock = TestFocusClock()
         let manager = makeManager(clock: clock)
         let first = try manager.createRewardClaim(
-            rewardId: "reward-starter-game",
+            rewardId: "reward-starter-social",
             durationTier: .fifteenMinutes
         )
         _ = try manager.startRewardClaim(rewardClaimId: first.rewardClaimId)
@@ -186,7 +186,7 @@ struct RewardManagerTests {
         _ = try manager.refreshRewardClaim()
 
         let second = try manager.createRewardClaim(
-            rewardId: "reward-starter-game",
+            rewardId: "reward-starter-social",
             durationTier: .fifteenMinutes
         )
 
@@ -206,7 +206,7 @@ struct RewardManagerTests {
             clock: TestFocusClock()
         )
         let claim = try first.createRewardClaim(
-            rewardId: "reward-starter-game",
+            rewardId: "reward-starter-social",
             durationTier: .fifteenMinutes
         )
 
@@ -223,7 +223,7 @@ struct RewardManagerTests {
         let scheduler = RecordingLocalTimerNotificationScheduler()
         let manager = makeManager(scheduler: scheduler)
         let claim = try manager.createRewardClaim(
-            rewardId: "reward-starter-game",
+            rewardId: "reward-starter-social",
             durationTier: .fifteenMinutes
         )
 
@@ -237,7 +237,7 @@ struct RewardManagerTests {
         let scheduler = RecordingLocalTimerNotificationScheduler()
         let manager = makeManager(clock: clock, scheduler: scheduler)
         let claim = try manager.createRewardClaim(
-            rewardId: "reward-starter-game",
+            rewardId: "reward-starter-social",
             durationTier: .fifteenMinutes
         )
         _ = try manager.startRewardClaim(rewardClaimId: claim.rewardClaimId)

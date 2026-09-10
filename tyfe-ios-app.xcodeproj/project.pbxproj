@@ -5,6 +5,7 @@
 	};
 	objectVersion = 77;
 	objects = {
+
 /* Begin PBXBuildFile section */
 		0200345B2EAC73C700D87C8F /* SwiftfulOnboarding in Frameworks */ = {isa = PBXBuildFile; productRef = 0200345A2EAC73C700D87C8F /* SwiftfulOnboarding */; };
 		0207BD982EA0958B00E46D93 /* SwiftfulGamification in Frameworks */ = {isa = PBXBuildFile; productRef = 0207BD972EA0958B00E46D93 /* SwiftfulGamification */; };
@@ -41,9 +42,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		0229582F2CEE7FEF00765488 /* tyfe-ios-appUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = tyfe-ios-appUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		0229583F2CEE7FF900765488 /* tyfe-ios-appUnitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = tyfe-ios-appUnitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		028F9B532CECF2C2009B9F48 /* tyfe-ios-app.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = tyfe-ios-app.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0229582F2CEE7FEF00765488 /* tyfe-ios-appUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "tyfe-ios-appUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		0229583F2CEE7FF900765488 /* tyfe-ios-appUnitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "tyfe-ios-appUnitTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		028F9B532CECF2C2009B9F48 /* tyfe-ios-app.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "tyfe-ios-app.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -503,7 +504,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = tyfe-ios-app;
+				TEST_TARGET_NAME = "tyfe-ios-app";
 			};
 			name = Debug;
 		};
@@ -523,7 +524,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = tyfe-ios-app;
+				TEST_TARGET_NAME = "tyfe-ios-app";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Mock;
@@ -544,7 +545,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = tyfe-ios-app;
+				TEST_TARGET_NAME = "tyfe-ios-app";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -985,6 +986,7 @@
 				minimumVersion = 1.2.0;
 			};
 		};
+/* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		0200345A2EAC73C700D87C8F /* SwiftfulOnboarding */ = {

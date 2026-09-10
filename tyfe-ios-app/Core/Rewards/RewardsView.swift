@@ -82,12 +82,14 @@ struct RewardsView: View {
     @ViewBuilder
     private var claimSection: some View {
         if let claim = presenter.activeClaim {
-            TyfeClaimCardView(
-                claim: claim,
-                remainingSeconds: presenter.remainingClaimSeconds,
-                endText: presenter.claimEndText,
-                onStart: presenter.onStartClaimPressed
-            )
+            if claim.state == .ready {
+                TyfeClaimCardView(
+                    claim: claim,
+                    remainingSeconds: presenter.remainingClaimSeconds,
+                    endText: presenter.claimEndText,
+                    onStart: presenter.onStartClaimPressed
+                )
+            }
         } else if let finished = presenter.finishedClaim {
             TyfeClaimCardView(
                 claim: finished,

@@ -28,7 +28,7 @@ struct RewardsInteractorTests {
         let interactor = makeInteractor()
 
         let claim = try interactor.createRewardClaim(
-            rewardId: "reward-starter-game",
+            rewardId: "reward-starter-social",
             durationTier: .fifteenMinutes
         )
 

@@ -73,7 +73,7 @@ struct RewardModel: Identifiable, Codable, Hashable {
                 rewardId: "reward-starter-game",
                 name: "Play a game",
                 kind: .starter,
-                durationTier: .fifteenMinutes,
+                durationTier: .sixtyMinutes,
                 availability: .available
             ),
             RewardModel(
@@ -87,7 +87,7 @@ struct RewardModel: Identifiable, Codable, Hashable {
                 rewardId: "reward-starter-social",
                 name: "Scroll social media",
                 kind: .starter,
-                durationTier: .sixtyMinutes,
+                durationTier: .fifteenMinutes,
                 availability: .available
             )
         ]
