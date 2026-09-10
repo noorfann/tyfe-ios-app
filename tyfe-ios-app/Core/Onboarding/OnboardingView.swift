@@ -154,16 +154,14 @@ struct OnboardingView: View {
 
     @ViewBuilder
     private func artView(for page: OnboardingPage) -> some View {
-        TyfeSurfaceView(role: .paper) {
-            VStack(spacing: TyfeSpacing.control) {
-                switch page.art {
-                case .hero: heroArt
-                case .focus: focusArt
-                case .circles: circlesArt
-                }
+        VStack(spacing: TyfeSpacing.control) {
+            switch page.art {
+            case .hero: heroArt
+            case .focus: focusArt
+            case .circles: circlesArt
             }
-            .frame(maxWidth: .infinity, minHeight: 168, alignment: .center)
         }
+        .frame(maxWidth: .infinity, minHeight: 168, alignment: .center)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text(page.body))
     }
