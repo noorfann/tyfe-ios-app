@@ -23,8 +23,7 @@ struct RewardCreditLedgerEntry: Identifiable, Codable, Hashable {
 struct FocusManagerSnapshot: Codable, Hashable {
     var schemaVersion: Int
     var activities: [ActivityModel]
-    var dailyPlan: DailyPlanModel?
-    var completedSessionCount: Int
+    var dailyPlans: [DailyPlanModel]
     var rewardCredits: Int
     var progression: ProgressionSnapshotModel
     var focusSessions: [FocusSessionModel]
@@ -33,11 +32,34 @@ struct FocusManagerSnapshot: Codable, Hashable {
     var nextActivityNumber: Int
     var nextSessionNumber: Int
 
+    private enum CodingKeys: String, CodingKey {
+        case schemaVersion
+        case activities
+        case dailyPlans
+        case dailyPlan
+        case completedSessionCount
+        case rewardCredits
+        case progression
+        case focusSessions
+        case creditLedger
+        case progressionAwards
+        case nextActivityNumber
+        case nextSessionNumber
+    }
+
+    var dailyPlan: DailyPlanModel? {
+        get { dailyPlans.last }
+        set { dailyPlans = newValue.map { [$0] } ?? [] }
+    }
+
+    var completedSessionCount: Int {
+        focusSessions.filter { $0.state == .completed }.count
+    }
+
     static var mock: Self {
         Self(
             activities: [ActivityModel.mock],
-            dailyPlan: nil,
-            completedSessionCount: 0,
+            dailyPlans: [],
             rewardCredits: 2,
             progression: .mock,
             focusSessions: [],
@@ -50,9 +72,10 @@ struct FocusManagerSnapshot: Codable, Hashable {
 
     static var homeFlowMock: Self {
         let activity = ActivityModel.mock
+        let localDate = Date()
         let plan = DailyPlanModel(
             dailyPlanId: "daily-plan-home-flow",
-            localDate: activity.createdAt,
+            localDate: localDate,
             intendedSessionCount: 2,
             originalIntendedSessionCount: 2,
             activityIds: [activity.activityId],
@@ -68,8 +91,7 @@ struct FocusManagerSnapshot: Codable, Hashable {
 
         return Self(
             activities: [activity],
-            dailyPlan: plan,
-            completedSessionCount: 0,
+            dailyPlans: [plan],
             rewardCredits: 2,
             progression: .mock,
             focusSessions: [],
@@ -81,10 +103,11 @@ struct FocusManagerSnapshot: Codable, Hashable {
     }
 
     init(
-        schemaVersion: Int = 1,
+        schemaVersion: Int = 2,
         activities: [ActivityModel],
-        dailyPlan: DailyPlanModel?,
-        completedSessionCount: Int,
+        dailyPlan: DailyPlanModel? = nil,
+        completedSessionCount: Int = 0,
+        dailyPlans: [DailyPlanModel]? = nil,
         rewardCredits: Int,
         progression: ProgressionSnapshotModel,
         focusSessions: [FocusSessionModel],
@@ -95,8 +118,7 @@ struct FocusManagerSnapshot: Codable, Hashable {
     ) {
         self.schemaVersion = schemaVersion
         self.activities = activities
-        self.dailyPlan = dailyPlan
-        self.completedSessionCount = completedSessionCount
+        self.dailyPlans = dailyPlans ?? dailyPlan.map { [$0] } ?? []
         self.rewardCredits = rewardCredits
         self.progression = progression
         self.focusSessions = focusSessions
@@ -104,6 +126,37 @@ struct FocusManagerSnapshot: Codable, Hashable {
         self.progressionAwards = progressionAwards
         self.nextActivityNumber = nextActivityNumber
         self.nextSessionNumber = nextSessionNumber
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            schemaVersion: 2,
+            activities: try container.decode([ActivityModel].self, forKey: .activities),
+            dailyPlan: try container.decodeIfPresent(DailyPlanModel.self, forKey: .dailyPlan),
+            dailyPlans: try container.decodeIfPresent([DailyPlanModel].self, forKey: .dailyPlans),
+            rewardCredits: try container.decode(Int.self, forKey: .rewardCredits),
+            progression: try container.decode(ProgressionSnapshotModel.self, forKey: .progression),
+            focusSessions: try container.decode([FocusSessionModel].self, forKey: .focusSessions),
+            creditLedger: try container.decode([RewardCreditLedgerEntry].self, forKey: .creditLedger),
+            progressionAwards: try container.decode([ProgressionAwardModel].self, forKey: .progressionAwards),
+            nextActivityNumber: try container.decode(Int.self, forKey: .nextActivityNumber),
+            nextSessionNumber: try container.decode(Int.self, forKey: .nextSessionNumber)
+        )
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(2, forKey: .schemaVersion)
+        try container.encode(activities, forKey: .activities)
+        try container.encode(dailyPlans, forKey: .dailyPlans)
+        try container.encode(rewardCredits, forKey: .rewardCredits)
+        try container.encode(progression, forKey: .progression)
+        try container.encode(focusSessions, forKey: .focusSessions)
+        try container.encode(creditLedger, forKey: .creditLedger)
+        try container.encode(progressionAwards, forKey: .progressionAwards)
+        try container.encode(nextActivityNumber, forKey: .nextActivityNumber)
+        try container.encode(nextSessionNumber, forKey: .nextSessionNumber)
     }
 }
 

@@ -54,7 +54,7 @@ struct DailyPlanItemModel: Identifiable, Codable, Hashable {
 
 struct DailyPlanModel: Identifiable, Codable, Hashable {
     let dailyPlanId: String
-    let localDate: Date
+    let localDay: LocalDay
     let intendedSessionCount: Int
     let originalIntendedSessionCount: Int
     let activityIds: [String]
@@ -68,7 +68,8 @@ struct DailyPlanModel: Identifiable, Codable, Hashable {
 
     private enum CodingKeys: String, CodingKey {
         case dailyPlanId
-        case localDate
+        case localDay = "local_day"
+        case localDate = "local_date"
         case intendedSessionCount
         case originalIntendedSessionCount
         case activityIds
@@ -80,6 +81,7 @@ struct DailyPlanModel: Identifiable, Codable, Hashable {
     init(
         dailyPlanId: String,
         localDate: Date,
+        localDay: LocalDay? = nil,
         intendedSessionCount: Int,
         originalIntendedSessionCount: Int,
         activityIds: [String],
@@ -88,7 +90,7 @@ struct DailyPlanModel: Identifiable, Codable, Hashable {
         isRevised: Bool = false
     ) {
         self.dailyPlanId = dailyPlanId
-        self.localDate = localDate
+        self.localDay = localDay ?? LocalDay(containing: localDate, calendar: .current)
         self.intendedSessionCount = intendedSessionCount
         self.originalIntendedSessionCount = originalIntendedSessionCount
         let normalizedItems = planItems?.filter { activityIds.contains($0.activityId) }
@@ -102,17 +104,20 @@ struct DailyPlanModel: Identifiable, Codable, Hashable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let dailyPlanId = try container.decode(String.self, forKey: .dailyPlanId)
-        let localDate = try container.decode(Date.self, forKey: .localDate)
+        let localDate = try container.decodeIfPresent(Date.self, forKey: .localDate)
+        let localDay = try container.decodeIfPresent(LocalDay.self, forKey: .localDay)
+            ?? LocalDay(containing: localDate ?? Date(), calendar: .current)
         let intendedSessionCount = try container.decode(Int.self, forKey: .intendedSessionCount)
         let originalIntendedSessionCount = try container.decode(Int.self, forKey: .originalIntendedSessionCount)
         let activityIds = try container.decode([String].self, forKey: .activityIds)
         let planItems = try container.decodeIfPresent([DailyPlanItemModel].self, forKey: .planItems)
         let timeBlocks = try container.decodeIfPresent([PlanTimeBlockModel].self, forKey: .timeBlocks)
-        let isRevised = try container.decode(Bool.self, forKey: .isRevised)
+        let isRevised = try container.decodeIfPresent(Bool.self, forKey: .isRevised) ?? false
 
         self.init(
             dailyPlanId: dailyPlanId,
-            localDate: localDate,
+            localDate: localDate ?? localDay.startDate,
+            localDay: localDay,
             intendedSessionCount: intendedSessionCount,
             originalIntendedSessionCount: originalIntendedSessionCount,
             activityIds: activityIds,
@@ -120,6 +125,19 @@ struct DailyPlanModel: Identifiable, Codable, Hashable {
             timeBlocks: timeBlocks,
             isRevised: isRevised
         )
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(dailyPlanId, forKey: .dailyPlanId)
+        try container.encode(localDay, forKey: .localDay)
+        try container.encode(localDate, forKey: .localDate)
+        try container.encode(intendedSessionCount, forKey: .intendedSessionCount)
+        try container.encode(originalIntendedSessionCount, forKey: .originalIntendedSessionCount)
+        try container.encode(activityIds, forKey: .activityIds)
+        try container.encode(planItems, forKey: .planItems)
+        try container.encodeIfPresent(timeBlocks, forKey: .timeBlocks)
+        try container.encode(isRevised, forKey: .isRevised)
     }
 
     var eventParameters: [String: Any] {
@@ -133,6 +151,10 @@ struct DailyPlanModel: Identifiable, Codable, Hashable {
             "daily_plan_time_block_count": timeBlocks?.count ?? 0,
             "daily_plan_is_revised": isRevised
         ]
+    }
+
+    var localDate: Date {
+        localDay.startDate
     }
 
     static var mock: Self {

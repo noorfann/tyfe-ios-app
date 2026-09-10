@@ -7,13 +7,20 @@ final class TodayManager {
 
     private let repository: FocusRepository
     private let clock: FocusClock
+    private let calendar: Calendar
 
     init(
         repository: FocusRepository = MockFocusRepository(),
-        clock: FocusClock = SystemFocusClock()
+        clock: FocusClock = SystemFocusClock(),
+        calendar: Calendar = .autoupdatingCurrent
     ) {
         self.repository = repository
         self.clock = clock
+        self.calendar = calendar
+    }
+
+    var currentLocalDay: LocalDay {
+        LocalDay(containing: clock.now, calendar: calendar)
     }
 
     var activities: [ActivityModel] {
@@ -21,11 +28,11 @@ final class TodayManager {
     }
 
     var dailyPlan: DailyPlanModel? {
-        repository.snapshot.dailyPlan
+        dailyPlan(for: currentLocalDay)
     }
 
     var completedSessionCount: Int {
-        repository.snapshot.completedSessionCount
+        completedSessionCount(on: currentLocalDay)
     }
 
     var rewardCredits: Int {
@@ -95,18 +102,20 @@ final class TodayManager {
                 durationMinutes: FocusSessionModel.durationMinutes
             )
         }
+        let existingPlan = dailyPlan
         let plan = DailyPlanModel(
-            dailyPlanId: dailyPlan?.dailyPlanId ?? "daily-plan-current",
-            localDate: Calendar.current.startOfDay(for: clock.now),
+            dailyPlanId: existingPlan?.dailyPlanId ?? "daily-plan-" + currentLocalDay.id,
+            localDate: currentLocalDay.startDate,
+            localDay: currentLocalDay,
             intendedSessionCount: count,
-            originalIntendedSessionCount: dailyPlan?.originalIntendedSessionCount ?? count,
+            originalIntendedSessionCount: existingPlan?.originalIntendedSessionCount ?? count,
             activityIds: selectedActivityIds,
             planItems: planItems,
             timeBlocks: normalizedTimeBlocks,
-            isRevised: dailyPlan != nil
+            isRevised: existingPlan != nil
         )
         try? repository.transaction { snapshot in
-            snapshot.dailyPlan = plan
+            upsert(plan, in: &snapshot)
         }
         return plan
     }
@@ -187,7 +196,7 @@ final class TodayManager {
         let items = dailyPlan.planItems.filter { $0.activityId != activityId }
         if items.isEmpty {
             try? repository.transaction { snapshot in
-                snapshot.dailyPlan = nil
+                snapshot.dailyPlans.removeAll { $0.localDay == currentLocalDay }
             }
             return nil
         }
@@ -195,9 +204,40 @@ final class TodayManager {
     }
 
     func completedSessionCount(for activityId: String) -> Int {
+        completedSessionCount(for: activityId, on: currentLocalDay)
+    }
+
+    func dailyPlan(for localDay: LocalDay) -> DailyPlanModel? {
+        repository.snapshot.dailyPlans.last { $0.localDay == localDay }
+    }
+
+    func completedSessionCount(on localDay: LocalDay) -> Int {
         repository.snapshot.focusSessions.filter {
-            $0.activityId == activityId && $0.state == .completed
+            $0.localDay == localDay && $0.state == .completed
         }.count
+    }
+
+    func completedSessionCount(for activityId: String, on localDay: LocalDay) -> Int {
+        repository.snapshot.focusSessions.filter {
+            $0.localDay == localDay
+                && $0.activityId == activityId
+                && $0.state == .completed
+                && !$0.isBonusSession
+        }.count
+    }
+
+    func progress(for localDay: LocalDay) -> DailyPlanProgressModel? {
+        guard let plan = dailyPlan(for: localDay) else { return nil }
+        let sessions = repository.snapshot.focusSessions.filter {
+            $0.localDay == localDay && $0.state == .completed
+        }
+        return DailyPlanProgressModel(
+            localDay: localDay,
+            originalPlannedSessionCount: plan.originalIntendedSessionCount,
+            finalPlannedSessionCount: plan.intendedSessionCount,
+            plannedCompletionCount: sessions.filter { !$0.isBonusSession }.count,
+            bonusCompletionCount: sessions.filter(\.isBonusSession).count
+        )
     }
 
     private func replaceDailyPlan(
@@ -212,6 +252,7 @@ final class TodayManager {
         let updatedPlan = DailyPlanModel(
             dailyPlanId: plan.dailyPlanId,
             localDate: plan.localDate,
+            localDay: plan.localDay,
             intendedSessionCount: normalizedItems.reduce(0) { $0 + $1.plannedSessionCount },
             originalIntendedSessionCount: plan.originalIntendedSessionCount,
             activityIds: normalizedItems.map(\.activityId),
@@ -220,9 +261,17 @@ final class TodayManager {
             isRevised: true
         )
         try? repository.transaction { snapshot in
-            snapshot.dailyPlan = updatedPlan
+            upsert(updatedPlan, in: &snapshot)
         }
         return updatedPlan
+    }
+
+    private func upsert(_ plan: DailyPlanModel, in snapshot: inout FocusManagerSnapshot) {
+        if let index = snapshot.dailyPlans.firstIndex(where: { $0.localDay == plan.localDay }) {
+            snapshot.dailyPlans[index] = plan
+        } else {
+            snapshot.dailyPlans.append(plan)
+        }
     }
 
     private func uniqueActivityIds(from ids: [String]) -> [String] {

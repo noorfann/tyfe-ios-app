@@ -36,6 +36,8 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
     let activityId: String
     let state: FocusSessionState
     let startedAt: Date
+    let localDay: LocalDay
+    let dailyPlanIdAtStart: String?
     let pausedAt: Date?
     let completedAt: Date?
     let focusEndsAt: Date?
@@ -48,6 +50,8 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
         case activityId
         case state
         case startedAt
+        case localDay = "local_day"
+        case dailyPlanIdAtStart = "daily_plan_id_at_start"
         case pausedAt
         case completedAt
         case focusEndsAt
@@ -82,19 +86,22 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
         completedAt: Date? = nil,
         focusEndsAt: Date? = nil,
         pauseUsed: Bool? = nil,
-        pauseRemainingSeconds: Int? = nil
+        pauseRemainingSeconds: Int? = nil,
+        isBonusSession: Bool? = nil
     ) -> Self {
         Self(
             focusSessionId: focusSessionId,
             activityId: activityId,
             state: state,
             startedAt: startedAt,
+            localDay: localDay,
+            dailyPlanIdAtStart: dailyPlanIdAtStart,
             pausedAt: pausedAt ?? self.pausedAt,
             completedAt: completedAt ?? self.completedAt,
             focusEndsAt: focusEndsAt ?? self.focusEndsAt,
             pauseUsed: pauseUsed ?? self.pauseUsed,
             pauseRemainingSeconds: pauseRemainingSeconds ?? self.pauseRemainingSeconds,
-            isBonusSession: isBonusSession
+            isBonusSession: isBonusSession ?? self.isBonusSession
         )
     }
 
@@ -103,6 +110,8 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
         activityId: String,
         state: FocusSessionState,
         startedAt: Date,
+        localDay: LocalDay? = nil,
+        dailyPlanIdAtStart: String? = nil,
         pausedAt: Date? = nil,
         completedAt: Date? = nil,
         focusEndsAt: Date? = nil,
@@ -114,6 +123,8 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
         self.activityId = activityId
         self.state = state
         self.startedAt = startedAt
+        self.localDay = localDay ?? LocalDay(containing: startedAt, calendar: .current)
+        self.dailyPlanIdAtStart = dailyPlanIdAtStart
         self.pausedAt = pausedAt
         self.completedAt = completedAt
         self.focusEndsAt = focusEndsAt
@@ -124,11 +135,15 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        let startedAt = try container.decode(Date.self, forKey: .startedAt)
         self.init(
             focusSessionId: try container.decode(String.self, forKey: .focusSessionId),
             activityId: try container.decode(String.self, forKey: .activityId),
             state: try container.decode(FocusSessionState.self, forKey: .state),
-            startedAt: try container.decode(Date.self, forKey: .startedAt),
+            startedAt: startedAt,
+            localDay: try container.decodeIfPresent(LocalDay.self, forKey: .localDay)
+                ?? LocalDay(containing: startedAt, calendar: .current),
+            dailyPlanIdAtStart: try container.decodeIfPresent(String.self, forKey: .dailyPlanIdAtStart),
             pausedAt: try container.decodeIfPresent(Date.self, forKey: .pausedAt),
             completedAt: try container.decodeIfPresent(Date.self, forKey: .completedAt),
             focusEndsAt: try container.decodeIfPresent(Date.self, forKey: .focusEndsAt),

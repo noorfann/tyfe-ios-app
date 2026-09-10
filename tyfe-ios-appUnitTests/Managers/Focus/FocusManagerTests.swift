@@ -5,6 +5,12 @@ import Testing
 @MainActor
 struct FocusManagerTests {
 
+    private func utcCalendar() -> Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .current
+        return calendar
+    }
+
     @Test func beginningAndPausingAFocusSessionUsesPersistedTime() throws {
         let clock = TestFocusClock()
         let repository = MockFocusRepository()
@@ -61,6 +67,68 @@ struct FocusManagerTests {
         #expect(manager.completedSessionCount == 1)
         #expect(manager.creditLedger.count == 1)
         #expect(manager.progressionAwards.count == 1)
+    }
+
+    @Test func completionCrossingMidnightStaysOnTheStartDay() throws {
+        let clock = TestFocusClock(now: Date(timeIntervalSince1970: 1_756_943_400))
+        let calendar = utcCalendar()
+        let repository = MockFocusRepository()
+        let today = TodayManager(repository: repository, clock: clock, calendar: calendar)
+        let manager = FocusManager(repository: repository, clock: clock, calendar: calendar)
+        let activityId = ActivityModel.mock.activityId
+        _ = today.addActivityToDailyPlan(activityId: activityId, sessionCount: 1)
+        let startDay = manager.currentLocalDay
+        let session = try #require(manager.startFocusSession(activityId: activityId))
+        _ = try manager.beginFocusSession(focusSessionId: session.focusSessionId)
+
+        clock.advance(by: TimeInterval(session.durationSeconds))
+        let refresh = try manager.refreshFocusSession(focusSessionId: session.focusSessionId)
+
+        #expect(refresh.session.state == .completed)
+        #expect(refresh.session.localDay == startDay)
+        #expect(today.completedSessionCount(on: startDay) == 1)
+        #expect(today.completedSessionCount(on: today.currentLocalDay) == 0)
+    }
+
+    @Test func reducingPlanWhileRunningFinalizesExcessCompletionAsBonus() throws {
+        let clock = TestFocusClock()
+        let calendar = utcCalendar()
+        let repository = MockFocusRepository()
+        let today = TodayManager(repository: repository, clock: clock, calendar: calendar)
+        let manager = FocusManager(repository: repository, clock: clock, calendar: calendar)
+        let activityId = ActivityModel.mock.activityId
+        _ = today.addActivityToDailyPlan(activityId: activityId, sessionCount: 2)
+
+        let first = try #require(manager.startFocusSession(activityId: activityId))
+        _ = try manager.beginFocusSession(focusSessionId: first.focusSessionId)
+        clock.advance(by: TimeInterval(first.durationSeconds))
+        _ = try manager.refreshFocusSession(focusSessionId: first.focusSessionId)
+
+        let second = try #require(manager.startFocusSession(activityId: activityId))
+        _ = today.updateDailyPlanItemCount(activityId: activityId, sessionCount: 1)
+        _ = try manager.beginFocusSession(focusSessionId: second.focusSessionId)
+        clock.advance(by: TimeInterval(second.durationSeconds))
+        let refresh = try manager.refreshFocusSession(focusSessionId: second.focusSessionId)
+
+        #expect(refresh.session.isBonusSession)
+        #expect(today.progress(for: today.currentLocalDay)?.plannedCompletionCount == 1)
+        #expect(today.progress(for: today.currentLocalDay)?.bonusCompletionCount == 1)
+    }
+
+    @Test func unplannedCompletionRemainsBonus() throws {
+        let clock = TestFocusClock()
+        let calendar = utcCalendar()
+        let repository = MockFocusRepository()
+        let manager = FocusManager(repository: repository, clock: clock, calendar: calendar)
+        let session = try #require(manager.startFocusSession(activityId: ActivityModel.mock.activityId))
+        _ = try manager.beginFocusSession(focusSessionId: session.focusSessionId)
+        clock.advance(by: TimeInterval(session.durationSeconds))
+
+        let completed = try manager.refreshFocusSession(focusSessionId: session.focusSessionId).session
+
+        #expect(completed.isBonusSession)
+        #expect(manager.rewardCredits == 3)
+        #expect(manager.progression.totalXP == 50)
     }
 
     @Test func abandoningAFocusSessionDoesNotAwardRewards() throws {

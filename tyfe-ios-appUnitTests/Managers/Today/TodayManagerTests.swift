@@ -5,6 +5,12 @@ import Testing
 @MainActor
 struct TodayManagerTests {
 
+    private func utcCalendar() -> Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .current
+        return calendar
+    }
+
     @Test func todayManagerStartsWithStarterActivityAndNoPlan() {
         let manager = TodayManager(repository: MockFocusRepository())
 
@@ -44,6 +50,7 @@ struct TodayManagerTests {
         _ = today.updateDailyPlanItemCount(activityId: activityId, sessionCount: 0)
 
         #expect(today.dailyPlan?.planItems.first?.plannedSessionCount == 1)
+        #expect(today.dailyPlan?.originalIntendedSessionCount == 3)
         #expect(today.completedSessionCount(for: activityId) == 1)
     }
 
@@ -52,6 +59,10 @@ struct TodayManagerTests {
         let repository = MockFocusRepository()
         let today = TodayManager(repository: repository, clock: clock)
         let focus = FocusManager(repository: repository, clock: clock)
+        _ = today.addActivityToDailyPlan(
+            activityId: ActivityModel.mock.activityId,
+            sessionCount: 1
+        )
         let session = try #require(focus.startFocusSession(activityId: ActivityModel.mock.activityId))
         _ = try focus.beginFocusSession(focusSessionId: session.focusSessionId)
         clock.advance(by: TimeInterval(session.durationSeconds))
@@ -61,5 +72,49 @@ struct TodayManagerTests {
         #expect(today.completedSessionCount(for: ActivityModel.mock.activityId) == 1)
         #expect(today.rewardCredits == 3)
         #expect(today.progression.totalXP == 50)
+    }
+
+    @Test func plansRemainAvailableAcrossLocalDayRollover() throws {
+        let clock = TestFocusClock(now: Date(timeIntervalSince1970: 1_756_941_600))
+        let calendar = utcCalendar()
+        let repository = MockFocusRepository()
+        let today = TodayManager(repository: repository, clock: clock, calendar: calendar)
+        let focus = FocusManager(repository: repository, clock: clock, calendar: calendar)
+        let activityId = ActivityModel.mock.activityId
+        _ = today.addActivityToDailyPlan(activityId: activityId, sessionCount: 1)
+        let firstDay = today.currentLocalDay
+        clock.advance(by: 86_400)
+
+        _ = today.addActivityToDailyPlan(activityId: activityId, sessionCount: 2)
+
+        #expect(today.dailyPlan(for: firstDay)?.intendedSessionCount == 1)
+        #expect(today.dailyPlan?.intendedSessionCount == 2)
+        #expect(repository.snapshot.dailyPlans.count == 2)
+        #expect(focus.dailyPlan(for: firstDay)?.intendedSessionCount == 1)
+    }
+
+    @Test func successfulDayExcludesBonusCompletions() throws {
+        let clock = TestFocusClock()
+        let calendar = utcCalendar()
+        let repository = MockFocusRepository()
+        let today = TodayManager(repository: repository, clock: clock, calendar: calendar)
+        let focus = FocusManager(repository: repository, clock: clock, calendar: calendar)
+        let activityId = ActivityModel.mock.activityId
+        _ = today.addActivityToDailyPlan(activityId: activityId, sessionCount: 1)
+
+        let planned = try #require(focus.startFocusSession(activityId: activityId))
+        _ = try focus.beginFocusSession(focusSessionId: planned.focusSessionId)
+        clock.advance(by: TimeInterval(planned.durationSeconds))
+        _ = try focus.refreshFocusSession(focusSessionId: planned.focusSessionId)
+
+        let bonus = try #require(focus.startFocusSession(activityId: activityId))
+        _ = try focus.beginFocusSession(focusSessionId: bonus.focusSessionId)
+        clock.advance(by: TimeInterval(bonus.durationSeconds))
+        _ = try focus.refreshFocusSession(focusSessionId: bonus.focusSessionId)
+
+        let progress = try #require(today.progress(for: today.currentLocalDay))
+        #expect(progress.plannedCompletionCount == 1)
+        #expect(progress.bonusCompletionCount == 1)
+        #expect(progress.isSuccessful)
     }
 }
