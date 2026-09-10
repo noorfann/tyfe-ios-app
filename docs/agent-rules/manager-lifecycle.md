@@ -61,8 +61,7 @@ Logout is orchestrated in `CoreInteractor.signOut()` — sequential, not paralle
 2. purchaseManager.logOut()     ← async cleanup
 3. userManager.signOut()        ← removes listeners, clears cache
 4. streakManager.logOut()       ← clears gamification state
-5. xpManager.logOut()
-6. progressManager.logOut()
+5. progressManager.logOut()
 ```
 
 - AuthManager signs out FIRST (clears auth state)

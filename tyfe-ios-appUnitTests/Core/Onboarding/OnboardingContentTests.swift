@@ -21,7 +21,6 @@ struct OnboardingContentTests {
 
         #expect(copy.contains("25"))
         #expect(copy.contains("reward credit"))
-        #expect(copy.contains("progression"))
         #expect(copy.contains("circle"))
         #expect(copy.contains("offline"))
         #expect(copy.contains("cheer"))

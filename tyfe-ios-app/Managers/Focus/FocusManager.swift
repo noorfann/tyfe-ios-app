@@ -42,20 +42,12 @@ final class FocusManager {
         repository.snapshot.creditLedger.balance
     }
 
-    var progression: ProgressionSnapshotModel {
-        repository.snapshot.progression
-    }
-
     var focusSessions: [FocusSessionModel] {
         repository.snapshot.focusSessions
     }
 
     var creditLedger: [RewardCreditLedgerEntry] {
         repository.snapshot.creditLedger.entries
-    }
-
-    var progressionAwards: [ProgressionAwardModel] {
-        repository.snapshot.progressionAwards
     }
 
     var activeFocusSession: FocusSessionModel? {
@@ -347,7 +339,6 @@ final class FocusManager {
             isBonusSession: isBonusSession
         )
         let creditKey = "focus-session-" + session.focusSessionId + "-credit"
-        let xpKey = "focus-session-" + session.focusSessionId + "-xp"
 
         try repository.transaction { snapshot in
             guard let index = snapshot.focusSessions.firstIndex(where: { $0.focusSessionId == session.focusSessionId }) else {
@@ -367,19 +358,6 @@ final class FocusManager {
                     idempotencyKey: creditKey
                 )
             )
-
-            if !snapshot.progressionAwards.contains(where: { $0.idempotencyKey == xpKey }) {
-                snapshot.progressionAwards.append(
-                    ProgressionAwardModel(
-                        awardId: "progression-award-" + session.focusSessionId,
-                        focusSessionId: session.focusSessionId,
-                        source: completedSession.isBonusSession ? .bonusSession : .focusSession,
-                        awardedAt: clock.now,
-                        idempotencyKey: xpKey
-                    )
-                )
-                snapshot.progression = ProgressionSnapshotModel(totalXP: snapshot.progression.totalXP + 10)
-            }
         }
         notificationScheduler?.cancelFocusCompletion(focusSessionId: completedSession.focusSessionId)
         return completedSession
@@ -392,9 +370,7 @@ final class FocusManager {
             rewardCreditsAwarded: snapshot.creditLedger.entries.contains {
                 $0.source == .focusSession && $0.sourceId == session.focusSessionId
             } ? 1 : 0,
-            xpAwarded: snapshot.progressionAwards.first(where: { $0.focusSessionId == session.focusSessionId })?.points ?? 0,
-            rewardCreditBalance: snapshot.creditLedger.balance,
-            progression: snapshot.progression
+            rewardCreditBalance: snapshot.creditLedger.balance
         )
     }
 }

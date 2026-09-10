@@ -93,12 +93,19 @@ struct OnboardingView: View {
 
     private var footer: some View {
         VStack(spacing: TyfeSpacing.small) {
-            TyfeProgressBarView(
-                label: "Onboarding progress",
-                current: presenter.currentIndex + 1,
-                total: presenter.pages.count,
-                accent: TyfeEditorialPalette.teal
-            )
+            HStack(spacing: TyfeSpacing.unit) {
+                ForEach(0..<presenter.pages.count, id: \.self) { index in
+                    Circle()
+                        .fill(
+                            index == presenter.currentIndex
+                                ? TyfeEditorialPalette.ink
+                                : TyfeEditorialPalette.ink.opacity(0.18)
+                        )
+                        .frame(width: 8, height: 8)
+                        .accessibilityHidden(true)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
 
             TyfeActionButtonView(
                 title: presenter.primaryButtonTitle,
@@ -200,7 +207,7 @@ struct OnboardingView: View {
     private var circlesArt: some View {
         VStack(spacing: TyfeSpacing.control) {
             iconTile(symbolName: "square.grid.2x2.fill", accent: TyfeEditorialPalette.slateBlue)
-            Text("PLAN · XP · CIRCLES · OFFLINE")
+            Text("PLAN · CIRCLES · OFFLINE")
                 .font(TyfeTypography.eyebrow)
                 .tracking(1.2)
                 .foregroundStyle(TyfeEditorialPalette.muted)

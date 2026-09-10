@@ -24,7 +24,6 @@ struct Dependencies {
         let hapticManager: HapticManager
         let soundEffectManager: SoundEffectManager
         let streakManager: StreakManager
-        let xpManager: ExperiencePointsManager
         let progressManager: ProgressManager
         let repository: LocalAppRepository
         let todayManager: TodayManager
@@ -56,7 +55,6 @@ struct Dependencies {
             appState = AppState(startingModuleId: isSignedIn ? Constants.tabbarModuleId : Constants.onboardingModuleId)
             hapticManager = HapticManager(logger: logManager)
             streakManager = StreakManager(services: MockStreakServices(), configuration: Dependencies.streakConfiguration, logger: logManager)
-            xpManager = ExperiencePointsManager(services: MockExperiencePointsServices(), configuration: Dependencies.xpConfiguration, logger: logManager)
             progressManager = ProgressManager(services: MockProgressServices(), configuration: Dependencies.progressConfiguration, logger: logManager)
         case .dev, .prod:
             if case .dev = config {
@@ -84,7 +82,6 @@ struct Dependencies {
             hapticManager = HapticManager(logger: logManager)
             appState = AppState()
             streakManager = StreakManager(services: ProdStreakServices(), configuration: Dependencies.streakConfiguration, logger: logManager)
-            xpManager = ExperiencePointsManager(services: ProdExperiencePointsServices(), configuration: Dependencies.xpConfiguration, logger: logManager)
             progressManager = ProgressManager(services: ProdProgressServices(), configuration: Dependencies.progressConfiguration, logger: logManager)
         }
         switch config {
@@ -134,7 +131,6 @@ struct Dependencies {
         container.register(HapticManager.self, service: hapticManager)
         container.register(SoundEffectManager.self, service: soundEffectManager)
         container.register(StreakManager.self, key: Dependencies.streakConfiguration.streakKey, service: streakManager)
-        container.register(ExperiencePointsManager.self, key: Dependencies.xpConfiguration.experienceKey, service: xpManager)
         container.register(ProgressManager.self, key: Dependencies.progressConfiguration.progressKey, service: progressManager)
         container.register(TodayManager.self, service: todayManager)
         container.register(FocusManager.self, service: focusManager)
@@ -151,11 +147,6 @@ struct Dependencies {
         useServerCalculation: false,
         leewayHours: 0,
         freezeBehavior: .autoConsumeFreezes
-    )
-    
-    static let xpConfiguration = ExperiencePointsConfiguration(
-        experienceKey: Constants.xpKey,
-        useServerCalculation: false
     )
     
     static let progressConfiguration = ProgressConfiguration(

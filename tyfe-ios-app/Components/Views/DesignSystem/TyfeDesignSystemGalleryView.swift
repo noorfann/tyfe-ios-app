@@ -14,12 +14,6 @@ final class TyfeDesignSystemGalleryPresenter {
         FocusSessionModel.abandonedMock
     ]
     let rewards = RewardModel.mocks
-    let progressionStates = [
-        ProgressionSnapshotModel.noXPMock,
-        ProgressionSnapshotModel.mock,
-        ProgressionSnapshotModel.levelUpMock,
-        ProgressionSnapshotModel.cosmeticUnlockedMock
-    ]
 
     init() {}
 }
@@ -37,7 +31,6 @@ struct TyfeDesignSystemGalleryView: View {
                 galleryHeader
                 warmCanvasSection
                 focusChamberSection
-                progressionSection
                 rewardSection
                 asyncStateSection
             }
@@ -88,7 +81,6 @@ struct TyfeDesignSystemGalleryView: View {
                 timeBlock: presenter.plan.timeBlocks?.first,
                 onStart: {}
             )
-            TyfeProgressBarView(label: "Today's plan", current: 1, total: 3, accent: TyfeEditorialPalette.teal)
             LazyVGrid(
                 columns: [GridItem(.flexible()), GridItem(.flexible())],
                 spacing: TyfeSpacing.small
@@ -112,14 +104,6 @@ struct TyfeDesignSystemGalleryView: View {
                     onResume: {},
                     onAbandon: {}
                 )
-            }
-        }
-    }
-
-    private var progressionSection: some View {
-        gallerySection("Progression") {
-            ForEach(Array(presenter.progressionStates.enumerated()), id: \.offset) { _, progression in
-                TyfeProgressionCardView(progression: progression)
             }
         }
     }

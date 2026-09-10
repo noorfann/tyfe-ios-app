@@ -13,7 +13,6 @@ final class TodayPresenter {
     private(set) var completedSessionCount = 0
     private(set) var completedSessionCounts: [String: Int] = [:]
     private(set) var rewardCredits = 0
-    private(set) var progression = ProgressionSnapshotModel.noXPMock
     private(set) var activeFocusSession: FocusSessionModel?
 
     var selectedPlanItemId: String?
@@ -199,7 +198,6 @@ final class TodayPresenter {
         completedSessionCount = interactor.phase1CompletedSessionCount
         completedSessionCounts = interactor.phase1CompletedSessionCounts
         rewardCredits = interactor.phase1RewardCredits
-        progression = interactor.phase1Progression
         activeFocusSession = interactor.activeFocusSession
 
         if let selectedPlanItemId,

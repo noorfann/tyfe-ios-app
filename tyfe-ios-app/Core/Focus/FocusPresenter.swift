@@ -255,7 +255,7 @@ final class FocusPresenter {
         router.showAlert(
             .alert,
             title: "Leave this session?",
-            subtitle: "An abandoned Focus Session earns no Reward Credit and no XP. You can begin again whenever you’re ready.",
+            subtitle: "An abandoned Focus Session earns no Reward Credit. You can begin again whenever you’re ready.",
             buttons: {
                 AnyView(
                     Button("Abandon Session", role: .destructive) {

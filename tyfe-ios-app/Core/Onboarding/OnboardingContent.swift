@@ -62,12 +62,12 @@ enum OnboardingContent {
         OnboardingPage(
             id: "everything",
             eyebrow: "EVERYTHING YOU GET",
-            title: "A private game\nthat is yours alone.",
-            body: "A forgiving Daily Plan, Progression with XP and cosmetics, and private Circles with Cheers — all working offline.",
+            title: "A private loop\nthat is yours alone.",
+            body: "A forgiving Daily Plan, bounded Rewards, and private Circles with Cheers — all working offline.",
             symbolName: "person.2.fill",
             accent: TyfeEditorialPalette.slateBlue,
             art: .circles,
-            pills: ["Daily Plan", "XP & cosmetics", "Private Circles", "Works offline"]
+            pills: ["Daily Plan", "Bounded Rewards", "Private Circles", "Works offline"]
         )
     ]
 }

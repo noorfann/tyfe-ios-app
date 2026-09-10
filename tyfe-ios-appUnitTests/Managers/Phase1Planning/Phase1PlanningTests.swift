@@ -11,7 +11,6 @@ struct Phase1PlanningTests {
         #expect(store.dailyPlan == nil)
         #expect(store.activities.first?.name == "Study Swift")
         #expect(store.rewardCredits == 2)
-        #expect(store.progression.totalXP == 40)
     }
 
     @Test func creatingActivityTrimsNameAndKeepsStableIdentity() {

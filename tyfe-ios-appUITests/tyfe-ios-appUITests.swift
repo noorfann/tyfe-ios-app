@@ -184,7 +184,7 @@ final class TyfeappUITests: XCTestCase {
         app.buttons["Mark complete"].tap()
 
         XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["You earned +1 Reward Credit and +10 XP."].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["You earned +1 Reward Credit."].waitForExistence(timeout: 5))
     }
 #endif
 }

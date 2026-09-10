@@ -92,7 +92,7 @@ final class PushManager: LocalTimerNotificationScheduling {
         let requests = [LocalNotificationRequest(
                 identifier: identifier,
                 title: "Focus Session complete",
-                body: "Nice work. Your Reward Credit and XP are ready.",
+                body: "Nice work. Your Reward Credit is ready.",
                 deliveryDate: focusEndsAt
             )]
         setDesiredGroup(

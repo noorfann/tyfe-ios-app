@@ -24,9 +24,7 @@ struct FocusRepositoryTests {
         let currentSnapshot = LocalAppSnapshot(
             activities: [ActivityModel.mock],
             dailyPlan: plan,
-            progression: .mock,
             focusSessions: [session],
-            progressionAwards: [],
             nextActivityNumber: 2,
             nextSessionNumber: 2
         )
@@ -61,6 +59,5 @@ struct FocusRepositoryTests {
         #expect(migrated.dailyPlans.count == 1)
         #expect(migrated.focusSessions.count == 1)
         #expect(migrated.creditLedger.balance == currentSnapshot.creditLedger.balance)
-        #expect(migrated.progression == currentSnapshot.progression)
     }
 }

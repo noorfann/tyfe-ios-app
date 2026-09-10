@@ -6,10 +6,8 @@ struct LocalAppSnapshot: Codable, Hashable {
     var dailyPlans: [DailyPlanModel]
     var customRewards: [RewardModel]
     var rewardClaims: [RewardClaimModel]
-    var progression: ProgressionSnapshotModel
     var focusSessions: [FocusSessionModel]
     var creditLedger: RewardCreditLedger
-    var progressionAwards: [ProgressionAwardModel]
     var nextActivityNumber: Int
     var nextSessionNumber: Int
     var nextRewardNumber: Int
@@ -23,10 +21,8 @@ struct LocalAppSnapshot: Codable, Hashable {
         case completedSessionCount
         case customRewards
         case rewardClaims
-        case progression
         case focusSessions
         case creditLedger
-        case progressionAwards
         case nextActivityNumber
         case nextSessionNumber
         case nextRewardNumber
@@ -46,10 +42,8 @@ struct LocalAppSnapshot: Codable, Hashable {
         Self(
             activities: [ActivityModel.mock],
             dailyPlans: [],
-            progression: .mock,
             focusSessions: [],
             creditLedger: .openingBalance(amount: 2),
-            progressionAwards: [],
             nextActivityNumber: 2,
             nextSessionNumber: 1
         )
@@ -77,10 +71,8 @@ struct LocalAppSnapshot: Codable, Hashable {
         return Self(
             activities: [activity],
             dailyPlans: [plan],
-            progression: .mock,
             focusSessions: [],
             creditLedger: .openingBalance(amount: 2),
-            progressionAwards: [],
             nextActivityNumber: 2,
             nextSessionNumber: 1
         )
@@ -94,10 +86,8 @@ struct LocalAppSnapshot: Codable, Hashable {
         dailyPlans: [DailyPlanModel]? = nil,
         customRewards: [RewardModel] = [],
         rewardClaims: [RewardClaimModel] = [],
-        progression: ProgressionSnapshotModel,
         focusSessions: [FocusSessionModel],
         creditLedger: RewardCreditLedger = RewardCreditLedger(),
-        progressionAwards: [ProgressionAwardModel],
         nextActivityNumber: Int,
         nextSessionNumber: Int,
         nextRewardNumber: Int = 1,
@@ -108,10 +98,8 @@ struct LocalAppSnapshot: Codable, Hashable {
         self.dailyPlans = dailyPlans ?? dailyPlan.map { [$0] } ?? []
         self.customRewards = customRewards
         self.rewardClaims = rewardClaims
-        self.progression = progression
         self.focusSessions = focusSessions
         self.creditLedger = creditLedger
-        self.progressionAwards = progressionAwards
         self.nextActivityNumber = nextActivityNumber
         self.nextSessionNumber = nextSessionNumber
         self.nextRewardNumber = nextRewardNumber
@@ -127,10 +115,8 @@ struct LocalAppSnapshot: Codable, Hashable {
             dailyPlans: try container.decodeIfPresent([DailyPlanModel].self, forKey: .dailyPlans),
             customRewards: try container.decodeIfPresent([RewardModel].self, forKey: .customRewards) ?? [],
             rewardClaims: try container.decodeIfPresent([RewardClaimModel].self, forKey: .rewardClaims) ?? [],
-            progression: try container.decode(ProgressionSnapshotModel.self, forKey: .progression),
             focusSessions: try container.decode([FocusSessionModel].self, forKey: .focusSessions),
             creditLedger: try container.decode(RewardCreditLedger.self, forKey: .creditLedger),
-            progressionAwards: try container.decode([ProgressionAwardModel].self, forKey: .progressionAwards),
             nextActivityNumber: try container.decode(Int.self, forKey: .nextActivityNumber),
             nextSessionNumber: try container.decode(Int.self, forKey: .nextSessionNumber),
             nextRewardNumber: try container.decodeIfPresent(Int.self, forKey: .nextRewardNumber) ?? 1,
@@ -145,10 +131,8 @@ struct LocalAppSnapshot: Codable, Hashable {
         try container.encode(dailyPlans, forKey: .dailyPlans)
         try container.encode(customRewards, forKey: .customRewards)
         try container.encode(rewardClaims, forKey: .rewardClaims)
-        try container.encode(progression, forKey: .progression)
         try container.encode(focusSessions, forKey: .focusSessions)
         try container.encode(creditLedger, forKey: .creditLedger)
-        try container.encode(progressionAwards, forKey: .progressionAwards)
         try container.encode(nextActivityNumber, forKey: .nextActivityNumber)
         try container.encode(nextSessionNumber, forKey: .nextSessionNumber)
         try container.encode(nextRewardNumber, forKey: .nextRewardNumber)

@@ -8,7 +8,6 @@ protocol TodayInteractor: GlobalInteractor {
     var phase1CompletedSessionCount: Int { get }
     var phase1CompletedSessionCounts: [String: Int] { get }
     var phase1RewardCredits: Int { get }
-    var phase1Progression: ProgressionSnapshotModel { get }
 
     @discardableResult
     func createPhase1Activity(

@@ -47,7 +47,7 @@ struct FocusManagerTests {
         #expect(try manager.refreshFocusSession(focusSessionId: session.focusSessionId).remainingFocusSeconds == 180)
     }
 
-    @Test func naturalCompletionAwardsCreditAndXPExactlyOnce() throws {
+    @Test func naturalCompletionAwardsCreditExactlyOnce() throws {
         let clock = TestFocusClock()
         let manager = FocusManager(repository: MockLocalAppRepository(), clock: clock)
         let session = try #require(manager.startFocusSession(activityId: ActivityModel.mock.activityId))
@@ -59,15 +59,12 @@ struct FocusManagerTests {
 
         #expect(firstRefresh.session.state == .completed)
         #expect(firstRefresh.completion?.rewardCreditsAwarded == 1)
-        #expect(firstRefresh.completion?.xpAwarded == 10)
         #expect(secondRefresh.session.state == .completed)
         #expect(secondRefresh.completion?.rewardCreditsAwarded == 1)
         #expect(manager.rewardCredits == 3)
         #expect(manager.rewardCredits == manager.creditLedger.reduce(0) { $0 + $1.amount })
-        #expect(manager.progression.totalXP == 50)
         #expect(manager.completedSessionCount == 1)
         #expect(manager.creditLedger.count == 1)
-        #expect(manager.progressionAwards.count == 1)
     }
 
     @Test func completionCrossingMidnightStaysOnTheStartDay() throws {
@@ -129,7 +126,6 @@ struct FocusManagerTests {
 
         #expect(completed.isBonusSession)
         #expect(manager.rewardCredits == 3)
-        #expect(manager.progression.totalXP == 50)
     }
 
     @Test func abandoningAFocusSessionDoesNotAwardRewards() throws {
@@ -141,7 +137,6 @@ struct FocusManagerTests {
 
         #expect(abandoned.state == .abandoned)
         #expect(manager.rewardCredits == 2)
-        #expect(manager.progression.totalXP == 40)
         #expect(manager.completedSessionCount == 0)
         #expect(manager.activeFocusSession == nil)
     }
@@ -231,7 +226,6 @@ struct FocusManagerTests {
         #expect(refresh.session.state == .running)
         #expect(refresh.remainingFocusSeconds == 1)
         #expect(manager.creditLedger.isEmpty)
-        #expect(manager.progressionAwards.isEmpty)
     }
 
     @Test func relaunchAtDeadlineAwardsCompletionExactlyOnce() throws {
@@ -261,10 +255,8 @@ struct FocusManagerTests {
         #expect(firstRefresh.session.state == .completed)
         #expect(secondRefresh.session.state == .completed)
         #expect(recreatedManager.creditLedger.count == 1)
-        #expect(recreatedManager.progressionAwards.count == 1)
         #expect(recreatedManager.completedSessionCount == 1)
         #expect(recreatedManager.rewardCredits == 3)
-        #expect(recreatedManager.progression.totalXP == 50)
     }
 
     @Test func relaunchRestoresPausedSessionWithoutAwards() throws {
@@ -293,7 +285,6 @@ struct FocusManagerTests {
         #expect(refresh.session.state == .paused)
         #expect(refresh.completion == nil)
         #expect(relaunchedManager.rewardCredits == 2)
-        #expect(relaunchedManager.progression.totalXP == 40)
     }
 
     @Test func terminalSessionsReportNoRemainingFocusTime() throws {
@@ -303,7 +294,6 @@ struct FocusManagerTests {
             activities: [ActivityModel.mock],
             dailyPlan: nil,
             completedSessionCount: 1,
-            progression: .mock,
             focusSessions: [
                 FocusSessionModel.completedMock.updated(
                     state: .completed,
@@ -315,7 +305,6 @@ struct FocusManagerTests {
                 )
             ],
             creditLedger: RewardCreditLedger(),
-            progressionAwards: [],
             nextActivityNumber: 2,
             nextSessionNumber: 3
         )
@@ -352,10 +341,8 @@ struct FocusManagerTests {
             activities: [ActivityModel.mock],
             dailyPlan: nil,
             completedSessionCount: 0,
-            progression: .mock,
             focusSessions: [session],
             creditLedger: RewardCreditLedger(),
-            progressionAwards: [],
             nextActivityNumber: 2,
             nextSessionNumber: 2
         )
@@ -383,7 +370,6 @@ struct FocusManagerTests {
 
         #expect(completed.state == .completed)
         #expect(manager.rewardCredits == 3)
-        #expect(manager.progression.totalXP == 50)
         #expect(manager.completedSessionCount == 1)
     }
 #endif

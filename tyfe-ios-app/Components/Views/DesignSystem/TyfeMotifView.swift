@@ -16,7 +16,7 @@ enum TyfeMotifKind {
     var label: String {
         switch self {
         case .tile: return "Decorative game tile"
-        case .badge: return "Decorative progression badge"
+        case .badge: return "Decorative reward badge"
         case .completion: return "Completion accent"
         }
     }

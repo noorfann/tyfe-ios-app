@@ -46,10 +46,6 @@ final class TodayManager {
         repository.snapshot.creditLedger.balance
     }
 
-    var progression: ProgressionSnapshotModel {
-        repository.snapshot.progression
-    }
-
     @discardableResult
     func createActivity(
         name: String,

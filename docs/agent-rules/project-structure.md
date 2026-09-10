@@ -82,7 +82,6 @@ Before creating a new manager, check if the functionality belongs in an existing
 | HapticManager | Haptic feedback |
 | SoundEffectManager | Sound effect playback |
 | StreakManager | Daily streak tracking |
-| ExperiencePointsManager | XP accumulation |
 | ProgressManager | Goal-based progress tracking |
 
 Only create a new manager if the functionality does not fit any existing manager's responsibility.

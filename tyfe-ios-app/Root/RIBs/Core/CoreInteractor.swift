@@ -12,7 +12,6 @@ struct CoreInteractor: GlobalInteractor {
     private let hapticManager: HapticManager
     private let soundEffectManager: SoundEffectManager
     private let streakManager: StreakManager
-    private let xpManager: ExperiencePointsManager
     private let progressManager: ProgressManager
     let todayManager: TodayManager
     let focusManager: FocusManager
@@ -29,7 +28,6 @@ struct CoreInteractor: GlobalInteractor {
         self.hapticManager = container.resolve(HapticManager.self)!
         self.soundEffectManager = container.resolve(SoundEffectManager.self)!
         self.streakManager = container.resolve(StreakManager.self, key: Dependencies.streakConfiguration.streakKey)!
-        self.xpManager = container.resolve(ExperiencePointsManager.self, key: Dependencies.xpConfiguration.experienceKey)!
         self.progressManager = container.resolve(ProgressManager.self, key: Dependencies.progressConfiguration.progressKey)!
         self.todayManager = container.resolve(TodayManager.self)!
         self.focusManager = container.resolve(FocusManager.self)!
@@ -254,33 +252,6 @@ struct CoreInteractor: GlobalInteractor {
         streakManager.recalculateStreak()
     }
 
-    // MARK: ExperiencePointsManager
-
-    var currentExperiencePointsData: CurrentExperiencePointsData {
-        xpManager.currentExperiencePointsData
-    }
-
-    @discardableResult
-    func addExperiencePoints(points: Int, metadata: [String: GamificationDictionaryValue] = [:]) async throws -> ExperiencePointsEvent {
-        try await xpManager.addExperiencePoints(points: points, metadata: metadata)
-    }
-
-    func getAllExperiencePointsEvents() async throws -> [ExperiencePointsEvent] {
-        try await xpManager.getAllExperiencePointsEvents()
-    }
-
-    func getAllExperiencePointsEvents(forField field: String, equalTo value: GamificationDictionaryValue) async throws -> [ExperiencePointsEvent] {
-        try await xpManager.getAllExperiencePointsEvents(forField: field, equalTo: value)
-    }
-
-    func deleteAllExperiencePointsEvents() async throws {
-        try await xpManager.deleteAllExperiencePointsEvents()
-    }
-
-    func recalculateExperiencePoints() {
-        xpManager.recalculateExperiencePoints()
-    }
-
     // MARK: ProgressManager
 
     func getProgress(id: String) -> Double {
@@ -343,10 +314,6 @@ struct CoreInteractor: GlobalInteractor {
 
     var phase1RewardCredits: Int {
         todayManager.rewardCredits
-    }
-
-    var phase1Progression: ProgressionSnapshotModel {
-        todayManager.progression
     }
 
     @discardableResult
@@ -501,10 +468,9 @@ struct CoreInteractor: GlobalInteractor {
             )
         )
         async let streakLogin: Void = streakManager.logIn(userId: user.uid)
-        async let xpLogin: Void = xpManager.logIn(userId: user.uid)
         async let progressLogin: Void = progressManager.logIn(userId: user.uid)
 
-        let (_, _, _, _, _) = await (try userLogin, try purchaseLogin, try streakLogin, try xpLogin, try progressLogin)
+        let (_, _, _, _) = await (try userLogin, try purchaseLogin, try streakLogin, try progressLogin)
 
         // Add user properties
         logManager.addUserProperties(dict: Utilities.eventParameters, isHighPriority: false)
@@ -515,7 +481,6 @@ struct CoreInteractor: GlobalInteractor {
         try await purchaseManager.logOut()
         userManager.signOut()
         streakManager.logOut()
-        xpManager.logOut()
         await progressManager.logOut()
     }
     

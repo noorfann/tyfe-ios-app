@@ -26,7 +26,6 @@ struct DesignSystemTests {
             systemImage: "circle.fill",
             accent: TyfeEditorialPalette.saffron
         )
-        let progress = TyfeProgressBarView(label: "XP", current: 40, total: 100)
         let badge = TyfeStateBadgeView(state: .paused)
 
         _ = Group {
@@ -34,7 +33,6 @@ struct DesignSystemTests {
             action
             pill
             metric
-            progress
             badge
         }
     }
@@ -55,14 +53,12 @@ struct DesignSystemTests {
             onResume: {},
             onAbandon: {}
         )
-        let progression = TyfeProgressionCardView(progression: .mock)
         let status = TyfeStatusView(kind: .offline, onRetry: {})
         let motif = TyfeMotifView(kind: .completion)
 
         _ = Group {
             activity
             timer
-            progression
             status
             motif
         }

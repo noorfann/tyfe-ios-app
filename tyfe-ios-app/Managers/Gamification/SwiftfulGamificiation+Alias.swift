@@ -18,16 +18,6 @@ typealias StreakFreeze = SwiftfulGamification.StreakFreeze
 
 typealias ProdStreakServices = SwiftfulGamification.MockStreakServices
 
-// Experience Points
-
-typealias ExperiencePointsManager = SwiftfulGamification.ExperiencePointsManager
-typealias MockExperiencePointsServices = SwiftfulGamification.MockExperiencePointsServices
-typealias ExperiencePointsConfiguration = SwiftfulGamification.ExperiencePointsConfiguration
-typealias CurrentExperiencePointsData = SwiftfulGamification.CurrentExperiencePointsData
-typealias ExperiencePointsEvent = SwiftfulGamification.ExperiencePointsEvent
-
-typealias ProdExperiencePointsServices = SwiftfulGamification.MockExperiencePointsServices
-
 // Progress
 
 typealias ProgressManager = SwiftfulGamification.ProgressManager

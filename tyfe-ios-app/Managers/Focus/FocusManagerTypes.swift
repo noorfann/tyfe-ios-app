@@ -3,9 +3,7 @@ import Foundation
 struct FocusCompletionResult: Equatable, Codable {
     let focusSessionId: String
     let rewardCreditsAwarded: Int
-    let xpAwarded: Int
     let rewardCreditBalance: Int
-    let progression: ProgressionSnapshotModel
 }
 
 struct FocusSessionRefresh: Equatable {

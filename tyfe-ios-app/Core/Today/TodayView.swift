@@ -120,14 +120,7 @@ struct TodayView: View {
                     .foregroundStyle(TyfeEditorialPalette.muted)
             }
 
-            if let dailyPlan = presenter.dailyPlan {
-                TyfeProgressBarView(
-                    label: "Today’s plan",
-                    current: presenter.completedSessionCount,
-                    total: dailyPlan.intendedSessionCount,
-                    accent: TyfeEditorialPalette.teal
-                )
-
+            if presenter.dailyPlan != nil {
                 HStack(spacing: TyfeSpacing.control) {
                     TyfeMetricCardView(
                         title: "Credits",
@@ -184,8 +177,6 @@ struct TodayView: View {
                     }
                 }
             }
-
-            TyfeProgressionCardView(progression: presenter.progression, compact: true)
         }
     }
 

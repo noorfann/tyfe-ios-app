@@ -274,10 +274,10 @@ struct FocusView: View {
                 .font(TyfeTypography.displayCompact)
 
                 if let completion = presenter.completion, presenter.session.state == .completed {
-                    Text("You earned +\(completion.rewardCreditsAwarded) Reward Credit and +\(completion.xpAwarded) XP.")
+                    Text("You earned +\(completion.rewardCreditsAwarded) Reward Credit.")
                         .font(TyfeTypography.interfaceStrong)
                 } else {
-                    Text("No Reward Credit or XP earned.")
+                    Text("No Reward Credit earned.")
                         .font(TyfeTypography.interfaceStrong)
                 }
 
