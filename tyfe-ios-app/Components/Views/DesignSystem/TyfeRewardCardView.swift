@@ -16,7 +16,7 @@ struct TyfeRewardCardView: View {
                 HStack(spacing: TyfeSpacing.small) {
                     Text(reward.name)
                         .font(TyfeTypography.interfaceStrong)
-                        .lineLimit(2)
+                        .lineLimit(2, reservesSpace: true)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     TyfePillView(
@@ -30,23 +30,34 @@ struct TyfeRewardCardView: View {
                     .font(TyfeTypography.caption)
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
-                if reward.availability == .insufficientBalance {
-                    Text("You need \(costLabel). You have \(balance).")
-                        .font(TyfeTypography.caption)
-                        .foregroundStyle(TyfeEditorialPalette.muted)
-                }
-
-                if isAvailable {
-                    TyfeActionButtonView(
-                        title: "Take this Reward",
-                        systemImage: "gift.fill",
-                        onTap: onTap
-                    )
-                }
+                actionSlot
             }
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel(Text("\(reward.name), \(tierLabel), \(availabilityLabel)"))
+    }
+
+    @ViewBuilder
+    private var actionSlot: some View {
+        switch reward.availability {
+        case .available:
+            TyfeActionButtonView(
+                title: "Take this Reward",
+                systemImage: "gift.fill",
+                onTap: onTap
+            )
+        case .insufficientBalance:
+            slotMessage("You need \(costLabel). You have \(balance).")
+        case .unavailable:
+            slotMessage("Unavailable right now.")
+        }
+    }
+
+    private func slotMessage(_ text: String) -> some View {
+        Text(text)
+            .font(TyfeTypography.caption)
+            .foregroundStyle(TyfeEditorialPalette.muted)
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
     }
 
     private var tierLabel: String {
