@@ -8,6 +8,11 @@ final class MockSocialService: SocialService {
     private var memberships: [CircleMembershipModel]
     private var invites: [CircleInviteModel]
     private var snapshots: [String: [LocalDay: SharedProgressSnapshot]] = [:]
+    private var cheers: [CheerModel] = []
+    private var cheerCounter = 0
+    private var cheerContinuations: [UUID: AsyncStream<CheerModel>.Continuation] = [:]
+    private var focusStatuses: [String: [String: CircleFocusStatus]] = [:]
+    private var focusContinuations: [String: [UUID: AsyncStream<[CircleFocusStatusEntry]>.Continuation]] = [:]
     private var circleCounter: Int
     private var membershipCounter: Int
     private var inviteCounter: Int
@@ -235,6 +240,89 @@ final class MockSocialService: SocialService {
 
     func snapshotCount(userId: String) -> Int {
         snapshots[userId]?.count ?? 0
+    }
+
+    func sendCheer(
+        _ kind: CheerKind,
+        senderId: String,
+        recipientId: String,
+        localDate: LocalDay
+    ) async throws {
+        guard senderId == currentUserId, senderId != recipientId, sharesCircle(with: recipientId) else {
+            throw SocialServiceError.notPermitted
+        }
+        cheerCounter += 1
+        let cheer = CheerModel(
+            cheerId: "mock-cheer-\(cheerCounter)",
+            senderId: senderId,
+            recipientId: recipientId,
+            localDate: localDate.socialDateString,
+            kind: kind,
+            createdAt: .now
+        )
+        cheers.append(cheer)
+        emitCheer(cheer)
+    }
+
+    func fetchCheers(localDate: LocalDay) async throws -> [CheerModel] {
+        cheers.filter {
+            $0.localDate == localDate.socialDateString
+                && ($0.senderId == currentUserId || $0.recipientId == currentUserId)
+        }
+    }
+
+    func cheerStream() -> AsyncStream<CheerModel> {
+        AsyncStream { continuation in
+            let id = UUID()
+            cheerContinuations[id] = continuation
+            continuation.onTermination = { [weak self] _ in
+                Task { @MainActor in self?.cheerContinuations[id] = nil }
+            }
+        }
+    }
+
+    func seedCheer(_ cheer: CheerModel) {
+        cheers.append(cheer)
+        emitCheer(cheer)
+    }
+
+    func updateFocusStatus(_ status: CircleFocusStatus, userId: String, circleId: String) async {
+        focusStatuses[circleId, default: [:]][userId] = status
+        emitFocusStatuses(circleId: circleId)
+    }
+
+    func focusStatusStream(circleId: String) -> AsyncStream<[CircleFocusStatusEntry]> {
+        AsyncStream { continuation in
+            let id = UUID()
+            focusContinuations[circleId, default: [:]][id] = continuation
+            continuation.yield(focusEntries(circleId: circleId))
+            continuation.onTermination = { [weak self] _ in
+                Task { @MainActor in self?.focusContinuations[circleId]?[id] = nil }
+            }
+        }
+    }
+
+    func stopFocusStatus(circleId: String) async {
+        focusContinuations[circleId]?.values.forEach { $0.finish() }
+        focusContinuations[circleId] = nil
+        focusStatuses[circleId] = nil
+    }
+
+    private func emitCheer(_ cheer: CheerModel) {
+        for continuation in cheerContinuations.values {
+            continuation.yield(cheer)
+        }
+    }
+
+    private func focusEntries(circleId: String) -> [CircleFocusStatusEntry] {
+        (focusStatuses[circleId] ?? [:])
+            .map { CircleFocusStatusEntry(userId: $0.key, status: $0.value) }
+            .sorted { $0.userId < $1.userId }
+    }
+
+    private func emitFocusStatuses(circleId: String) {
+        let entries = focusEntries(circleId: circleId)
+        focusContinuations[circleId]?.values.forEach { $0.yield(entries) }
     }
 
     private func sevenDayCompleted(

@@ -10,7 +10,13 @@ final class SocialManager {
     private(set) var circles: [CircleModel] = []
     private(set) var membersByCircle: [String: [CircleMemberModel]] = [:]
     private(set) var progressByCircle: [String: [CircleMemberProgressModel]] = [:]
+    private(set) var cheers: [CheerModel] = []
+    private(set) var focusStatusesByCircle: [String: [CircleFocusStatusEntry]] = [:]
+    private(set) var activeFocusCircleIds: Set<String> = []
     private(set) var isLoading = false
+
+    @ObservationIgnored private var cheerTask: Task<Void, Never>?
+    @ObservationIgnored private var focusTasks: [String: Task<Void, Never>] = [:]
 
     init(service: SocialService, logManager: LogManager? = nil) {
         self.service = service
@@ -136,10 +142,79 @@ final class SocialManager {
         return progress
     }
 
+    func sendCheer(
+        _ kind: CheerKind,
+        senderId: String,
+        recipientId: String,
+        localDate: LocalDay
+    ) async throws {
+        logManager?.trackEvent(event: Event.sendCheer(.start))
+        do {
+            try await service.sendCheer(
+                kind,
+                senderId: senderId,
+                recipientId: recipientId,
+                localDate: localDate
+            )
+            logManager?.trackEvent(event: Event.sendCheer(.success))
+        } catch {
+            logManager?.trackEvent(event: Event.sendCheer(.fail(error)))
+            throw error
+        }
+    }
+
+    func refreshCheers(localDate: LocalDay) async throws {
+        cheers = try await service.fetchCheers(localDate: localDate)
+    }
+
+    func startCheerDelivery() {
+        guard cheerTask == nil else { return }
+        let stream = service.cheerStream()
+        cheerTask = Task { [weak self] in
+            for await cheer in stream {
+                self?.cheers.append(cheer)
+            }
+        }
+    }
+
+    func startFocusStatus(circleId: String) {
+        guard focusTasks[circleId] == nil else { return }
+        activeFocusCircleIds.insert(circleId)
+        let stream = service.focusStatusStream(circleId: circleId)
+        focusTasks[circleId] = Task { [weak self] in
+            for await entries in stream {
+                self?.focusStatusesByCircle[circleId] = entries
+            }
+        }
+    }
+
+    func updateFocusStatus(_ status: CircleFocusStatus, userId: String, circleId: String) async {
+        await service.updateFocusStatus(status, userId: userId, circleId: circleId)
+    }
+
+    func updateFocusStatusForActiveCircles(_ status: CircleFocusStatus, userId: String) async {
+        for circleId in activeFocusCircleIds {
+            await service.updateFocusStatus(status, userId: userId, circleId: circleId)
+        }
+    }
+
+    func stopRealtime() {
+        cheerTask?.cancel()
+        cheerTask = nil
+        for task in focusTasks.values {
+            task.cancel()
+        }
+        focusTasks = [:]
+        activeFocusCircleIds = []
+    }
+
     func signOut() {
+        stopRealtime()
         circles = []
         membersByCircle = [:]
         progressByCircle = [:]
+        cheers = []
+        focusStatusesByCircle = [:]
         isLoading = false
     }
 }
@@ -166,6 +241,7 @@ extension SocialManager {
         case leaveCircle(SocialManagerEventStatus)
         case removeMember(SocialManagerEventStatus)
         case publishProgress(SocialManagerEventStatus)
+        case sendCheer(SocialManagerEventStatus)
 
         var eventName: String {
             "SocialMan_\(action)_\(status.name)"
@@ -193,6 +269,7 @@ extension SocialManager {
             case .leaveCircle: return "LeaveCircle"
             case .removeMember: return "RemoveMember"
             case .publishProgress: return "PublishProgress"
+            case .sendCheer: return "SendCheer"
             }
         }
 
@@ -203,7 +280,8 @@ extension SocialManager {
                  .acceptInvite(let status),
                  .leaveCircle(let status),
                  .removeMember(let status),
-                 .publishProgress(let status):
+                 .publishProgress(let status),
+                 .sendCheer(let status):
                 return status
             }
         }

@@ -25,24 +25,33 @@ extension CoreInteractor: FocusInteractor {
         let refresh = try focusManager.refreshFocusSession(focusSessionId: focusSessionId)
         if refresh.completion != nil {
             scheduleSharedProgressSync(for: refresh.session.localDay)
+            Task { await updateSocialFocusStatus(.available) }
         }
         return refresh
     }
 
     func beginFocusSession(focusSessionId: String) throws -> FocusSessionModel {
-        try focusManager.beginFocusSession(focusSessionId: focusSessionId)
+        let session = try focusManager.beginFocusSession(focusSessionId: focusSessionId)
+        Task { await updateSocialFocusStatus(.focusing) }
+        return session
     }
 
     func pauseFocusSession(focusSessionId: String) throws -> FocusSessionModel {
-        try focusManager.pauseFocusSession(focusSessionId: focusSessionId)
+        let session = try focusManager.pauseFocusSession(focusSessionId: focusSessionId)
+        Task { await updateSocialFocusStatus(.available) }
+        return session
     }
 
     func resumeFocusSession(focusSessionId: String) throws -> FocusSessionModel {
-        try focusManager.resumeFocusSession(focusSessionId: focusSessionId)
+        let session = try focusManager.resumeFocusSession(focusSessionId: focusSessionId)
+        Task { await updateSocialFocusStatus(.focusing) }
+        return session
     }
 
     func abandonFocusSession(focusSessionId: String) throws -> FocusSessionModel {
-        try focusManager.abandonFocusSession(focusSessionId: focusSessionId)
+        let session = try focusManager.abandonFocusSession(focusSessionId: focusSessionId)
+        Task { await updateSocialFocusStatus(.available) }
+        return session
     }
 
     func startAnotherFocusSession(activityId: String) throws -> FocusSessionModel {

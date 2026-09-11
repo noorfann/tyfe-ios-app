@@ -548,6 +548,45 @@ struct CoreInteractor: GlobalInteractor {
         try await socialManager.circleProgress(circleId: circleId)
     }
 
+    var socialCheers: [CheerModel] {
+        socialManager.cheers
+    }
+
+    var socialFocusStatuses: [String: [CircleFocusStatusEntry]] {
+        socialManager.focusStatusesByCircle
+    }
+
+    func sendCheer(_ kind: CheerKind, recipientId: String) async throws {
+        guard let senderId = auth?.uid else { throw SocialServiceError.notAuthenticated }
+        try await socialManager.sendCheer(
+            kind,
+            senderId: senderId,
+            recipientId: recipientId,
+            localDate: todayManager.currentLocalDay
+        )
+    }
+
+    func refreshSocialCheers() async throws {
+        try await socialManager.refreshCheers(localDate: todayManager.currentLocalDay)
+    }
+
+    func startSocialRealtime(circleIds: [String]) {
+        guard auth != nil else { return }
+        socialManager.startCheerDelivery()
+        for circleId in circleIds {
+            socialManager.startFocusStatus(circleId: circleId)
+        }
+    }
+
+    func stopSocialRealtime() {
+        socialManager.stopRealtime()
+    }
+
+    func updateSocialFocusStatus(_ status: CircleFocusStatus) async {
+        guard let userId = auth?.uid else { return }
+        await socialManager.updateFocusStatusForActiveCircles(status, userId: userId)
+    }
+
     // MARK: SHARED
 
     func logIn(user: UserAuthInfo, isNewUser: Bool) async throws {

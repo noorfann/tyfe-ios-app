@@ -19,6 +19,12 @@ protocol SocialService: Sendable {
         completedSessions: Int
     ) async throws
     func fetchCircleProgress(circleId: String) async throws -> [CircleMemberProgressModel]
+    func sendCheer(_ kind: CheerKind, senderId: String, recipientId: String, localDate: LocalDay) async throws
+    func fetchCheers(localDate: LocalDay) async throws -> [CheerModel]
+    func cheerStream() -> AsyncStream<CheerModel>
+    func updateFocusStatus(_ status: CircleFocusStatus, userId: String, circleId: String) async
+    func focusStatusStream(circleId: String) -> AsyncStream<[CircleFocusStatusEntry]>
+    func stopFocusStatus(circleId: String) async
 }
 
 enum SocialServiceError: LocalizedError, Equatable {

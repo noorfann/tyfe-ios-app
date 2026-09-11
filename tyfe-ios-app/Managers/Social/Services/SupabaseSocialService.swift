@@ -5,6 +5,7 @@ import Supabase
 @MainActor
 final class SupabaseSocialService: SocialService {
     private let client: SupabaseClient
+    private var presenceChannels: [String: RealtimeChannelV2] = [:]
 
     init(client: SupabaseClient) {
         self.client = client
@@ -166,6 +167,98 @@ final class SupabaseSocialService: SocialService {
             .value
     }
 
+    func sendCheer(
+        _ kind: CheerKind,
+        senderId: String,
+        recipientId: String,
+        localDate: LocalDay
+    ) async throws {
+        try await client
+            .from("cheers")
+            .insert(CheerInsert(
+                kind: kind.rawValue,
+                senderId: senderId,
+                recipientId: recipientId,
+                localDate: localDate.socialDateString
+            ))
+            .execute()
+    }
+
+    func fetchCheers(localDate: LocalDay) async throws -> [CheerModel] {
+        try await client
+            .from("cheers")
+            .select()
+            .eq("local_date", value: localDate.socialDateString)
+            .execute()
+            .value
+    }
+
+    func cheerStream() -> AsyncStream<CheerModel> {
+        AsyncStream { continuation in
+            let channel = client.realtimeV2.channel("cheers-delivery")
+            let changes = channel.postgresChange(InsertAction.self, schema: "public", table: "cheers")
+            let changesTask = Task {
+                for await action in changes {
+                    if let cheer = try? action.decodeRecord(
+                        as: CheerModel.self,
+                        decoder: JSONDecoder.socialRealtime
+                    ) {
+                        continuation.yield(cheer)
+                    }
+                }
+            }
+            let subscribeTask = Task { try? await channel.subscribeWithError() }
+            continuation.onTermination = { _ in
+                changesTask.cancel()
+                subscribeTask.cancel()
+                Task { await self.client.realtimeV2.removeChannel(channel) }
+            }
+        }
+    }
+
+    func updateFocusStatus(_ status: CircleFocusStatus, userId: String, circleId: String) async {
+        guard let channel = presenceChannels[circleId] else { return }
+        try? await channel.track(CirclePresencePayload(userId: userId, status: status))
+    }
+
+    func focusStatusStream(circleId: String) -> AsyncStream<[CircleFocusStatusEntry]> {
+        AsyncStream { continuation in
+            let channel = client.realtimeV2.channel("circle-\(circleId)-presence")
+            presenceChannels[circleId] = channel
+            var statuses: [String: CircleFocusStatus] = [:]
+            let changes = channel.presenceChange()
+            let changesTask = Task {
+                for await action in changes {
+                    for payload in (try? action.decodeJoins(as: CirclePresencePayload.self)) ?? [] {
+                        statuses[payload.userId] = payload.status
+                    }
+                    for payload in (try? action.decodeLeaves(as: CirclePresencePayload.self)) ?? [] {
+                        statuses[payload.userId] = nil
+                    }
+                    continuation.yield(Self.sortedStatuses(statuses))
+                }
+            }
+            let subscribeTask = Task { try? await channel.subscribeWithError() }
+            continuation.onTermination = { _ in
+                changesTask.cancel()
+                subscribeTask.cancel()
+                Task { await self.client.realtimeV2.removeChannel(channel) }
+            }
+        }
+    }
+
+    func stopFocusStatus(circleId: String) async {
+        guard let channel = presenceChannels.removeValue(forKey: circleId) else { return }
+        await channel.untrack()
+        await client.realtimeV2.removeChannel(channel)
+    }
+
+    private static func sortedStatuses(_ statuses: [String: CircleFocusStatus]) -> [CircleFocusStatusEntry] {
+        statuses
+            .map { CircleFocusStatusEntry(userId: $0.key, status: $0.value) }
+            .sorted { $0.userId < $1.userId }
+    }
+
     private static func makeCode() -> String {
         let alphabet = Array("ABCDEFGHJKLMNPQRSTUVWXYZ23456789")
         return String((0..<8).map { _ in alphabet.randomElement() ?? "A" })
@@ -261,6 +354,42 @@ private struct MembershipMemberProfile: Decodable {
     enum CodingKeys: String, CodingKey {
         case displayName = "display_name"
         case avatarToken = "avatar_token"
+    }
+}
+
+private struct CheerInsert: Encodable {
+    let kind: String
+    let senderId: String
+    let recipientId: String
+    let localDate: String
+
+    enum CodingKeys: String, CodingKey {
+        case kind
+        case senderId = "sender_id"
+        case recipientId = "recipient_id"
+        case localDate = "local_date"
+    }
+}
+
+private extension JSONDecoder {
+    static var socialRealtime: JSONDecoder {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let string = try container.decode(String.self)
+            let withFraction = ISO8601DateFormatter()
+            withFraction.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            if let date = withFraction.date(from: string) {
+                return date
+            }
+            let plain = ISO8601DateFormatter()
+            plain.formatOptions = [.withInternetDateTime]
+            if let date = plain.date(from: string) {
+                return date
+            }
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Invalid date: \(string)")
+        }
+        return decoder
     }
 }
 #endif
