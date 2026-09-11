@@ -30,6 +30,7 @@ struct Dependencies {
         let focusManager: FocusManager
         let rewardManager: RewardManager
         let supabaseService: SupabaseClientProviding
+        let socialManager: SocialManager
         
         switch config {
         case .mock(isSignedIn: let isSignedIn, addLogging: let addLogging):
@@ -58,6 +59,7 @@ struct Dependencies {
             hapticManager = HapticManager(logger: logManager)
             streakManager = StreakManager(services: MockStreakServices(), configuration: Dependencies.streakConfiguration, logger: logManager)
             progressManager = ProgressManager(services: MockProgressServices(), configuration: Dependencies.progressConfiguration, logger: logManager)
+            socialManager = SocialManager(service: MockSocialService(), logManager: logManager)
         case .dev, .prod:
             if case .dev = config {
                 logManager = LogManager(services: [
@@ -77,13 +79,16 @@ struct Dependencies {
                 let liveService = LiveSupabaseClientService(configuration: configuration)
                 supabaseService = liveService
                 authManager = AuthManager(service: SupabaseAuthService(client: liveService.client), logger: logManager)
+                socialManager = SocialManager(service: SupabaseSocialService(client: liveService.client), logManager: logManager)
             } else {
                 supabaseService = MockSupabaseClientService()
                 authManager = AuthManager(service: MockAuthService(user: nil), logger: logManager)
+                socialManager = SocialManager(service: MockSocialService(), logManager: logManager)
             }
             #else
             supabaseService = MockSupabaseClientService()
             authManager = AuthManager(service: MockAuthService(user: nil), logger: logManager)
+            socialManager = SocialManager(service: MockSocialService(), logManager: logManager)
             #endif
             userManager = UserManager(userSyncEngine: DocumentSyncEngine<UserModel>(
                 remote: MockRemoteDocumentService(document: nil),
@@ -153,6 +158,7 @@ struct Dependencies {
         container.register(FocusManager.self, service: focusManager)
         container.register(RewardManager.self, service: rewardManager)
         container.register(SupabaseClientProviding.self, service: supabaseService)
+        container.register(SocialManager.self, service: socialManager)
 
         self.container = container
         

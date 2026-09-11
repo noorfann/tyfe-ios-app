@@ -16,6 +16,7 @@ struct CoreInteractor: GlobalInteractor {
     let todayManager: TodayManager
     let focusManager: FocusManager
     let rewardManager: RewardManager
+    private let socialManager: SocialManager
 
     init(container: DependencyContainer) {
         self.appState = container.resolve(AppState.self)!
@@ -32,6 +33,7 @@ struct CoreInteractor: GlobalInteractor {
         self.todayManager = container.resolve(TodayManager.self)!
         self.focusManager = container.resolve(FocusManager.self)!
         self.rewardManager = container.resolve(RewardManager.self)!
+        self.socialManager = container.resolve(SocialManager.self)!
     }
     
     // MARK: APP STATE
@@ -462,6 +464,56 @@ struct CoreInteractor: GlobalInteractor {
         try rewardManager.refreshRewardClaim()
     }
 
+    // MARK: Social
+
+    var socialCircles: [CircleModel] {
+        socialManager.circles
+    }
+
+    func refreshSocialCircles(userId: String) async throws {
+        try await socialManager.refreshCircles(for: userId)
+    }
+
+    @discardableResult
+    func createCircle(name: String, ownerId: String) async throws -> CircleModel {
+        try await socialManager.createCircle(name: name, ownerId: ownerId)
+    }
+
+    @discardableResult
+    func createCircleInvite(
+        circleId: String,
+        createdBy: String,
+        expiresAt: Date
+    ) async throws -> CircleInviteModel {
+        try await socialManager.createInvite(circleId: circleId, createdBy: createdBy, expiresAt: expiresAt)
+    }
+
+    func revokeCircleInvite(inviteId: String) async throws {
+        try await socialManager.revokeInvite(inviteId: inviteId)
+    }
+
+    @discardableResult
+    func acceptCircleInvite(code: String) async throws -> String {
+        try await socialManager.acceptInvite(code: code)
+    }
+
+    @discardableResult
+    func circleMembers(circleId: String) async throws -> [CircleMemberModel] {
+        try await socialManager.members(for: circleId)
+    }
+
+    func leaveCircle(circleId: String, userId: String) async throws {
+        try await socialManager.leaveCircle(circleId: circleId, userId: userId)
+    }
+
+    func removeCircleMember(circleId: String, userId: String) async throws {
+        try await socialManager.removeMember(circleId: circleId, userId: userId)
+    }
+
+    func updateSocialDisplayName(_ name: String, userId: String) async throws {
+        try await socialManager.updateDisplayName(name, userId: userId)
+    }
+
     // MARK: SHARED
 
     func logIn(user: UserAuthInfo, isNewUser: Bool) async throws {
@@ -488,6 +540,7 @@ struct CoreInteractor: GlobalInteractor {
         try authManager.signOut()
         try await purchaseManager.logOut()
         userManager.signOut()
+        socialManager.signOut()
         streakManager.logOut()
         await progressManager.logOut()
     }
