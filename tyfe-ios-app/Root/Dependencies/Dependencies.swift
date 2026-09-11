@@ -37,6 +37,7 @@ struct Dependencies {
                 ConsoleService(printParameters: true, system: .stdout)
             ] : [])
             authManager = AuthManager(service: MockAuthService(user: isSignedIn ? .mock() : nil), logger: logManager)
+            supabaseService = MockSupabaseClientService()
             userManager = UserManager(userSyncEngine: DocumentSyncEngine<UserModel>(
                 remote: MockRemoteDocumentService(document: isSignedIn ? UserModel.mock : nil),
                 managerKey: "UserMan",
@@ -68,7 +69,22 @@ struct Dependencies {
                     MixpanelService(token: Keys.mixpanelToken)
                 ])
             }
+            #if !MOCK && canImport(Supabase)
+            if let configuration = SupabaseConfiguration(
+                urlString: Keys.supabaseURL,
+                publishableKey: Keys.supabasePublishableKey
+            ) {
+                let liveService = LiveSupabaseClientService(configuration: configuration)
+                supabaseService = liveService
+                authManager = AuthManager(service: SupabaseAuthService(client: liveService.client), logger: logManager)
+            } else {
+                supabaseService = MockSupabaseClientService()
+                authManager = AuthManager(service: MockAuthService(user: nil), logger: logManager)
+            }
+            #else
+            supabaseService = MockSupabaseClientService()
             authManager = AuthManager(service: MockAuthService(user: nil), logger: logManager)
+            #endif
             userManager = UserManager(userSyncEngine: DocumentSyncEngine<UserModel>(
                 remote: MockRemoteDocumentService(document: nil),
                 managerKey: "UserMan",
@@ -99,23 +115,6 @@ struct Dependencies {
             )
         }
         soundEffectManager = SoundEffectManager(logger: logManager)
-        switch config {
-        case .mock:
-            supabaseService = MockSupabaseClientService()
-        case .dev, .prod:
-            #if !MOCK && canImport(Supabase)
-            if let configuration = SupabaseConfiguration(
-                urlString: Keys.supabaseURL,
-                publishableKey: Keys.supabasePublishableKey
-            ) {
-                supabaseService = LiveSupabaseClientService(configuration: configuration)
-            } else {
-                supabaseService = MockSupabaseClientService()
-            }
-            #else
-            supabaseService = MockSupabaseClientService()
-            #endif
-        }
         switch config {
         case .mock:
             let snapshot = ProcessInfo.processInfo.arguments.contains("HOME_FLOW")

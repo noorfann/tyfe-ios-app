@@ -8,7 +8,9 @@ import SwiftfulAuthenticating
 
 public typealias UserAuthInfo = SwiftfulAuthenticating.UserAuthInfo
 typealias AuthManager = SwiftfulAuthenticating.AuthManager
+typealias AuthService = SwiftfulAuthenticating.AuthService
 typealias MockAuthService = SwiftfulAuthenticating.MockAuthService
+typealias AuthProviderOption = SwiftfulAuthenticating.AuthProviderOption
 typealias SignInOption = SwiftfulAuthenticating.SignInOption
 
 extension AuthLogType {
