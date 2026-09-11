@@ -25,6 +25,9 @@ protocol SocialService: Sendable {
     func updateFocusStatus(_ status: CircleFocusStatus, userId: String, circleId: String) async
     func focusStatusStream(circleId: String) -> AsyncStream<[CircleFocusStatusEntry]>
     func stopFocusStatus(circleId: String) async
+    func blockUser(_ blockedId: String, blockerId: String) async throws
+    func unblockUser(_ blockedId: String, blockerId: String) async throws
+    func fetchBlockedUserIds(userId: String) async throws -> [String]
 }
 
 enum SocialServiceError: LocalizedError, Equatable {

@@ -253,6 +253,32 @@ final class SupabaseSocialService: SocialService {
         await client.realtimeV2.removeChannel(channel)
     }
 
+    func blockUser(_ blockedId: String, blockerId: String) async throws {
+        try await client
+            .from("user_blocks")
+            .insert(UserBlockInsert(blockerId: blockerId, blockedId: blockedId))
+            .execute()
+    }
+
+    func unblockUser(_ blockedId: String, blockerId: String) async throws {
+        try await client
+            .from("user_blocks")
+            .delete()
+            .eq("blocker_id", value: blockerId)
+            .eq("blocked_id", value: blockedId)
+            .execute()
+    }
+
+    func fetchBlockedUserIds(userId: String) async throws -> [String] {
+        let rows: [BlockedIdRow] = try await client
+            .from("user_blocks")
+            .select("blocked_id")
+            .eq("blocker_id", value: userId)
+            .execute()
+            .value
+        return rows.map(\.blockedId)
+    }
+
     private static func sortedStatuses(_ statuses: [String: CircleFocusStatus]) -> [CircleFocusStatusEntry] {
         statuses
             .map { CircleFocusStatusEntry(userId: $0.key, status: $0.value) }
@@ -368,6 +394,24 @@ private struct CheerInsert: Encodable {
         case senderId = "sender_id"
         case recipientId = "recipient_id"
         case localDate = "local_date"
+    }
+}
+
+private struct UserBlockInsert: Encodable {
+    let blockerId: String
+    let blockedId: String
+
+    enum CodingKeys: String, CodingKey {
+        case blockerId = "blocker_id"
+        case blockedId = "blocked_id"
+    }
+}
+
+private struct BlockedIdRow: Decodable {
+    let blockedId: String
+
+    enum CodingKeys: String, CodingKey {
+        case blockedId = "blocked_id"
     }
 }
 

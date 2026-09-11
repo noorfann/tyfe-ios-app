@@ -11,6 +11,7 @@ final class SocialManager {
     private(set) var membersByCircle: [String: [CircleMemberModel]] = [:]
     private(set) var progressByCircle: [String: [CircleMemberProgressModel]] = [:]
     private(set) var cheers: [CheerModel] = []
+    private(set) var blockedUserIds: [String] = []
     private(set) var focusStatusesByCircle: [String: [CircleFocusStatusEntry]] = [:]
     private(set) var activeFocusCircleIds: Set<String> = []
     private(set) var isLoading = false
@@ -208,12 +209,29 @@ final class SocialManager {
         activeFocusCircleIds = []
     }
 
+    func blockUser(_ blockedId: String, blockerId: String) async throws {
+        try await service.blockUser(blockedId, blockerId: blockerId)
+        if !blockedUserIds.contains(blockedId) {
+            blockedUserIds.append(blockedId)
+        }
+    }
+
+    func unblockUser(_ blockedId: String, blockerId: String) async throws {
+        try await service.unblockUser(blockedId, blockerId: blockerId)
+        blockedUserIds.removeAll { $0 == blockedId }
+    }
+
+    func refreshBlockedUserIds(userId: String) async throws {
+        blockedUserIds = try await service.fetchBlockedUserIds(userId: userId)
+    }
+
     func signOut() {
         stopRealtime()
         circles = []
         membersByCircle = [:]
         progressByCircle = [:]
         cheers = []
+        blockedUserIds = []
         focusStatusesByCircle = [:]
         isLoading = false
     }

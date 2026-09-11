@@ -51,15 +51,16 @@ final class SupabaseAuthService: AuthService {
     }
 
     func deleteAccount() async throws {
-        throw SupabaseAuthError.deferredAccountDeletion
+        try await client.rpc("delete_account").execute()
     }
 
     func deleteAccountWithReauthentication(
         option _: SignInOption,
         revokeToken _: Bool,
-        performDeleteActionsBeforeAuthIsDeleted _: () async throws -> Void
+        performDeleteActionsBeforeAuthIsDeleted: () async throws -> Void
     ) async throws {
-        throw SupabaseAuthError.deferredAccountDeletion
+        try await performDeleteActionsBeforeAuthIsDeleted()
+        try await client.rpc("delete_account").execute()
     }
 
     private static func userAuthInfo(from session: Session) -> UserAuthInfo {
@@ -90,14 +91,11 @@ final class SupabaseAuthService: AuthService {
 
 enum SupabaseAuthError: LocalizedError {
     case deferredProvider(String)
-    case deferredAccountDeletion
 
     var errorDescription: String? {
         switch self {
         case .deferredProvider(let name):
             return "\(name) is not available yet."
-        case .deferredAccountDeletion:
-            return "Account deletion is not available yet."
         }
     }
 }
