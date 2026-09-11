@@ -1,0 +1,20 @@
+//
+//  Keys.swift.example
+//  tyfe-ios-app
+//
+//  Copy this file to Keys.swift in the same directory and fill in local
+//  values. Keys.swift is gitignored; never commit real keys.
+//
+
+struct Keys {
+    static let mixpanelToken = ""
+    static let revenueCatAPIKey = ""
+
+    #if DEV
+    static let supabaseURL = "https://<dev-project-ref>.supabase.co"
+    static let supabasePublishableKey = "sb_publishable_..."
+    #else
+    static let supabaseURL = ""
+    static let supabasePublishableKey = ""
+    #endif
+}
