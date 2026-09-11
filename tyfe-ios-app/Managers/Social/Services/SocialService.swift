@@ -12,6 +12,13 @@ protocol SocialService: Sendable {
     func acceptInvite(code: String) async throws -> String
     func leaveCircle(circleId: String, userId: String) async throws
     func removeMember(circleId: String, userId: String) async throws
+    func publishProgress(
+        userId: String,
+        localDay: LocalDay,
+        plannedSessions: Int,
+        completedSessions: Int
+    ) async throws
+    func fetchCircleProgress(circleId: String) async throws -> [CircleMemberProgressModel]
 }
 
 enum SocialServiceError: LocalizedError, Equatable {

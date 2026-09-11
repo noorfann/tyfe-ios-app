@@ -22,7 +22,11 @@ extension CoreInteractor: FocusInteractor {
     }
 
     func refreshFocusSession(focusSessionId: String) throws -> FocusSessionRefresh {
-        try focusManager.refreshFocusSession(focusSessionId: focusSessionId)
+        let refresh = try focusManager.refreshFocusSession(focusSessionId: focusSessionId)
+        if refresh.completion != nil {
+            scheduleSharedProgressSync(for: refresh.session.localDay)
+        }
+        return refresh
     }
 
     func beginFocusSession(focusSessionId: String) throws -> FocusSessionModel {

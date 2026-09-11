@@ -7,6 +7,7 @@ final class MockSocialService: SocialService {
     private var circles: [CircleModel]
     private var memberships: [CircleMembershipModel]
     private var invites: [CircleInviteModel]
+    private var snapshots: [String: [LocalDay: SharedProgressSnapshot]] = [:]
     private var circleCounter: Int
     private var membershipCounter: Int
     private var inviteCounter: Int
@@ -192,6 +193,62 @@ final class MockSocialService: SocialService {
         memberships.removeAll { $0.circleId == circleId && $0.userId == userId }
     }
 
+    func publishProgress(
+        userId: String,
+        localDay: LocalDay,
+        plannedSessions: Int,
+        completedSessions: Int
+    ) async throws {
+        guard userId == currentUserId else { throw SocialServiceError.notPermitted }
+        snapshots[userId, default: [:]][localDay] = SharedProgressSnapshot(
+            planned: max(plannedSessions, 0),
+            completed: max(completedSessions, 0),
+            updatedAt: .now
+        )
+    }
+
+    func fetchCircleProgress(circleId: String) async throws -> [CircleMemberProgressModel] {
+        guard currentUserIsMember(of: circleId) else { throw SocialServiceError.notPermitted }
+        return memberships
+            .filter { $0.circleId == circleId }
+            .map { membership in
+                let userSnapshots = snapshots[membership.userId] ?? [:]
+                let latestDay = userSnapshots.keys.max { $0.startDate < $1.startDate }
+                let latest = latestDay.flatMap { userSnapshots[$0] }
+                let sevenDay = sevenDayCompleted(in: userSnapshots, latestDay: latestDay)
+                let profile = profiles[membership.userId]
+                return CircleMemberProgressModel(
+                    circleId: circleId,
+                    userId: membership.userId,
+                    displayName: profile?.displayName ?? "Friend",
+                    avatarToken: profile?.avatarToken,
+                    isOwner: membership.role == .owner,
+                    latestDate: latestDay?.socialDateString,
+                    todayPlanned: latest?.planned ?? 0,
+                    todayCompleted: latest?.completed ?? 0,
+                    sevenDayCompleted: sevenDay,
+                    cheersToday: 0,
+                    progressUpdatedAt: latest?.updatedAt
+                )
+            }
+    }
+
+    func snapshotCount(userId: String) -> Int {
+        snapshots[userId]?.count ?? 0
+    }
+
+    private func sevenDayCompleted(
+        in userSnapshots: [LocalDay: SharedProgressSnapshot],
+        latestDay: LocalDay?
+    ) -> Int {
+        guard let latestDay else { return 0 }
+        let windowStart = latestDay.startDate.addingTimeInterval(-6 * 86_400)
+        return userSnapshots
+            .filter { day, _ in day.startDate >= windowStart && day.startDate <= latestDay.startDate }
+            .values
+            .reduce(0) { $0 + $1.completed }
+    }
+
     func memberUserIds(circleId: String) -> [String] {
         memberships.filter { $0.circleId == circleId }.map(\.userId)
     }
@@ -216,4 +273,10 @@ final class MockSocialService: SocialService {
         }
         return code
     }
+}
+
+private struct SharedProgressSnapshot {
+    var planned: Int
+    var completed: Int
+    var updatedAt: Date
 }

@@ -341,11 +341,13 @@ struct CoreInteractor: GlobalInteractor {
         activityIds: [String],
         timeBlocks: [PlanTimeBlockModel]?
     ) -> DailyPlanModel {
-        todayManager.acceptDailyPlan(
+        let plan = todayManager.acceptDailyPlan(
             intendedSessionCount: intendedSessionCount,
             activityIds: activityIds,
             timeBlocks: timeBlocks
         )
+        scheduleSharedProgressSync()
+        return plan
     }
 
     @discardableResult
@@ -358,10 +360,12 @@ struct CoreInteractor: GlobalInteractor {
         activityId: String,
         sessionCount: Int
     ) -> DailyPlanModel? {
-        todayManager.addActivityToDailyPlan(
+        let plan = todayManager.addActivityToDailyPlan(
             activityId: activityId,
             sessionCount: sessionCount
         )
+        scheduleSharedProgressSync()
+        return plan
     }
 
     @discardableResult
@@ -369,15 +373,19 @@ struct CoreInteractor: GlobalInteractor {
         activityId: String,
         sessionCount: Int
     ) -> DailyPlanModel? {
-        todayManager.updateDailyPlanItemCount(
+        let plan = todayManager.updateDailyPlanItemCount(
             activityId: activityId,
             sessionCount: sessionCount
         )
+        scheduleSharedProgressSync()
+        return plan
     }
 
     @discardableResult
     func removePhase1ActivityFromDailyPlan(activityId: String) -> DailyPlanModel? {
-        todayManager.removeActivityFromDailyPlan(activityId: activityId)
+        let plan = todayManager.removeActivityFromDailyPlan(activityId: activityId)
+        scheduleSharedProgressSync()
+        return plan
     }
 
     // MARK: Home Dashboard
@@ -512,6 +520,32 @@ struct CoreInteractor: GlobalInteractor {
 
     func updateSocialDisplayName(_ name: String, userId: String) async throws {
         try await socialManager.updateDisplayName(name, userId: userId)
+    }
+
+    func syncSharedProgress(for localDay: LocalDay? = nil) async {
+        guard let userId = auth?.uid else { return }
+        let day = localDay ?? todayManager.currentLocalDay
+        let planned = todayManager.dailyPlan(for: day)?.intendedSessionCount ?? 0
+        let completed = todayManager.completedSessionCount(on: day)
+        try? await socialManager.publishProgress(
+            userId: userId,
+            localDay: day,
+            plannedSessions: planned,
+            completedSessions: completed
+        )
+    }
+
+    func scheduleSharedProgressSync(for localDay: LocalDay? = nil) {
+        Task { await syncSharedProgress(for: localDay) }
+    }
+
+    var circleProgressByCircle: [String: [CircleMemberProgressModel]] {
+        socialManager.progressByCircle
+    }
+
+    @discardableResult
+    func circleMemberProgress(circleId: String) async throws -> [CircleMemberProgressModel] {
+        try await socialManager.circleProgress(circleId: circleId)
     }
 
     // MARK: SHARED

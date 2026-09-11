@@ -137,6 +137,35 @@ final class SupabaseSocialService: SocialService {
             .execute()
     }
 
+    func publishProgress(
+        userId: String,
+        localDay: LocalDay,
+        plannedSessions: Int,
+        completedSessions: Int
+    ) async throws {
+        try await client
+            .from("shared_progress")
+            .upsert(
+                SharedProgressUpsert(
+                    userId: userId,
+                    localDate: localDay.socialDateString,
+                    plannedSessions: max(plannedSessions, 0),
+                    completedSessions: max(completedSessions, 0)
+                ),
+                onConflict: "user_id,local_date"
+            )
+            .execute()
+    }
+
+    func fetchCircleProgress(circleId: String) async throws -> [CircleMemberProgressModel] {
+        try await client
+            .from("circle_member_progress")
+            .select()
+            .eq("circle_id", value: circleId)
+            .execute()
+            .value
+    }
+
     private static func makeCode() -> String {
         let alphabet = Array("ABCDEFGHJKLMNPQRSTUVWXYZ23456789")
         return String((0..<8).map { _ in alphabet.randomElement() ?? "A" })
@@ -192,6 +221,20 @@ private struct InviteRevoke: Encodable {
 
     enum CodingKeys: String, CodingKey {
         case revokedAt = "revoked_at"
+    }
+}
+
+private struct SharedProgressUpsert: Encodable {
+    let userId: String
+    let localDate: String
+    let plannedSessions: Int
+    let completedSessions: Int
+
+    enum CodingKeys: String, CodingKey {
+        case userId = "user_id"
+        case localDate = "local_date"
+        case plannedSessions = "planned_sessions"
+        case completedSessions = "completed_sessions"
     }
 }
 

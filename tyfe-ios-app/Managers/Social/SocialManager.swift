@@ -9,6 +9,7 @@ final class SocialManager {
 
     private(set) var circles: [CircleModel] = []
     private(set) var membersByCircle: [String: [CircleMemberModel]] = [:]
+    private(set) var progressByCircle: [String: [CircleMemberProgressModel]] = [:]
     private(set) var isLoading = false
 
     init(service: SocialService, logManager: LogManager? = nil) {
@@ -107,9 +108,38 @@ final class SocialManager {
         try await service.updateDisplayName(name, userId: userId)
     }
 
+    func publishProgress(
+        userId: String,
+        localDay: LocalDay,
+        plannedSessions: Int,
+        completedSessions: Int
+    ) async throws {
+        logManager?.trackEvent(event: Event.publishProgress(.start))
+        do {
+            try await service.publishProgress(
+                userId: userId,
+                localDay: localDay,
+                plannedSessions: plannedSessions,
+                completedSessions: completedSessions
+            )
+            logManager?.trackEvent(event: Event.publishProgress(.success))
+        } catch {
+            logManager?.trackEvent(event: Event.publishProgress(.fail(error)))
+            throw error
+        }
+    }
+
+    @discardableResult
+    func circleProgress(circleId: String) async throws -> [CircleMemberProgressModel] {
+        let progress = try await service.fetchCircleProgress(circleId: circleId)
+        progressByCircle[circleId] = progress
+        return progress
+    }
+
     func signOut() {
         circles = []
         membersByCircle = [:]
+        progressByCircle = [:]
         isLoading = false
     }
 }
@@ -135,6 +165,7 @@ extension SocialManager {
         case acceptInvite(SocialManagerEventStatus)
         case leaveCircle(SocialManagerEventStatus)
         case removeMember(SocialManagerEventStatus)
+        case publishProgress(SocialManagerEventStatus)
 
         var eventName: String {
             "SocialMan_\(action)_\(status.name)"
@@ -161,6 +192,7 @@ extension SocialManager {
             case .acceptInvite: return "AcceptInvite"
             case .leaveCircle: return "LeaveCircle"
             case .removeMember: return "RemoveMember"
+            case .publishProgress: return "PublishProgress"
             }
         }
 
@@ -170,7 +202,8 @@ extension SocialManager {
                  .createInvite(let status),
                  .acceptInvite(let status),
                  .leaveCircle(let status),
-                 .removeMember(let status):
+                 .removeMember(let status),
+                 .publishProgress(let status):
                 return status
             }
         }
