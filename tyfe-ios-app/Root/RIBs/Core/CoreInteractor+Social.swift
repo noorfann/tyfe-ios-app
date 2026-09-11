@@ -4,6 +4,10 @@ extension CoreInteractor {
 
     // MARK: Social
 
+    var currentAuthUserId: String? {
+        auth?.uid
+    }
+
     var socialCircles: [CircleModel] {
         socialManager.circles
     }
@@ -152,5 +156,13 @@ extension CoreInteractor {
             completedSessions: completed
         )
         socialManager.markSocialMigrationComplete()
+    }
+
+    func setCircleSharingPaused(_ paused: Bool, circleId: String, userId: String) async throws {
+        try await socialManager.setCircleSharingPaused(paused, circleId: circleId, userId: userId)
+    }
+
+    func setGlobalSharingPaused(_ paused: Bool, userId: String) async throws {
+        try await socialManager.setGlobalSharingPaused(paused, userId: userId)
     }
 }

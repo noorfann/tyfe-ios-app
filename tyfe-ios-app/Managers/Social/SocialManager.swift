@@ -230,6 +230,14 @@ final class SocialManager {
         hasMigratedToSocial = true
     }
 
+    func setCircleSharingPaused(_ paused: Bool, circleId: String, userId: String) async throws {
+        try await service.setCircleSharingPaused(paused, circleId: circleId, userId: userId)
+    }
+
+    func setGlobalSharingPaused(_ paused: Bool, userId: String) async throws {
+        try await service.setGlobalSharingPaused(paused, userId: userId)
+    }
+
     func signOut() {
         stopRealtime()
         circles = []

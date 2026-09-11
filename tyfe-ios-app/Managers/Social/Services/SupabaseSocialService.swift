@@ -279,6 +279,23 @@ final class SupabaseSocialService: SocialService {
         return rows.map(\.blockedId)
     }
 
+    func setCircleSharingPaused(_ paused: Bool, circleId: String, userId: String) async throws {
+        try await client
+            .from("circle_memberships")
+            .update(MembershipSharingUpdate(sharingPaused: paused))
+            .eq("circle_id", value: circleId)
+            .eq("user_id", value: userId)
+            .execute()
+    }
+
+    func setGlobalSharingPaused(_ paused: Bool, userId: String) async throws {
+        try await client
+            .from("profiles")
+            .update(ProfileSharingUpdate(sharingPaused: paused))
+            .eq("id", value: userId)
+            .execute()
+    }
+
     private static func sortedStatuses(_ statuses: [String: CircleFocusStatus]) -> [CircleFocusStatusEntry] {
         statuses
             .map { CircleFocusStatusEntry(userId: $0.key, status: $0.value) }
@@ -412,6 +429,22 @@ private struct BlockedIdRow: Decodable {
 
     enum CodingKeys: String, CodingKey {
         case blockedId = "blocked_id"
+    }
+}
+
+private struct MembershipSharingUpdate: Encodable {
+    let sharingPaused: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case sharingPaused = "sharing_paused"
+    }
+}
+
+private struct ProfileSharingUpdate: Encodable {
+    let sharingPaused: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case sharingPaused = "sharing_paused"
     }
 }
 
