@@ -54,6 +54,9 @@ fastlane/report.json
 .env
 .env.*
 
+# Local API keys and environment values
+tyfe-ios-app/Utilities/Keys.swift
+
 # Agent-local state
 # Codex and other agents keep local state outside the repository. Do not add
 # generated agent memory, credentials, or tool caches to source control.
