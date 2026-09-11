@@ -59,7 +59,10 @@ struct Dependencies {
             hapticManager = HapticManager(logger: logManager)
             streakManager = StreakManager(services: MockStreakServices(), configuration: Dependencies.streakConfiguration, logger: logManager)
             progressManager = ProgressManager(services: MockProgressServices(), configuration: Dependencies.progressConfiguration, logger: logManager)
-            socialManager = SocialManager(service: MockSocialService(), logManager: logManager)
+            socialManager = SocialManager(
+                service: MockSocialService(currentUserId: UserAuthInfo.mock().uid),
+                logManager: logManager
+            )
         case .dev, .prod:
             if case .dev = config {
                 logManager = LogManager(services: [

@@ -12,6 +12,7 @@ final class SocialManager {
     private(set) var progressByCircle: [String: [CircleMemberProgressModel]] = [:]
     private(set) var cheers: [CheerModel] = []
     private(set) var blockedUserIds: [String] = []
+    private(set) var hasMigratedToSocial = false
     private(set) var focusStatusesByCircle: [String: [CircleFocusStatusEntry]] = [:]
     private(set) var activeFocusCircleIds: Set<String> = []
     private(set) var isLoading = false
@@ -225,6 +226,10 @@ final class SocialManager {
         blockedUserIds = try await service.fetchBlockedUserIds(userId: userId)
     }
 
+    func markSocialMigrationComplete() {
+        hasMigratedToSocial = true
+    }
+
     func signOut() {
         stopRealtime()
         circles = []
@@ -232,6 +237,7 @@ final class SocialManager {
         progressByCircle = [:]
         cheers = []
         blockedUserIds = []
+        hasMigratedToSocial = false
         focusStatusesByCircle = [:]
         isLoading = false
     }

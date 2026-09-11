@@ -135,4 +135,22 @@ extension CoreInteractor {
         guard let userId = auth?.uid else { throw SocialServiceError.notAuthenticated }
         try await socialManager.refreshBlockedUserIds(userId: userId)
     }
+
+    var isSocialMigrationComplete: Bool {
+        socialManager.hasMigratedToSocial
+    }
+
+    func migrateLocalToSocial() async throws {
+        guard let userId = auth?.uid else { throw SocialServiceError.notAuthenticated }
+        let day = todayManager.currentLocalDay
+        let planned = todayManager.dailyPlan(for: day)?.intendedSessionCount ?? 0
+        let completed = todayManager.completedSessionCount(on: day)
+        try await socialManager.publishProgress(
+            userId: userId,
+            localDay: day,
+            plannedSessions: planned,
+            completedSessions: completed
+        )
+        socialManager.markSocialMigrationComplete()
+    }
 }
