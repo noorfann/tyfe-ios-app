@@ -31,5 +31,26 @@ and must build and run without network access.
 ## Applying migrations
 
 Migrations are the source of truth. Apply them to Development through the
-Supabase MCP server or `supabase db push` (the latter needs the linked database
-password and a CLI matching the remote Postgres major version, currently 17).
+Supabase MCP server or the Management API (`POST /v1/projects/{ref}/database/query`
+with a personal access token), then record the applied version so the history
+stays consistent:
+
+```sh
+supabase migration repair --status applied <version> --project-ref <ref>
+```
+
+`supabase db push` also works but needs the linked database password and a CLI
+matching the remote Postgres major version (currently 17). The MCP/Management
+API path does not require Docker.
+
+## Edge Functions
+
+Deploy functions with:
+
+```sh
+supabase functions deploy <name> --use-api --project-ref <ref>
+```
+
+`--use-api` bundles server-side and does not require Docker. Secret-bearing
+values (for example an APNs key) are injected through Supabase secret storage
+per environment and are never committed.
