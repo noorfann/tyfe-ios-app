@@ -22,6 +22,7 @@
 		028F9BD72CED155A009B9F48 /* SwiftfulAuthUI in Frameworks */ = {isa = PBXBuildFile; productRef = 028F9BD62CED155A009B9F48 /* SwiftfulAuthUI */; };
 		028F9BD92CED155A009B9F48 /* SwiftfulAuthenticating in Frameworks */ = {isa = PBXBuildFile; productRef = 028F9BD82CED155A009B9F48 /* SwiftfulAuthenticating */; };
 		028F9BDF2CED1617009B9F48 /* SwiftfulUI in Frameworks */ = {isa = PBXBuildFile; productRef = 028F9BDE2CED1617009B9F48 /* SwiftfulUI */; };
+		4690661F3053B12E0007A12D /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 4690661E3053B12E0007A12D /* Supabase */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -109,6 +110,7 @@
 				028F9BD12CED1539009B9F48 /* SwiftfulPurchasing in Frameworks */,
 				028F9BC52CED14CA009B9F48 /* SwiftfulLogging in Frameworks */,
 				0200345B2EAC73C700D87C8F /* SwiftfulOnboarding in Frameworks */,
+				4690661F3053B12E0007A12D /* Supabase in Frameworks */,
 				028F9BD42CED1547009B9F48 /* SwiftfulPurchasingRevenueCat in Frameworks */,
 				028F9BD92CED155A009B9F48 /* SwiftfulAuthenticating in Frameworks */,
 				0210A6CA2DB4DCE40072B2FC /* SwiftfulRouting in Frameworks */,
@@ -228,6 +230,7 @@
 				0207BD972EA0958B00E46D93 /* SwiftfulGamification */,
 				0200345A2EAC73C700D87C8F /* SwiftfulOnboarding */,
 				0270C23C2F3852780039CF25 /* SwiftfulDataManagers */,
+				4690661E3053B12E0007A12D /* Supabase */,
 			);
 			productName = "tyfe-ios-app";
 			productReference = 028F9B532CECF2C2009B9F48 /* tyfe-ios-app.app */;
@@ -280,6 +283,7 @@
 				0207BD962EA0958B00E46D93 /* XCRemoteSwiftPackageReference "SwiftfulGamification" */,
 				020034592EAC73C700D87C8F /* XCRemoteSwiftPackageReference "SwiftfulOnboarding" */,
 				0270C23B2F3852780039CF25 /* XCRemoteSwiftPackageReference "SwiftfulDataManagers" */,
+				46C3AA933053B08600598EC0 /* XCRemoteSwiftPackageReference "supabase-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 028F9B542CECF2C2009B9F48 /* Products */;
@@ -986,6 +990,16 @@
 				minimumVersion = 1.2.0;
 			};
 		};
+		46C3AA933053B08600598EC0 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+			traits = (
+			);
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1063,6 +1077,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 028F9BDD2CED1617009B9F48 /* XCRemoteSwiftPackageReference "SwiftfulUI" */;
 			productName = SwiftfulUI;
+		};
+		4690661E3053B12E0007A12D /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 46C3AA933053B08600598EC0 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

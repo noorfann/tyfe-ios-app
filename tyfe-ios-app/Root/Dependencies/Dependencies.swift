@@ -29,6 +29,7 @@ struct Dependencies {
         let todayManager: TodayManager
         let focusManager: FocusManager
         let rewardManager: RewardManager
+        let supabaseService: SupabaseClientProviding
         
         switch config {
         case .mock(isSignedIn: let isSignedIn, addLogging: let addLogging):
@@ -100,6 +101,23 @@ struct Dependencies {
         soundEffectManager = SoundEffectManager(logger: logManager)
         switch config {
         case .mock:
+            supabaseService = MockSupabaseClientService()
+        case .dev, .prod:
+            #if !MOCK && canImport(Supabase)
+            if let configuration = SupabaseConfiguration(
+                urlString: Keys.supabaseURL,
+                publishableKey: Keys.supabasePublishableKey
+            ) {
+                supabaseService = LiveSupabaseClientService(configuration: configuration)
+            } else {
+                supabaseService = MockSupabaseClientService()
+            }
+            #else
+            supabaseService = MockSupabaseClientService()
+            #endif
+        }
+        switch config {
+        case .mock:
             let snapshot = ProcessInfo.processInfo.arguments.contains("HOME_FLOW")
                 ? LocalAppSnapshot.homeFlowMock
                 : LocalAppSnapshot.mock
@@ -135,6 +153,7 @@ struct Dependencies {
         container.register(TodayManager.self, service: todayManager)
         container.register(FocusManager.self, service: focusManager)
         container.register(RewardManager.self, service: rewardManager)
+        container.register(SupabaseClientProviding.self, service: supabaseService)
 
         self.container = container
         
