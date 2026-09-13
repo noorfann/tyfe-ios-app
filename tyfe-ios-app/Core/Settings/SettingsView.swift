@@ -69,7 +69,7 @@ struct SettingsView: View {
                             title: "Save & back up account",
                             systemImage: "person.crop.circle.badge.plus",
                             role: .primary,
-                            onTap: { presenter.onCreateAccountPressed() }
+                            onTap: { presenter.onSaveAccountPressed() }
                         )
                     } else {
                         TyfeActionButtonView(
@@ -88,7 +88,7 @@ struct SettingsView: View {
                         title: "Save & back up account",
                         systemImage: "person.crop.circle.badge.plus",
                         role: .primary,
-                        onTap: { presenter.onCreateAccountPressed() }
+                        onTap: { presenter.onSaveAccountPressed() }
                     )
                 }
             }

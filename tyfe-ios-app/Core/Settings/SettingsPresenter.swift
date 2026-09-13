@@ -117,13 +117,10 @@ final class SettingsPresenter {
         }
     }
 
-    func onCreateAccountPressed() {
-        interactor.trackEvent(event: Event.createAccountPressed)
+    func onSaveAccountPressed() {
+        interactor.trackEvent(event: Event.saveAccountPressed)
 
-        let delegate = CreateAccountDelegate()
-        router.showCreateAccountView(delegate: delegate, onDismiss: {
-            self.setAnonymousAccountStatus()
-        })
+        router.showSignUpView(delegate: SignUpDelegate())
     }
 
     // MARK: Private
@@ -159,7 +156,7 @@ extension SettingsPresenter {
         case deleteAccountStartConfirm
         case deleteAccountSuccess
         case deleteAccountFail(error: Error)
-        case createAccountPressed
+        case saveAccountPressed
         case contactUsPressed
 
         var eventName: String {
@@ -173,7 +170,7 @@ extension SettingsPresenter {
             case .deleteAccountStartConfirm:    return "SettingsView_DeleteAccount_StartConfirm"
             case .deleteAccountSuccess:         return "SettingsView_DeleteAccount_Success"
             case .deleteAccountFail:            return "SettingsView_DeleteAccount_Fail"
-            case .createAccountPressed:         return "SettingsView_CreateAccount_Pressed"
+            case .saveAccountPressed:          return "SettingsView_SaveAccount_Pressed"
             case .contactUsPressed:             return "SettingsView_ContactUs_Pressed"
             }
         }
