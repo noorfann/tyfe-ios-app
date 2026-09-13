@@ -79,13 +79,6 @@ struct SettingsView: View {
                             onTap: { presenter.onSignOutPressed() }
                         )
                     }
-
-                    TyfeActionButtonView(
-                        title: "Delete account",
-                        systemImage: "trash",
-                        role: .destructive,
-                        onTap: { presenter.onDeleteAccountPressed() }
-                    )
                 } else {
                     Text("Turn on Circles to share today's progress with your private groups.")
                         .font(TyfeTypography.interface)
@@ -141,7 +134,16 @@ struct SettingsView: View {
                 }
             }
 
-            Text("2024 Developer, LLC")
+            if presenter.isSignedIn {
+                TyfeActionButtonView(
+                    title: "Delete account",
+                    systemImage: "trash",
+                    role: .destructive,
+                    onTap: { presenter.onDeleteAccountPressed() }
+                )
+            }
+
+            Text("2026 Zulfikar Noorfan ©️")
                 .font(TyfeTypography.caption)
                 .foregroundStyle(TyfeEditorialPalette.muted)
                 .frame(maxWidth: .infinity, alignment: .center)
