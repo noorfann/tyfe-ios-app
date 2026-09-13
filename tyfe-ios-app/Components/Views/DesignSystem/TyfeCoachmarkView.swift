@@ -17,6 +17,7 @@ struct TyfeCoachmarkView: View {
                     .font(.headline.weight(.black))
                     .foregroundStyle(TyfeEditorialPalette.onAccent)
                     .frame(width: 40, height: 40)
+                    .background(TyfeEditorialPalette.focus)
                     .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
 
                 VStack(alignment: .leading, spacing: TyfeSpacing.unit) {
