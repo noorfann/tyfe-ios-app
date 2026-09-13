@@ -37,41 +37,68 @@ struct TabBarTab: Identifiable {
     }
 }
 
+enum TabBarProgressStatusKind: Equatable {
+    case reward
+    case focusRunning
+    case focusPaused
+}
+
+struct TabBarProgressStatus: Equatable {
+    let kind: TabBarProgressStatusKind
+    let remainingSeconds: Int
+
+    var timeText: String {
+        let safeSeconds = max(remainingSeconds, 0)
+        return String(format: "%d:%02d", safeSeconds / 60, safeSeconds % 60)
+    }
+}
+
 @Observable
 @MainActor
 class TabBarPresenter {
 
     private let interactor: TabBarInteractor
+    private let router: TabBarRouter
 
     var tabs: [TabBarTab]
     var selectedTab: String
 
-    init(interactor: TabBarInteractor, delegate: TabBarDelegate) {
+    init(interactor: TabBarInteractor, router: TabBarRouter, delegate: TabBarDelegate) {
         self.interactor = interactor
+        self.router = router
         self.tabs = delegate.tabs
         self.selectedTab = delegate.startingTabId ?? ""
     }
 
-    private(set) var rewardRemainingSeconds = 0
-    private var rewardTickerTask: Task<Void, Never>?
+    private(set) var progressRemainingSeconds = 0
+    private var progressTickerTask: Task<Void, Never>?
 
-    var isRewardStatusVisible: Bool {
-        guard let claim = interactor.activeRewardClaim else { return false }
-        return claim.state == .active
+    var progressStatusKind: TabBarProgressStatusKind? {
+        if let focusSession = interactor.activeFocusSession,
+           focusSession.state == .running || focusSession.state == .paused {
+            guard !interactor.isFocusScreenVisible else { return nil }
+            return focusSession.state == .paused ? .focusPaused : .focusRunning
+        }
+
+        guard interactor.activeRewardClaim?.state == .active else { return nil }
+        return .reward
     }
 
-    var rewardStatusTimeText: String {
-        let safeSeconds = max(rewardRemainingSeconds, 0)
-        return String(format: "%d:%02d", safeSeconds / 60, safeSeconds % 60)
+    var progressStatus: TabBarProgressStatus? {
+        guard let progressStatusKind else { return nil }
+        return TabBarProgressStatus(
+            kind: progressStatusKind,
+            remainingSeconds: progressRemainingSeconds
+        )
     }
     
     func onViewAppear(delegate: TabBarDelegate) {
         interactor.trackScreenEvent(event: Event.onAppear(delegate: delegate))
-        syncRewardTicker()
+        syncProgressTicker()
     }
 
     func onViewDisappear(delegate: TabBarDelegate) {
-        stopRewardTicker()
+        stopProgressTicker()
         interactor.trackEvent(event: Event.onDisappear(delegate: delegate))
     }
 
@@ -89,57 +116,86 @@ class TabBarPresenter {
         selectedTab = tabId
     }
 
-    func onRewardStatusPressed(delegate: TabBarDelegate) {
-        guard isRewardStatusVisible,
-              let rewardsTab = tabs.first(where: { $0.title == "Rewards" }) else { return }
+    func onProgressStatusPressed(delegate: TabBarDelegate) {
+        guard let progressStatusKind else { return }
 
-        interactor.trackEvent(event: Event.rewardStatusPressed(delegate: delegate))
-        selectedTab = rewardsTab.id
-    }
-
-    func syncRewardTicker() {
-        _ = try? interactor.refreshRewardClaim()
-        if isRewardStatusVisible {
-            startRewardTicker()
-        } else {
-            stopRewardTicker()
+        switch progressStatusKind {
+        case .reward:
+            guard let rewardsTab = tabs.first(where: { $0.title == "Rewards" }) else { return }
+            interactor.trackEvent(event: Event.rewardStatusPressed(delegate: delegate))
+            selectedTab = rewardsTab.id
+        case .focusRunning, .focusPaused:
+            guard let focusSession = interactor.activeFocusSession,
+                  let activity = interactor.activity(forFocusSession: focusSession),
+                  let todayTab = tabs.first(where: { $0.title == "Today" }) else { return }
+            interactor.trackEvent(
+                event: Event.focusStatusPressed(session: focusSession, delegate: delegate)
+            )
+            selectedTab = todayTab.id
+            router.showFocusOverlay(delegate: FocusDelegate(activity: activity, session: focusSession))
         }
     }
 
-    private func startRewardTicker() {
-        guard rewardTickerTask == nil else { return }
-        updateRewardRemaining()
-        rewardTickerTask = Task { [weak self] in
+    func syncProgressTicker() {
+        refreshProgressState()
+        if progressStatusKind != nil {
+            startProgressTicker()
+        } else {
+            stopProgressTicker()
+        }
+    }
+
+    private func startProgressTicker() {
+        guard progressTickerTask == nil else { return }
+        progressTickerTask = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(1))
                 guard !Task.isCancelled else { return }
-                self?.tickReward()
+                self?.tickProgress()
             }
         }
     }
 
-    private func stopRewardTicker() {
-        rewardTickerTask?.cancel()
-        rewardTickerTask = nil
+    private func stopProgressTicker() {
+        progressTickerTask?.cancel()
+        progressTickerTask = nil
     }
 
-    private func tickReward() {
-        _ = try? interactor.refreshRewardClaim()
-        if isRewardStatusVisible {
-            updateRewardRemaining()
-        } else {
-            stopRewardTicker()
+    private func tickProgress() {
+        refreshProgressState()
+        if progressStatusKind == nil {
+            stopProgressTicker()
         }
     }
 
-    private func updateRewardRemaining() {
+    private func refreshProgressState() {
+        _ = try? interactor.refreshRewardClaim()
+
+        if let focusSession = interactor.activeFocusSession,
+           focusSession.state == .running || focusSession.state == .paused {
+            if let refresh = try? interactor.refreshFocusSession(
+                focusSessionId: focusSession.focusSessionId
+            ) {
+                switch refresh.session.state {
+                case .running:
+                    progressRemainingSeconds = refresh.remainingFocusSeconds
+                    return
+                case .paused:
+                    progressRemainingSeconds = refresh.remainingPauseSeconds
+                    return
+                case .ready, .completed, .abandoned:
+                    break
+                }
+            }
+        }
+
         guard let claim = interactor.activeRewardClaim,
               claim.state == .active,
               let endsAt = claim.endsAt else {
-            rewardRemainingSeconds = 0
+            progressRemainingSeconds = 0
             return
         }
-        rewardRemainingSeconds = max(Int(ceil(endsAt.timeIntervalSinceNow)), 0)
+        progressRemainingSeconds = max(Int(ceil(endsAt.timeIntervalSinceNow)), 0)
     }
 }
 
@@ -151,6 +207,7 @@ extension TabBarPresenter {
         case tabSelected(tab: TabBarTab, delegate: TabBarDelegate)
         case tabReselected(tab: TabBarTab, delegate: TabBarDelegate)
         case rewardStatusPressed(delegate: TabBarDelegate)
+        case focusStatusPressed(session: FocusSessionModel, delegate: TabBarDelegate)
 
         var eventName: String {
             switch self {
@@ -159,6 +216,7 @@ extension TabBarPresenter {
             case .tabSelected:              return "TabBar_TabSelected"
             case .tabReselected:            return "TabBar_TabReselected"
             case .rewardStatusPressed:      return "TabBar_RewardStatusPressed"
+            case .focusStatusPressed:       return "TabBar_FocusStatusPressed"
             }
         }
 
@@ -172,6 +230,10 @@ extension TabBarPresenter {
                 return params
             case .rewardStatusPressed(delegate: let delegate):
                 return delegate.eventParameters
+            case .focusStatusPressed(session: let session, delegate: let delegate):
+                var params = session.eventParameters
+                params.merge(delegate.eventParameters)
+                return params
             }
         }
 

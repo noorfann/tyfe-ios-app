@@ -48,13 +48,16 @@ struct TabBarView: View {
     }
 
     var body: some View {
-        VStack(spacing: presenter.isRewardStatusVisible ? TyfeSpacing.small : 0) {
-            if presenter.isRewardStatusVisible {
-                TyfeRewardStatusBarView(
-                    title: "Reward in progress",
-                    timeText: presenter.rewardStatusTimeText,
-                    systemImage: "clock.fill",
-                    onTap: { presenter.onRewardStatusPressed(delegate: delegate) }
+        VStack(spacing: presenter.progressStatus == nil ? 0 : TyfeSpacing.small) {
+            if let status = presenter.progressStatus {
+                TyfeProgressStatusBarView(
+                    title: status.kind.title,
+                    timeText: status.timeText,
+                    systemImage: status.kind.systemImage,
+                    accent: status.kind.accent,
+                    accessibilityHint: status.kind.accessibilityHint,
+                    accessibilityIdentifier: status.kind.accessibilityIdentifier,
+                    onTap: { presenter.onProgressStatusPressed(delegate: delegate) }
                 )
                 .padding(.horizontal, TyfeSpacing.control)
                 .padding(.top, TyfeSpacing.small)
@@ -72,19 +75,19 @@ struct TabBarView: View {
             }
         }
         .background(TyfeEditorialPalette.canvas.ignoresSafeArea())
-        .animation(statusBarAnimation, value: presenter.isRewardStatusVisible)
+        .animation(statusBarAnimation, value: presenter.progressStatusKind)
         .onAppear {
             presenter.onViewAppear(delegate: delegate)
         }
         .onDisappear {
             presenter.onViewDisappear(delegate: delegate)
         }
-        .onChange(of: presenter.isRewardStatusVisible) { _, _ in
-            presenter.syncRewardTicker()
+        .onChange(of: presenter.progressStatusKind) { _, _ in
+            presenter.syncProgressTicker()
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
-                presenter.syncRewardTicker()
+                presenter.syncProgressTicker()
             }
         }
     }
@@ -103,16 +106,57 @@ struct TabBarView: View {
 
 extension CoreBuilder {
 
-    func tabBarView(delegate: TabBarDelegate) -> some View {
+    func tabBarView(router: AnyRouter, delegate: TabBarDelegate) -> some View {
         TabBarView(
             presenter: TabBarPresenter(
                 interactor: interactor,
+                router: CoreRouter(router: router, builder: self),
                 delegate: delegate
             ),
             delegate: delegate
         )
     }
 
+}
+
+private extension TabBarProgressStatusKind {
+
+    var title: String {
+        switch self {
+        case .reward: return "Reward in progress"
+        case .focusRunning: return "Focus in progress"
+        case .focusPaused: return "Focus paused"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .reward: return "clock.fill"
+        case .focusRunning: return "timer"
+        case .focusPaused: return "pause.fill"
+        }
+    }
+
+    var accent: Color {
+        switch self {
+        case .reward: return TyfeEditorialPalette.saffron
+        case .focusRunning, .focusPaused: return TyfeEditorialPalette.focus
+        }
+    }
+
+    var accessibilityHint: String {
+        switch self {
+        case .reward: return "Opens Rewards"
+        case .focusRunning, .focusPaused: return "Opens Focus"
+        }
+    }
+
+    var accessibilityIdentifier: String {
+        switch self {
+        case .reward: return "reward-in-progress-status"
+        case .focusRunning, .focusPaused: return "focus-in-progress-status"
+        }
+    }
 }
 
 /*

@@ -111,11 +111,11 @@ extension CoreBuilder {
 
     func coreModuleEntryView(router: AnyRouter, delegate: ModuleWrapperDelegate) -> some View {
         moduleWrapperView(router: router, delegate: delegate) {
-            coreModuleTabBarView()
+            coreModuleTabBarView(router: router)
         }
     }
 
-    private func coreModuleTabBarView() -> some View {
+    private func coreModuleTabBarView(router: AnyRouter) -> some View {
         let tabs: [TabBarTab] = [
             TabBarTab(title: "Today", systemImage: "sun.max.fill", destination: { router in
                 todayView(router: router, delegate: TodayDelegate())
@@ -132,6 +132,7 @@ extension CoreBuilder {
         ]
         
         return tabBarView(
+            router: router,
             delegate: TabBarDelegate(
                 tabs: tabs,
                 startingTabId: tabs.first?.id

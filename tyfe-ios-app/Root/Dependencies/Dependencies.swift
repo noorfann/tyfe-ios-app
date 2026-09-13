@@ -126,7 +126,8 @@ struct Dependencies {
         switch config {
         case .mock:
             let snapshot: LocalAppSnapshot
-            if ProcessInfo.processInfo.arguments.contains("HOME_FLOW") {
+            if ProcessInfo.processInfo.arguments.contains("HOME_FLOW")
+                || ProcessInfo.processInfo.arguments.contains("FOCUS_PROGRESS_FLOW") {
                 snapshot = LocalAppSnapshot.homeFlowMock
             } else if ProcessInfo.processInfo.arguments.contains("REWARD_FLOW") {
                 snapshot = LocalAppSnapshot.rewardFlowMock
