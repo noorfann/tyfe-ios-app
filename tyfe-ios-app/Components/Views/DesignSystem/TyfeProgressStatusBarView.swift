@@ -1,11 +1,14 @@
 import SwiftUI
 import SwiftfulUI
 
-struct TyfeRewardStatusBarView: View {
+struct TyfeProgressStatusBarView: View {
 
     var title: String
     var timeText: String
     var systemImage: String
+    var accent: Color
+    var accessibilityHint: String
+    var accessibilityIdentifier: String
     var onTap: () -> Void = { }
 
     var body: some View {
@@ -25,7 +28,7 @@ struct TyfeRewardStatusBarView: View {
         .foregroundStyle(TyfeEditorialPalette.onAccent)
         .padding(.horizontal, TyfeSpacing.control)
         .frame(minHeight: 40)
-        .background(TyfeEditorialPalette.saffron)
+        .background(accent)
         .clipShape(Capsule())
         .overlay {
             Capsule()
@@ -42,19 +45,32 @@ struct TyfeRewardStatusBarView: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text("\(title), \(timeText) remaining"))
-        .accessibilityHint("Opens Rewards")
-        .accessibilityIdentifier("reward-in-progress-status")
+        .accessibilityHint(accessibilityHint)
+        .accessibilityIdentifier(accessibilityIdentifier)
         .accessibilityAddTraits(.isButton)
     }
 }
 
-#Preview("Reward status bar") {
-    TyfeRewardStatusBarView(
-        title: "Reward in progress",
-        timeText: "12:30",
-        systemImage: "clock.fill",
-        onTap: { }
-    )
+#Preview("Progress status bars") {
+    VStack(spacing: TyfeSpacing.control) {
+        TyfeProgressStatusBarView(
+            title: "Reward in progress",
+            timeText: "12:30",
+            systemImage: "clock.fill",
+            accent: TyfeEditorialPalette.saffron,
+            accessibilityHint: "Opens Rewards",
+            accessibilityIdentifier: "reward-in-progress-status"
+        )
+
+        TyfeProgressStatusBarView(
+            title: "Focus in progress",
+            timeText: "18:42",
+            systemImage: "timer",
+            accent: TyfeEditorialPalette.focus,
+            accessibilityHint: "Opens Focus",
+            accessibilityIdentifier: "focus-in-progress-status"
+        )
+    }
         .padding(TyfeSpacing.card)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(TyfeEditorialPalette.canvas)

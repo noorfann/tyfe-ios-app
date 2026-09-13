@@ -87,10 +87,13 @@ struct DesignSystemTests {
             onStart: {}
         )
         let tiers = TyfeTierLegendView()
-        let statusBar = TyfeRewardStatusBarView(
+        let statusBar = TyfeProgressStatusBarView(
             title: "Reward in progress",
             timeText: "12:30",
-            systemImage: "clock.fill"
+            systemImage: "clock.fill",
+            accent: TyfeEditorialPalette.saffron,
+            accessibilityHint: "Opens Rewards.",
+            accessibilityIdentifier: "reward-in-progress-status"
         )
 
         _ = Group {
