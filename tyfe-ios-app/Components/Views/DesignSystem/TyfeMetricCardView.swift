@@ -52,23 +52,21 @@ struct TyfeMetricCardView: View {
                                 .frame(maxWidth: .infinity, alignment: .trailing)
                         }
                     }
-                    HStack(alignment: .firstTextBaseline, spacing: TyfeSpacing.small) {
+                } else {
+                    VStack(alignment: .center, spacing: TyfeSpacing.unit) {
+                        HStack(spacing: TyfeSpacing.small) {
+                            Image(systemName: systemImage)
+                                .imageScale(.small)
+                                .foregroundStyle(accent)
+                            Text(title)
+                                .font(TyfeTypography.eyebrow)
+                                .textCase(.uppercase)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .center)
                         Text(value)
                             .font(TyfeTypography.displayCompact)
-                        Text(detail)
-                            .font(TyfeTypography.caption)
-                            .frame(maxWidth: .infinity, alignment: .trailing)
+                            .frame(maxWidth: .infinity, alignment: .center)
                     }
-                }
-            } else {
-                VStack(alignment: .center, spacing: TyfeSpacing.unit) {
-                    Text(title)
-                        .font(TyfeTypography.eyebrow)
-                        .textCase(.uppercase)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                    Text(value)
-                        .font(TyfeTypography.displayCompact)
-                        .frame(maxWidth: .infinity, alignment: .center)
                 }
             }
             .frame(minHeight: minContentHeight)
