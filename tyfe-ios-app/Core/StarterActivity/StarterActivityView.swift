@@ -30,7 +30,6 @@ struct StarterActivityView: View {
                 VStack(alignment: .leading, spacing: TyfeSpacing.section) {
                     header
                     intro
-                    existingActivities
                     activityForm
                     TyfeActionButtonView(
                         title: "Continue to today’s plan",
@@ -86,38 +85,6 @@ struct StarterActivityView: View {
         }
     }
 
-    private var existingActivities: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.small) {
-            Text("YOUR ACTIVITIES")
-                .font(TyfeTypography.eyebrow)
-                .tracking(1.2)
-                .foregroundStyle(TyfeEditorialPalette.muted)
-
-            ForEach(presenter.activities) { activity in
-                Text(activity.name)
-                    .font(TyfeTypography.interfaceStrong)
-                    .foregroundStyle(TyfeEditorialPalette.ink)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .frame(minHeight: 44, alignment: .leading)
-                    .padding(.horizontal, TyfeSpacing.control)
-                    .background(
-                        presenter.activityName == activity.name
-                            ? TyfeEditorialPalette.teal.opacity(0.25)
-                            : TyfeEditorialPalette.paper
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: TyfeRadius.control)
-                            .stroke(TyfeEditorialPalette.ink, lineWidth: TyfeStroke.hairline)
-                    }
-                    .asButton(.press) {
-                        presenter.select(activity: activity)
-                    }
-                    .accessibilityLabel("Use \(activity.name)")
-            }
-        }
-    }
-
     private var activityForm: some View {
         TyfeSurfaceView(role: .paper) {
             VStack(alignment: .leading, spacing: TyfeSpacing.control) {
@@ -126,7 +93,7 @@ struct StarterActivityView: View {
                     .tracking(1.2)
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
-                TyfeTextFieldView(placeholder: "Study Swift", text: $presenter.activityName)
+                TyfeTextFieldView(placeholder: "Name your activity", text: $presenter.activityName)
 
                 Picker("Category", selection: $presenter.selectedCategory) {
                     ForEach(ActivityCategory.allCases, id: \.self) { category in

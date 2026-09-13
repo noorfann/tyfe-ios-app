@@ -9,8 +9,7 @@ final class StarterActivityPresenter {
 
     private var onComplete: (() -> Void)?
 
-    private(set) var activities: [ActivityModel] = []
-    var activityName = ActivityModel.mock.name
+    var activityName = ""
     var selectedCategory: ActivityCategory = .study
     var selectedColorToken = "teal"
 
@@ -24,19 +23,12 @@ final class StarterActivityPresenter {
     }
 
     func onViewAppear(delegate: StarterActivityDelegate) {
-        activities = interactor.phase1Activities
         onComplete = delegate.onComplete
         interactor.trackScreenEvent(event: Event.onAppear(delegate: delegate))
     }
 
     func onViewDisappear(delegate: StarterActivityDelegate) {
         interactor.trackEvent(event: Event.onDisappear(delegate: delegate))
-    }
-
-    func select(activity: ActivityModel) {
-        activityName = activity.name
-        selectedCategory = activity.category ?? .personal
-        selectedColorToken = activity.colorToken ?? "teal"
     }
 
     func onContinuePressed() {

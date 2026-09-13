@@ -54,7 +54,7 @@ struct TodayAddActivitySheet: View {
                     .tracking(1.1)
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
-                TyfeTextFieldView(placeholder: "Study Swift", text: $activityName)
+                TyfeTextFieldView(placeholder: "Name your activity", text: $activityName)
 
                 Picker("Category", selection: $selectedCategory) {
                     ForEach(ActivityCategory.allCases, id: \.self) { category in

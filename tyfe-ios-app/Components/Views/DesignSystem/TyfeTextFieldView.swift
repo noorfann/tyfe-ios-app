@@ -22,7 +22,7 @@ struct TyfeTextFieldView: View {
 }
 
 #Preview("Text field") {
-    TyfeTextFieldView(placeholder: "Study Swift", text: .constant(""))
+    TyfeTextFieldView(placeholder: "Name your activity", text: .constant(""))
         .padding(TyfeSpacing.card)
         .background(TyfeEditorialPalette.paper)
 }
