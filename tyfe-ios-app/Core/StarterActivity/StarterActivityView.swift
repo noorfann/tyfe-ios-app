@@ -126,18 +126,7 @@ struct StarterActivityView: View {
                     .tracking(1.2)
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
-                TextField("Study Swift", text: $presenter.activityName)
-                    .font(TyfeTypography.interfaceStrong)
-                    .textInputAutocapitalization(.sentences)
-                    .autocorrectionDisabled()
-                    .padding(.horizontal, TyfeSpacing.control)
-                    .frame(minHeight: 52)
-                    .background(TyfeEditorialPalette.canvas)
-                    .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: TyfeRadius.control)
-                            .stroke(TyfeEditorialPalette.ink, lineWidth: TyfeStroke.hairline)
-                    }
+                TyfeTextFieldView(placeholder: "Study Swift", text: $presenter.activityName)
 
                 Picker("Category", selection: $presenter.selectedCategory) {
                     ForEach(ActivityCategory.allCases, id: \.self) { category in

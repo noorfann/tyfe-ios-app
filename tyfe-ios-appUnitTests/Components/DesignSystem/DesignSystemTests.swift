@@ -153,4 +153,18 @@ struct DesignSystemTests {
 
         _ = memberRow
     }
+
+    @Test func textFieldAcceptsInjectedData() {
+        let field = TyfeTextFieldView(placeholder: "Family", text: .constant(""))
+        let codeField = TyfeTextFieldView(
+            placeholder: "Invite code",
+            text: .constant("ABCD2345"),
+            autocapitalization: .characters
+        )
+
+        _ = Group {
+            field
+            codeField
+        }
+    }
 }

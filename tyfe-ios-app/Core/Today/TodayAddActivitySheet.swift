@@ -88,18 +88,7 @@ struct TodayAddActivitySheet: View {
                     .tracking(1.1)
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
-                TextField("Study Swift", text: $activityName)
-                    .font(TyfeTypography.interfaceStrong)
-                    .textInputAutocapitalization(.sentences)
-                    .autocorrectionDisabled()
-                    .padding(.horizontal, TyfeSpacing.control)
-                    .frame(minHeight: 52)
-                    .background(TyfeEditorialPalette.canvas)
-                    .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: TyfeRadius.control)
-                            .stroke(TyfeEditorialPalette.ink, lineWidth: TyfeStroke.hairline)
-                    }
+                TyfeTextFieldView(placeholder: "Study Swift", text: $activityName)
 
                 Picker("Category", selection: $selectedCategory) {
                     ForEach(ActivityCategory.allCases, id: \.self) { category in

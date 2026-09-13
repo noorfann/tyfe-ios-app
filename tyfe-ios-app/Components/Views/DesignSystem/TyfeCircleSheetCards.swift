@@ -12,9 +12,7 @@ struct TyfeCircleNameSheetCardView: View {
             Text(title)
                 .font(TyfeTypography.displayCompact)
 
-            TextField(placeholder, text: $value)
-                .textFieldStyle(.roundedBorder)
-                .autocorrectionDisabled()
+            TyfeTextFieldView(placeholder: placeholder, text: $value)
 
             HStack(spacing: TyfeSpacing.small) {
                 TyfeActionButtonView(title: "Cancel", role: .secondary, onTap: onCancel)
