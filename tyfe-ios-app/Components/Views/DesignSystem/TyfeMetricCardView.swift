@@ -33,12 +33,12 @@ struct TyfeMetricCardView: View {
                                 RoundedRectangle(cornerRadius: TyfeSpacing.unit)
                                     .stroke(TyfeEditorialPalette.onAccent, lineWidth: TyfeStroke.hairline)
                             }
+                        Image(systemName: systemImage)
+                            .imageScale(.small)
                         Text(title)
                             .font(TyfeTypography.eyebrow)
                             .textCase(.uppercase)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                        Image(systemName: systemImage)
-                            .imageScale(.small)
                     }
                     HStack(alignment: .firstTextBaseline, spacing: TyfeSpacing.small) {
                         Text(value)

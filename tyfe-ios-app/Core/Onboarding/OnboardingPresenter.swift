@@ -27,7 +27,7 @@ final class OnboardingPresenter {
     }
 
     var primaryButtonTitle: String {
-        isLastPage ? "Choose your first Activity" : "Continue"
+        isLastPage ? OnboardingContent.primaryButtonTitle : OnboardingContent.continueButtonTitle
     }
 
     func onViewAppear(delegate: OnboardingDelegate) {

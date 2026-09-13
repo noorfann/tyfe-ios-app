@@ -144,13 +144,13 @@ struct TodayView: View {
                     TyfeMetricCardView(
                         title: "Credits",
                         value: String(presenter.rewardCredits),
-                        systemImage: "circle.fill",
+                        systemImage: "creditcard.rewards",
                         accent: TyfeEditorialPalette.saffron
                     )
                     TyfeMetricCardView(
-                        title: "Today",
+                        title: "Today Sessions",
                         value: presenter.planProgressLabel,
-                        systemImage: "checkmark.circle.fill",
+                        systemImage: "list.bullet.rectangle",
                         accent: TyfeEditorialPalette.teal
                     )
                 }

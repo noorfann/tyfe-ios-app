@@ -35,4 +35,35 @@ struct OnboardingContentTests {
             #expect(!page.symbolName.isEmpty)
         }
     }
+
+    @Test func usesSimpleFriendlyCopyAndKeepsOnboardingTerms() {
+        let pages = OnboardingContent.pages
+        let copy = pages
+            .map { [$0.eyebrow, $0.title, $0.body, $0.pills?.joined(separator: " ") ?? ""].joined(separator: " ") }
+            .joined(separator: " ")
+            .lowercased()
+
+        #expect(pages[0].eyebrow == "WELCOME TO TYFE")
+        #expect(pages[0].title == "Focus a little.\nRest a lot.")
+        #expect(pages[0].body == "Make a simple plan, focus on one thing, then enjoy your break.")
+        #expect(pages[1].title == "25 minutes of focus\ngets you real downtime.")
+        #expect(pages[1].pills == ["1 credit per session", "15, 30, or 60 min", "Credits never expire"])
+        #expect(pages[2].eyebrow == "WHAT'S INCLUDED")
+        #expect(pages[2].title == "Everything you need\nto keep going.")
+        #expect(pages[2].pills == ["Daily Plan", "Rewards", "Private Circles", "Works offline"])
+
+        #expect(copy.contains("focus session"))
+        #expect(copy.contains("reward credit"))
+        #expect(copy.contains("daily plan"))
+        #expect(copy.contains("circles"))
+        #expect(copy.contains("cheer"))
+        #expect(copy.contains("offline"))
+    }
+
+    @Test func exposesFriendlyNavigationCopy() {
+        #expect(OnboardingContent.continueButtonTitle == "Continue")
+        #expect(OnboardingContent.primaryButtonTitle == "Pick your first Activity")
+        #expect(OnboardingContent.skipButtonTitle == "Skip for now")
+        #expect(OnboardingContent.skipAccessibilityLabel == "Skip onboarding for now")
+    }
 }

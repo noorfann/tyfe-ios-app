@@ -83,14 +83,14 @@ struct OnboardingView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             if !presenter.isLastPage {
-                Text("Skip")
+                Text(OnboardingContent.skipButtonTitle)
                     .font(TyfeTypography.interface)
                     .foregroundStyle(TyfeEditorialPalette.muted)
                     .frame(minHeight: 44)
                     .asButton(.press) {
                         presenter.onSkipPressed()
                     }
-                    .accessibilityLabel("Skip onboarding")
+                    .accessibilityLabel(OnboardingContent.skipAccessibilityLabel)
             }
         }
         .padding(.horizontal, TyfeSpacing.control)
@@ -196,12 +196,12 @@ struct OnboardingView: View {
     private var focusArt: some View {
         TyfeSurfaceView(role: .focusChamber) {
             VStack(spacing: TyfeSpacing.small) {
-                TyfePillView(label: "Focusing", systemImage: "timer", tone: .accent)
+                TyfePillView(label: "Focus time", systemImage: "timer", tone: .accent)
                 Text("25:00")
                     .font(TyfeTypography.timer)
                     .monospacedDigit()
                     .foregroundStyle(TyfeEditorialPalette.onDark)
-                Text("Study Swift · One pause · up to 5 minutes")
+                Text("Study Swift · Pause once · up to 5 min")
                     .font(TyfeTypography.caption)
                     .foregroundStyle(TyfeEditorialPalette.onDark.opacity(0.82))
             }

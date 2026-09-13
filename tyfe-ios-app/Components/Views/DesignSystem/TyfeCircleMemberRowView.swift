@@ -23,7 +23,7 @@ struct TyfeCircleMemberRowView: View {
 
     private var header: some View {
         HStack {
-            Text(member.displayName)
+            Text(isSelf ? "Me" : member.displayName)
                 .font(TyfeTypography.interfaceStrong)
             if member.role == .owner {
                 TyfePillView(label: "Owner", systemImage: "crown.fill", tone: .warning)
