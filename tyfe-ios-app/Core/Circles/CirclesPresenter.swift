@@ -21,7 +21,9 @@ final class CirclesPresenter {
     var isCreateCirclePresented = false
     var isJoinCirclePresented = false
     var isInvitePresented = false
+    var isEditCirclePresented = false
     var createCircleName = ""
+    var editCircleName = ""
     var joinCode = ""
 
     init(interactor: CirclesInteractor, router: CirclesRouter) {
@@ -114,6 +116,58 @@ final class CirclesPresenter {
             do {
                 let circle = try await interactor.createCircle(name: name, ownerId: userId)
                 selectedCircleId = circle.circleId
+                await refresh()
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    func onEditCircleTapped() {
+        guard isSelectedCircleOwner, let circle = selectedCircle else { return }
+        editCircleName = circle.name
+        isEditCirclePresented = true
+    }
+
+    func onSubmitEditCircle() {
+        let name = editCircleName
+        isEditCirclePresented = false
+        Task {
+            guard let circleId = selectedCircleId else { return }
+            do {
+                _ = try await interactor.updateCircle(circleId: circleId, name: name)
+                await refresh()
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    func onDeleteCircleTapped() {
+        guard isSelectedCircleOwner, let circle = selectedCircle else { return }
+        router.showAlert(
+            .alert,
+            title: "Delete \(circle.name)?",
+            subtitle: "This removes the Circle for everyone. This can't be undone.",
+            buttons: {
+                AnyView(
+                    Group {
+                        Button("Delete Circle", role: .destructive) {
+                            self.onDeleteCircleConfirmed()
+                        }
+                        Button("Cancel", role: .cancel) { }
+                    }
+                )
+            }
+        )
+    }
+
+    func onDeleteCircleConfirmed() {
+        Task {
+            guard let circleId = selectedCircleId else { return }
+            do {
+                try await interactor.deleteCircle(circleId: circleId)
+                selectedCircleId = nil
                 await refresh()
             } catch {
                 errorMessage = error.localizedDescription

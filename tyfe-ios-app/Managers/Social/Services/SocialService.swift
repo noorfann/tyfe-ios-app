@@ -4,6 +4,8 @@ import Foundation
 protocol SocialService: Sendable {
     func updateDisplayName(_ name: String, userId: String) async throws
     func createCircle(name: String, ownerId: String) async throws -> CircleModel
+    func updateCircle(circleId: String, name: String) async throws -> CircleModel
+    func deleteCircle(circleId: String) async throws
     func fetchCircles(userId: String) async throws -> [CircleModel]
     func fetchMembers(circleId: String) async throws -> [CircleMemberModel]
     func createInvite(circleId: String, createdBy: String, expiresAt: Date) async throws -> CircleInviteModel

@@ -13,6 +13,8 @@ protocol CirclesInteractor: GlobalInteractor {
 
     func refreshSocialCircles(userId: String) async throws
     func createCircle(name: String, ownerId: String) async throws -> CircleModel
+    func updateCircle(circleId: String, name: String) async throws -> CircleModel
+    func deleteCircle(circleId: String) async throws
     func createCircleInvite(
         circleId: String,
         createdBy: String,

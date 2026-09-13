@@ -52,6 +52,41 @@ final class SocialManager {
         }
     }
 
+    func updateCircle(circleId: String, name: String) async throws -> CircleModel {
+        logManager?.trackEvent(event: Event.updateCircle(.start))
+        do {
+            let circle = try await service.updateCircle(circleId: circleId, name: name)
+            if let index = circles.firstIndex(where: { $0.circleId == circleId }) {
+                circles[index] = circle
+            }
+            logManager?.trackEvent(event: Event.updateCircle(.success))
+            return circle
+        } catch {
+            logManager?.trackEvent(event: Event.updateCircle(.fail(error)))
+            throw error
+        }
+    }
+
+    func deleteCircle(circleId: String) async throws {
+        logManager?.trackEvent(event: Event.deleteCircle(.start))
+        do {
+            try await service.deleteCircle(circleId: circleId)
+            circles.removeAll { $0.circleId == circleId }
+            membersByCircle[circleId] = nil
+            progressByCircle[circleId] = nil
+            focusStatusesByCircle[circleId] = nil
+            if activeFocusCircleIds.remove(circleId) != nil {
+                focusTasks[circleId]?.cancel()
+                focusTasks[circleId] = nil
+                Task { await service.stopFocusStatus(circleId: circleId) }
+            }
+            logManager?.trackEvent(event: Event.deleteCircle(.success))
+        } catch {
+            logManager?.trackEvent(event: Event.deleteCircle(.fail(error)))
+            throw error
+        }
+    }
+
     func createInvite(
         circleId: String,
         createdBy: String,
@@ -269,6 +304,8 @@ enum SocialManagerEventStatus {
 extension SocialManager {
     enum Event: LoggableEvent {
         case createCircle(SocialManagerEventStatus)
+        case updateCircle(SocialManagerEventStatus)
+        case deleteCircle(SocialManagerEventStatus)
         case createInvite(SocialManagerEventStatus)
         case acceptInvite(SocialManagerEventStatus)
         case leaveCircle(SocialManagerEventStatus)
@@ -297,6 +334,8 @@ extension SocialManager {
         private var action: String {
             switch self {
             case .createCircle: return "CreateCircle"
+            case .updateCircle: return "UpdateCircle"
+            case .deleteCircle: return "DeleteCircle"
             case .createInvite: return "CreateInvite"
             case .acceptInvite: return "AcceptInvite"
             case .leaveCircle: return "LeaveCircle"
@@ -309,6 +348,8 @@ extension SocialManager {
         private var status: SocialManagerEventStatus {
             switch self {
             case .createCircle(let status),
+                 .updateCircle(let status),
+                 .deleteCircle(let status),
                  .createInvite(let status),
                  .acceptInvite(let status),
                  .leaveCircle(let status),

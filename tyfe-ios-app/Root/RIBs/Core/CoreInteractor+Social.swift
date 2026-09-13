@@ -22,6 +22,15 @@ extension CoreInteractor {
     }
 
     @discardableResult
+    func updateCircle(circleId: String, name: String) async throws -> CircleModel {
+        try await socialManager.updateCircle(circleId: circleId, name: name)
+    }
+
+    func deleteCircle(circleId: String) async throws {
+        try await socialManager.deleteCircle(circleId: circleId)
+    }
+
+    @discardableResult
     func createCircleInvite(
         circleId: String,
         createdBy: String,

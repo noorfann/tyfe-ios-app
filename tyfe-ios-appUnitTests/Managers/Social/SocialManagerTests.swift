@@ -116,6 +116,66 @@ struct SocialManagerTests {
         }
     }
 
+    @Test func ownerCanRenameCircle() async throws {
+        let manager = SocialManager(service: MockSocialService(currentUserId: "u1"))
+        let circle = try await manager.createCircle(name: "Family", ownerId: "u1")
+
+        let updated = try await manager.updateCircle(circleId: circle.circleId, name: "Close Family")
+
+        #expect(updated.name == "Close Family")
+        #expect(manager.circles.first?.name == "Close Family")
+    }
+
+    @Test func rejectingEmptyRenameName() async throws {
+        let manager = SocialManager(service: MockSocialService(currentUserId: "u1"))
+        let circle = try await manager.createCircle(name: "Family", ownerId: "u1")
+
+        await assertThrows(.invalidName) {
+            _ = try await manager.updateCircle(circleId: circle.circleId, name: "   ")
+        }
+    }
+
+    @Test func nonOwnerCannotRenameCircle() async {
+        let manager = SocialManager(service: MockSocialService(currentUserId: "u3", memberships: [
+            makeMembership(id: "m1", circleId: "c1", userId: "u1", role: .owner),
+            makeMembership(id: "m2", circleId: "c1", userId: "u3", role: .member)
+        ]))
+
+        await assertThrows(.notPermitted) {
+            _ = try await manager.updateCircle(circleId: "c1", name: "Hijacked")
+        }
+    }
+
+    @Test func ownerCanDeleteCircle() async throws {
+        let service = MockSocialService(
+            currentUserId: "u1",
+            circles: [makeCircle(id: "c1", ownerId: "u1")],
+            memberships: [
+                makeMembership(id: "m1", circleId: "c1", userId: "u1", role: .owner),
+                makeMembership(id: "m2", circleId: "c1", userId: "u2", role: .member)
+            ]
+        )
+        let manager = SocialManager(service: service)
+        try await manager.refreshCircles(for: "u1")
+        #expect(manager.circles.map(\.circleId) == ["c1"])
+
+        try await manager.deleteCircle(circleId: "c1")
+
+        #expect(manager.circles.isEmpty)
+        #expect(service.memberUserIds(circleId: "c1").isEmpty)
+    }
+
+    @Test func nonOwnerCannotDeleteCircle() async {
+        let manager = SocialManager(service: MockSocialService(currentUserId: "u3", memberships: [
+            makeMembership(id: "m1", circleId: "c1", userId: "u1", role: .owner),
+            makeMembership(id: "m2", circleId: "c1", userId: "u3", role: .member)
+        ]))
+
+        await assertThrows(.notPermitted) {
+            try await manager.deleteCircle(circleId: "c1")
+        }
+    }
+
     @Test func signOutClearsCachedState() async throws {
         let manager = SocialManager(service: MockSocialService(currentUserId: "u1"))
         let circle = try await manager.createCircle(name: "Family", ownerId: "u1")

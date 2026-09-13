@@ -66,6 +66,19 @@ struct CirclesView: View {
             )
         }
         .tyfeBottomSheet(
+            isPresented: $presenter.isEditCirclePresented,
+            detents: [.medium],
+            title: "Edit Circle"
+        ) {
+            TyfeCircleNameSheetCardView(
+                label: "Circle name",
+                placeholder: "Family",
+                value: $presenter.editCircleName,
+                actionTitle: "Save Changes",
+                onSave: { presenter.onSubmitEditCircle() }
+            )
+        }
+        .tyfeBottomSheet(
             isPresented: $presenter.isInvitePresented,
             detents: [.medium],
             title: "Invite Code",
@@ -188,7 +201,22 @@ struct CirclesView: View {
                 onTap: { presenter.onGenerateInviteTapped() }
             )
 
-            if !presenter.isSelectedCircleOwner {
+            if presenter.isSelectedCircleOwner {
+                HStack(spacing: TyfeSpacing.small) {
+                    TyfeActionButtonView(
+                        title: "Edit",
+                        systemImage: "pencil",
+                        role: .secondary,
+                        onTap: { presenter.onEditCircleTapped() }
+                    )
+                    TyfeActionButtonView(
+                        title: "Delete Circle",
+                        systemImage: "trash",
+                        role: .destructive,
+                        onTap: { presenter.onDeleteCircleTapped() }
+                    )
+                }
+            } else {
                 TyfeActionButtonView(
                     title: "Leave Circle",
                     systemImage: "rectangle.portrait.and.arrow.right",

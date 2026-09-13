@@ -45,6 +45,27 @@ final class SupabaseSocialService: SocialService {
         return circle
     }
 
+    func updateCircle(circleId: String, name: String) async throws -> CircleModel {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { throw SocialServiceError.invalidName }
+        return try await client
+            .from("circles")
+            .update(CircleUpdate(name: trimmed), returning: .representation)
+            .eq("id", value: circleId)
+            .select()
+            .single()
+            .execute()
+            .value
+    }
+
+    func deleteCircle(circleId: String) async throws {
+        try await client
+            .from("circles")
+            .delete(returning: .minimal)
+            .eq("id", value: circleId)
+            .execute()
+    }
+
     func fetchCircles(userId: String) async throws -> [CircleModel] {
         try await client.from("circles").select().execute().value
     }
@@ -262,6 +283,10 @@ private struct CircleInsert: Encodable {
         case name
         case ownerId = "owner_id"
     }
+}
+
+private struct CircleUpdate: Encodable {
+    let name: String
 }
 
 private struct MembershipInsert: Encodable {

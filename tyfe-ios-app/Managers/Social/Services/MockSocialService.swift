@@ -79,6 +79,32 @@ final class MockSocialService: SocialService {
         return circle
     }
 
+    func updateCircle(circleId: String, name: String) async throws -> CircleModel {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { throw SocialServiceError.invalidName }
+        guard currentUserIsOwner(of: circleId) else { throw SocialServiceError.notPermitted }
+        guard let index = circles.firstIndex(where: { $0.circleId == circleId }) else {
+            throw SocialServiceError.circleNotFound
+        }
+        let existing = circles[index]
+        let updated = CircleModel(
+            circleId: existing.circleId,
+            name: trimmed,
+            ownerId: existing.ownerId,
+            createdAt: existing.createdAt,
+            updatedAt: .now
+        )
+        circles[index] = updated
+        return updated
+    }
+
+    func deleteCircle(circleId: String) async throws {
+        guard currentUserIsOwner(of: circleId) else { throw SocialServiceError.notPermitted }
+        circles.removeAll { $0.circleId == circleId }
+        memberships.removeAll { $0.circleId == circleId }
+        invites.removeAll { $0.circleId == circleId }
+    }
+
     func fetchCircles(userId: String) async throws -> [CircleModel] {
         let circleIds = Set(memberships.filter { $0.userId == userId }.map(\.circleId))
         return circles.filter { circleIds.contains($0.circleId) }
