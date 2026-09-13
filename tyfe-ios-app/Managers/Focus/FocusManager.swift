@@ -10,6 +10,8 @@ final class FocusManager {
     private let calendar: Calendar
     private let notificationScheduler: LocalTimerNotificationScheduling?
 
+    private(set) var stateRevision = 0
+
     init(
         repository: LocalAppRepository = MockLocalAppRepository(),
         clock: FocusClock = SystemFocusClock(),
@@ -27,7 +29,7 @@ final class FocusManager {
     }
 
     var activities: [ActivityModel] {
-        repository.snapshot.activities
+        observableSnapshot.activities
     }
 
     var dailyPlan: DailyPlanModel? {
@@ -39,15 +41,15 @@ final class FocusManager {
     }
 
     var rewardCredits: Int {
-        repository.snapshot.creditLedger.balance
+        observableSnapshot.creditLedger.balance
     }
 
     var focusSessions: [FocusSessionModel] {
-        repository.snapshot.focusSessions
+        observableSnapshot.focusSessions
     }
 
     var creditLedger: [RewardCreditLedgerEntry] {
-        repository.snapshot.creditLedger.entries
+        observableSnapshot.creditLedger.entries
     }
 
     var activeFocusSession: FocusSessionModel? {
@@ -96,6 +98,7 @@ final class FocusManager {
                 snapshot.focusSessions.append(session)
                 snapshot.nextSessionNumber += 1
             }
+            stateRevision += 1
             return session
         } catch {
             return nil
@@ -103,7 +106,7 @@ final class FocusManager {
     }
 
     func dailyPlan(for localDay: LocalDay) -> DailyPlanModel? {
-        repository.snapshot.dailyPlans.last { $0.localDay == localDay }
+        observableSnapshot.dailyPlans.last { $0.localDay == localDay }
     }
 
     func completedSessionCount(on localDay: LocalDay) -> Int {
@@ -295,6 +298,7 @@ final class FocusManager {
             }
             snapshot.focusSessions[index] = session
         }
+        stateRevision += 1
     }
 
     private func remainingSeconds(until endDate: Date?) -> Int {
@@ -359,12 +363,13 @@ final class FocusManager {
                 )
             )
         }
+        stateRevision += 1
         notificationScheduler?.cancelFocusCompletion(focusSessionId: completedSession.focusSessionId)
         return completedSession
     }
 
     private func completionResult(for session: FocusSessionModel) -> FocusCompletionResult {
-        let snapshot = repository.snapshot
+        let snapshot = observableSnapshot
         return FocusCompletionResult(
             focusSessionId: session.focusSessionId,
             rewardCreditsAwarded: snapshot.creditLedger.entries.contains {
@@ -372,5 +377,10 @@ final class FocusManager {
             } ? 1 : 0,
             rewardCreditBalance: snapshot.creditLedger.balance
         )
+    }
+
+    private var observableSnapshot: LocalAppSnapshot {
+        _ = stateRevision
+        return repository.snapshot
     }
 }

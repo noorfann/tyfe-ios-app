@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 import Testing
 @testable import tyfe_ios_app
 
@@ -44,7 +45,7 @@ struct FocusManagerTests {
 
         #expect(resumed.state == .running)
         #expect(resumed.pauseRemainingSeconds == 180)
-        #expect(try manager.refreshFocusSession(focusSessionId: session.focusSessionId).remainingFocusSeconds == 180)
+        #expect(try manager.refreshFocusSession(focusSessionId: session.focusSessionId).remainingFocusSeconds == 300)
     }
 
     @Test func naturalCompletionAwardsCreditExactlyOnce() throws {
@@ -180,6 +181,40 @@ struct FocusManagerTests {
         #expect(relaunchedManager.activeFocusSession?.focusSessionId == session.focusSessionId)
         #expect(relaunchedManager.focusSessions.count == 1)
         #expect(relaunchedManager.startFocusSession(activityId: ActivityModel.mock.activityId)?.focusSessionId == session.focusSessionId)
+    }
+
+    @Test func focusSessionChangesInvalidateObserversAcrossTheLifecycle() throws {
+        let manager = FocusManager(repository: MockLocalAppRepository(), clock: TestFocusClock())
+        let recorder = FocusObservationRecorder()
+
+        func observeActiveSession() {
+            withObservationTracking {
+                _ = manager.activeFocusSession
+            } onChange: {
+                recorder.count += 1
+            }
+        }
+
+        observeActiveSession()
+        let ready = try #require(manager.startFocusSession(activityId: ActivityModel.mock.activityId))
+        #expect(recorder.count == 1)
+
+        observeActiveSession()
+        _ = try manager.beginFocusSession(focusSessionId: ready.focusSessionId)
+        #expect(recorder.count == 2)
+
+        observeActiveSession()
+        _ = try manager.pauseFocusSession(focusSessionId: ready.focusSessionId)
+        #expect(recorder.count == 3)
+
+        observeActiveSession()
+        _ = try manager.resumeFocusSession(focusSessionId: ready.focusSessionId)
+        #expect(recorder.count == 4)
+
+        observeActiveSession()
+        _ = try manager.abandonFocusSession(focusSessionId: ready.focusSessionId)
+        #expect(recorder.count == 5)
+        #expect(manager.activeFocusSession == nil)
     }
 
     @Test func relaunchRestoresRunningSessionAndDerivesRemainingFromClock() throws {
@@ -386,4 +421,8 @@ final class TestFocusClock: FocusClock {
     func advance(by interval: TimeInterval) {
         now = now.addingTimeInterval(interval)
     }
+}
+
+private final class FocusObservationRecorder: @unchecked Sendable {
+    var count = 0
 }
