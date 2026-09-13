@@ -12,7 +12,6 @@ final class TyfeCirclesGalleryPresenter {
     let focusingMember = CircleMemberModel(userId: "user-focus", displayName: "Alex", avatarToken: nil, role: .member, joinedAt: .now)
     let availableMember = CircleMemberModel(userId: "user-idle", displayName: "Jordan", avatarToken: nil, role: .member, joinedAt: .now)
     let quietMember = CircleMemberModel(userId: "user-quiet", displayName: "Sam", avatarToken: nil, role: .member, joinedAt: .now)
-    let blockedMember = CircleMemberModel(userId: "user-blocked", displayName: "Blocked person", avatarToken: nil, role: .member, joinedAt: .now)
 
     let ownerProgress = CircleMemberProgressModel(
         circleId: "circle-family", userId: "user-owner", displayName: "You", avatarToken: nil,
@@ -35,7 +34,6 @@ final class TyfeCirclesGalleryPresenter {
         sevenDayCompleted: 9, cheersToday: 0, progressUpdatedAt: .now
     )
 
-    let blockedUserIds = ["user-blocked"]
     let inviteCode = "ABCD2345"
     let errorMessage = "That invite code has expired or was already used."
 
@@ -59,7 +57,6 @@ struct TyfeCirclesGalleryView: View {
                 selectionSection
                 ownerDetailSection
                 memberDetailSection
-                blockedSection
                 inviteSection
                 sheetSection
                 errorSection
@@ -119,30 +116,23 @@ struct TyfeCirclesGalleryView: View {
 
     private var ownerDetailSection: some View {
         gallerySection("Owner view · members") {
-            memberRow(TyfeCirclesGalleryMemberFixture(member: presenter.owner, progress: presenter.ownerProgress, focus: nil, isSelf: true, isViewerOwner: true, isBlocked: false))
-            memberRow(TyfeCirclesGalleryMemberFixture(member: presenter.focusingMember, progress: presenter.focusingProgress, focus: .focusing, isSelf: false, isViewerOwner: true, isBlocked: false))
-            memberRow(TyfeCirclesGalleryMemberFixture(member: presenter.availableMember, progress: presenter.availableProgress, focus: .available, isSelf: false, isViewerOwner: true, isBlocked: false))
-            memberRow(TyfeCirclesGalleryMemberFixture(member: presenter.quietMember, progress: presenter.quietProgress, focus: nil, isSelf: false, isViewerOwner: true, isBlocked: false))
+            memberRow(TyfeCirclesGalleryMemberFixture(member: presenter.owner, progress: presenter.ownerProgress, focus: nil, isSelf: true, isViewerOwner: true))
+            memberRow(TyfeCirclesGalleryMemberFixture(member: presenter.focusingMember, progress: presenter.focusingProgress, focus: .focusing, isSelf: false, isViewerOwner: true))
+            memberRow(TyfeCirclesGalleryMemberFixture(member: presenter.availableMember, progress: presenter.availableProgress, focus: .available, isSelf: false, isViewerOwner: true))
+            memberRow(TyfeCirclesGalleryMemberFixture(member: presenter.quietMember, progress: presenter.quietProgress, focus: nil, isSelf: false, isViewerOwner: true))
             TyfeActionButtonView(title: "Invite", systemImage: "person.badge.plus", role: .primary, onTap: {})
         }
     }
 
     private var memberDetailSection: some View {
         gallerySection("Member view · non-owner") {
-            memberRow(TyfeCirclesGalleryMemberFixture(member: presenter.availableMember, progress: presenter.availableProgress, focus: .available, isSelf: false, isViewerOwner: false, isBlocked: false))
+            memberRow(TyfeCirclesGalleryMemberFixture(member: presenter.availableMember, progress: presenter.availableProgress, focus: .available, isSelf: false, isViewerOwner: false))
             TyfeActionButtonView(
                 title: "Leave Circle",
                 systemImage: "rectangle.portrait.and.arrow.right",
                 role: .destructive,
                 onTap: {}
             )
-        }
-    }
-
-    private var blockedSection: some View {
-        gallerySection("Blocked member") {
-            memberRow(TyfeCirclesGalleryMemberFixture(member: presenter.blockedMember, progress: nil, focus: nil, isSelf: false, isViewerOwner: true, isBlocked: true))
-            TyfeCircleBlockedListView(blockedUserIds: presenter.blockedUserIds, onUnblock: { _ in })
         }
     }
 
@@ -190,11 +180,8 @@ struct TyfeCirclesGalleryView: View {
             focusStatus: fixture.focus,
             isSelf: fixture.isSelf,
             isViewerOwner: fixture.isViewerOwner,
-            isBlocked: fixture.isBlocked,
             onCheer: { _ in },
-            onRemove: {},
-            onBlock: {},
-            onUnblock: {}
+            onRemove: {}
         )
     }
 
@@ -218,7 +205,6 @@ private struct TyfeCirclesGalleryMemberFixture {
     let focus: CircleFocusStatus?
     let isSelf: Bool
     let isViewerOwner: Bool
-    let isBlocked: Bool
 }
 
 #Preview("Circles gallery") {

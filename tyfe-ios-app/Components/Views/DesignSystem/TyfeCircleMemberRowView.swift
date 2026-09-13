@@ -6,11 +6,8 @@ struct TyfeCircleMemberRowView: View {
     let focusStatus: CircleFocusStatus?
     let isSelf: Bool
     let isViewerOwner: Bool
-    let isBlocked: Bool
     let onCheer: (CheerKind) -> Void
     let onRemove: () -> Void
-    let onBlock: () -> Void
-    let onUnblock: () -> Void
 
     var body: some View {
         TyfeSurfaceView(role: .paper) {
@@ -56,13 +53,6 @@ struct TyfeCircleMemberRowView: View {
             cheerMenu
             if isViewerOwner {
                 Button("Remove", role: .destructive, action: onRemove)
-                    .font(TyfeTypography.caption)
-            }
-            if isBlocked {
-                Button("Unblock", action: onUnblock)
-                    .font(TyfeTypography.caption)
-            } else {
-                Button("Block", role: .destructive, action: onBlock)
                     .font(TyfeTypography.caption)
             }
         }

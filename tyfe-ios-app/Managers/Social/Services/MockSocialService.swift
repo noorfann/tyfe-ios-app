@@ -13,7 +13,6 @@ final class MockSocialService: SocialService {
     private var cheerContinuations: [UUID: AsyncStream<CheerModel>.Continuation] = [:]
     private var focusStatuses: [String: [String: CircleFocusStatus]] = [:]
     private var focusContinuations: [String: [UUID: AsyncStream<[CircleFocusStatusEntry]>.Continuation]] = [:]
-    private var blocks: [String: Set<String>] = [:]
     private var circleCounter: Int
     private var membershipCounter: Int
     private var inviteCounter: Int
@@ -295,22 +294,6 @@ final class MockSocialService: SocialService {
         focusContinuations[circleId]?.values.forEach { $0.finish() }
         focusContinuations[circleId] = nil
         focusStatuses[circleId] = nil
-    }
-
-    func blockUser(_ blockedId: String, blockerId: String) async throws {
-        guard blockerId == currentUserId, blockedId != blockerId else {
-            throw SocialServiceError.notPermitted
-        }
-        blocks[blockerId, default: []].insert(blockedId)
-    }
-
-    func unblockUser(_ blockedId: String, blockerId: String) async throws {
-        guard blockerId == currentUserId else { throw SocialServiceError.notPermitted }
-        blocks[blockerId]?.remove(blockedId)
-    }
-
-    func fetchBlockedUserIds(userId: String) async throws -> [String] {
-        blocks[userId, default: []].sorted()
     }
 
     private func emitCheer(_ cheer: CheerModel) {

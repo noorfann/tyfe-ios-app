@@ -46,10 +46,6 @@ final class CirclesPresenter {
         return Dictionary(uniqueKeysWithValues: entries.map { ($0.userId, $0.status) })
     }
 
-    var blockedUserIds: [String] {
-        interactor.socialBlockedUserIds
-    }
-
     var lastSyncedText: String? {
         guard let lastSyncedAt else { return nil }
         return lastSyncedAt.formatted(.relative(presentation: .named))
@@ -202,28 +198,6 @@ final class CirclesPresenter {
         }
     }
 
-    func onBlockUser(_ userId: String) {
-        Task {
-            do {
-                try await interactor.blockSocialUser(userId)
-                try await interactor.refreshSocialBlockedUsers()
-            } catch {
-                errorMessage = error.localizedDescription
-            }
-        }
-    }
-
-    func onUnblockUser(_ userId: String) {
-        Task {
-            do {
-                try await interactor.unblockSocialUser(userId)
-                try await interactor.refreshSocialBlockedUsers()
-            } catch {
-                errorMessage = error.localizedDescription
-            }
-        }
-    }
-
     func onDismissError() {
         errorMessage = nil
     }
@@ -240,7 +214,6 @@ final class CirclesPresenter {
         defer { isLoading = false }
         do {
             try await interactor.refreshSocialCircles(userId: userId)
-            try await interactor.refreshSocialBlockedUsers()
             try await interactor.refreshSocialCheers()
             circles = interactor.socialCircles
             if selectedCircleId == nil || !circles.contains(where: { $0.circleId == selectedCircleId }) {

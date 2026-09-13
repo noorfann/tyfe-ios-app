@@ -101,7 +101,6 @@ struct DesignSystemTests {
             selectedCircleId: "c1",
             onSelect: { _ in }
         )
-        let blocked = TyfeCircleBlockedListView(blockedUserIds: ["u3"], onUnblock: { _ in })
         let invite = TyfeCircleInviteCardView(code: "ABCD2345", onDone: {})
         let sheet = TyfeCircleNameSheetCardView(
             title: "New Circle",
@@ -115,7 +114,6 @@ struct DesignSystemTests {
         _ = Group {
             enable
             pills
-            blocked
             invite
             sheet
             error
@@ -149,11 +147,8 @@ struct DesignSystemTests {
             focusStatus: .focusing,
             isSelf: false,
             isViewerOwner: true,
-            isBlocked: false,
             onCheer: { _ in },
-            onRemove: {},
-            onBlock: {},
-            onUnblock: {}
+            onRemove: {}
         )
 
         _ = memberRow

@@ -132,25 +132,6 @@ extension CoreInteractor {
         await socialManager.updateFocusStatusForActiveCircles(status, userId: userId)
     }
 
-    var socialBlockedUserIds: [String] {
-        socialManager.blockedUserIds
-    }
-
-    func blockSocialUser(_ blockedId: String) async throws {
-        guard let blockerId = auth?.uid else { throw SocialServiceError.notAuthenticated }
-        try await socialManager.blockUser(blockedId, blockerId: blockerId)
-    }
-
-    func unblockSocialUser(_ blockedId: String) async throws {
-        guard let blockerId = auth?.uid else { throw SocialServiceError.notAuthenticated }
-        try await socialManager.unblockUser(blockedId, blockerId: blockerId)
-    }
-
-    func refreshSocialBlockedUsers() async throws {
-        guard let userId = auth?.uid else { throw SocialServiceError.notAuthenticated }
-        try await socialManager.refreshBlockedUserIds(userId: userId)
-    }
-
     var isSocialMigrationComplete: Bool {
         socialManager.hasMigratedToSocial
     }

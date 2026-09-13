@@ -6,7 +6,6 @@ protocol CirclesInteractor: GlobalInteractor {
     var socialCircles: [CircleModel] { get }
     var socialCheers: [CheerModel] { get }
     var socialFocusStatuses: [String: [CircleFocusStatusEntry]] { get }
-    var socialBlockedUserIds: [String] { get }
     var isSocialMigrationComplete: Bool { get }
 
     func signInAnonymously() async throws -> (user: UserAuthInfo, isNewUser: Bool)
@@ -27,9 +26,6 @@ protocol CirclesInteractor: GlobalInteractor {
     func sendCheer(_ kind: CheerKind, recipientId: String) async throws
     func refreshSocialCheers() async throws
     func syncSocialRealtime() async
-    func blockSocialUser(_ blockedId: String) async throws
-    func unblockSocialUser(_ blockedId: String) async throws
-    func refreshSocialBlockedUsers() async throws
 }
 
 extension CoreInteractor: CirclesInteractor { }

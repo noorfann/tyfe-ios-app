@@ -93,10 +93,6 @@ struct CirclesView: View {
             if presenter.selectedCircle != nil {
                 circleDetail
             }
-            TyfeCircleBlockedListView(
-                blockedUserIds: presenter.blockedUserIds,
-                onUnblock: { presenter.onUnblockUser($0) }
-            )
         }
     }
 
@@ -169,11 +165,8 @@ struct CirclesView: View {
                     focusStatus: presenter.focusStatus(for: member.userId),
                     isSelf: member.userId == presenter.currentUserId,
                     isViewerOwner: presenter.isSelectedCircleOwner,
-                    isBlocked: presenter.blockedUserIds.contains(member.userId),
                     onCheer: { presenter.onSendCheer($0, to: member.userId) },
-                    onRemove: { presenter.onRemoveMember(member.userId) },
-                    onBlock: { presenter.onBlockUser(member.userId) },
-                    onUnblock: { presenter.onUnblockUser(member.userId) }
+                    onRemove: { presenter.onRemoveMember(member.userId) }
                 )
             }
 
