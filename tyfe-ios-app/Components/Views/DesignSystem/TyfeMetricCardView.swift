@@ -23,30 +23,40 @@ struct TyfeMetricCardView: View {
 
     var body: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.small) {
-                HStack(alignment: .center, spacing: TyfeSpacing.small) {
-                    RoundedRectangle(cornerRadius: TyfeSpacing.unit)
-                        .fill(accent)
-                        .frame(width: 12, height: 12)
-                        .overlay {
-                            RoundedRectangle(cornerRadius: TyfeSpacing.unit)
-                                .stroke(TyfeEditorialPalette.onAccent, lineWidth: TyfeStroke.hairline)
-                        }
-                    Text(title)
-                        .font(TyfeTypography.eyebrow)
-                        .textCase(.uppercase)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    Image(systemName: systemImage)
-                        .imageScale(.small)
-                }
-                HStack(alignment: .firstTextBaseline, spacing: TyfeSpacing.small) {
-                    Text(value)
-                        .font(TyfeTypography.displayCompact)
-                    if let detail {
+            if let detail {
+                VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+                    HStack(alignment: .center, spacing: TyfeSpacing.small) {
+                        RoundedRectangle(cornerRadius: TyfeSpacing.unit)
+                            .fill(accent)
+                            .frame(width: 12, height: 12)
+                            .overlay {
+                                RoundedRectangle(cornerRadius: TyfeSpacing.unit)
+                                    .stroke(TyfeEditorialPalette.onAccent, lineWidth: TyfeStroke.hairline)
+                            }
+                        Text(title)
+                            .font(TyfeTypography.eyebrow)
+                            .textCase(.uppercase)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Image(systemName: systemImage)
+                            .imageScale(.small)
+                    }
+                    HStack(alignment: .firstTextBaseline, spacing: TyfeSpacing.small) {
+                        Text(value)
+                            .font(TyfeTypography.displayCompact)
                         Text(detail)
                             .font(TyfeTypography.caption)
                             .frame(maxWidth: .infinity, alignment: .trailing)
                     }
+                }
+            } else {
+                VStack(alignment: .center, spacing: TyfeSpacing.unit) {
+                    Text(title)
+                        .font(TyfeTypography.eyebrow)
+                        .textCase(.uppercase)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    Text(value)
+                        .font(TyfeTypography.displayCompact)
+                        .frame(maxWidth: .infinity, alignment: .center)
                 }
             }
         }
