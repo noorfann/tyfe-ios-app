@@ -218,11 +218,11 @@ final class SupabaseSocialService: SocialService {
             let changes = channel.presenceChange()
             let changesTask = Task {
                 for await action in changes {
-                    for payload in (try? action.decodeJoins(as: CirclePresencePayload.self)) ?? [] {
-                        statuses[payload.userId] = payload.status
-                    }
                     for payload in (try? action.decodeLeaves(as: CirclePresencePayload.self)) ?? [] {
                         statuses[payload.userId] = nil
+                    }
+                    for payload in (try? action.decodeJoins(as: CirclePresencePayload.self)) ?? [] {
+                        statuses[payload.userId] = payload.status
                     }
                     continuation.yield(Self.sortedStatuses(statuses))
                 }

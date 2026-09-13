@@ -34,16 +34,18 @@ final class CirclesPresenter {
     }
 
     var currentUserId: String? {
-        interactor.currentAuthUserId
+        interactor.currentAuthUserId?.lowercased()
     }
 
     var isSelectedCircleOwner: Bool {
-        selectedCircle?.ownerId == interactor.currentAuthUserId
+        selectedCircle?.ownerId.lowercased() == currentUserId
     }
 
     var focusStatusByUser: [String: CircleFocusStatus] {
         let entries = interactor.socialFocusStatuses[selectedCircleId ?? ""] ?? []
-        return Dictionary(uniqueKeysWithValues: entries.map { ($0.userId, $0.status) })
+        return entries.reduce(into: [String: CircleFocusStatus]()) { result, entry in
+            result[entry.userId.lowercased()] = entry.status
+        }
     }
 
     var lastSyncedText: String? {
@@ -60,7 +62,7 @@ final class CirclesPresenter {
     }
 
     func focusStatus(for userId: String) -> CircleFocusStatus? {
-        focusStatusByUser[userId]
+        focusStatusByUser[userId.lowercased()]
     }
 
     // MARK: Lifecycle
