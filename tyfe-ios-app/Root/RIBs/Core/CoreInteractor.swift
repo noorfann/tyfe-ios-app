@@ -352,7 +352,8 @@ struct CoreInteractor: GlobalInteractor {
 
     @discardableResult
     func startPhase1FocusSession(activityId: String) -> FocusSessionModel? {
-        focusManager.startFocusSession(activityId: activityId)
+        guard !isRewardInProgress else { return nil }
+        return focusManager.startFocusSession(activityId: activityId)
     }
 
     @discardableResult
@@ -410,6 +411,8 @@ struct CoreInteractor: GlobalInteractor {
 
     @discardableResult
     func startFocusFromHome() -> FocusSessionModel? {
+        guard !isRewardInProgress else { return nil }
+
         if let activeFocusSession = focusManager.activeFocusSession {
             return activeFocusSession
         }
@@ -443,6 +446,10 @@ struct CoreInteractor: GlobalInteractor {
 
     var activeRewardClaim: RewardClaimModel? {
         rewardManager.activeRewardClaim
+    }
+
+    var isRewardInProgress: Bool {
+        activeRewardClaim?.state == .active
     }
 
     var rewardClaims: [RewardClaimModel] {

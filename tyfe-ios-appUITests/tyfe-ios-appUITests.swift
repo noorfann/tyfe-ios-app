@@ -135,9 +135,23 @@ final class TyfeappUITests: XCTestCase {
 
         app.buttons["Start now"].tap()
 
-        XCTAssertTrue(app.buttons["reward-in-progress-status"].waitForExistence(timeout: 5))
+        let rewardStatus = app.buttons["reward-in-progress-status"]
+        XCTAssertTrue(rewardStatus.waitForExistence(timeout: 5))
+
+        for tabTitle in ["Today", "Rewards", "Circles", "Settings"] {
+            app.buttons[tabTitle].tap()
+
+            let screenTitle = app.staticTexts[tabTitle].firstMatch
+            XCTAssertTrue(screenTitle.waitForExistence(timeout: 5))
+            XCTAssertLessThanOrEqual(
+                rewardStatus.frame.maxY,
+                screenTitle.frame.minY,
+                "Reward status overlaps the \(tabTitle) screen title"
+            )
+        }
+
         app.buttons["Today"].tap()
-        app.buttons["reward-in-progress-status"].tap()
+        rewardStatus.tap()
         XCTAssertTrue(app.buttons["Rewards"].isSelected)
     }
 

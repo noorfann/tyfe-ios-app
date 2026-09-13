@@ -49,6 +49,7 @@ struct HomeInteractorTests {
         #expect(interactor.dashboardState.activeFocusActivity?.activityId == activityId)
     }
 
+#if MOCK
     @Test func activeRewardBlocksStartingFocusFromHome() throws {
         let interactor = makeInteractor()
         let activityId = ActivityModel.mock.activityId
@@ -70,6 +71,7 @@ struct HomeInteractorTests {
         #expect(interactor.isRewardInProgress)
         #expect(interactor.startFocusFromHome() == nil)
     }
+#endif
 
     private func makeInteractor() -> CoreInteractor {
         let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))

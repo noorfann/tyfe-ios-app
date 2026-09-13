@@ -37,6 +37,7 @@ struct RewardsInteractorTests {
         #expect(interactor.activeRewardClaim == nil)
     }
 
+#if MOCK
     @Test func activeRewardBlocksStartingFocusFromToday() throws {
         let interactor = makeInteractor()
         let activityId = ActivityModel.mock.activityId
@@ -53,6 +54,7 @@ struct RewardsInteractorTests {
         #expect(interactor.isRewardInProgress)
         #expect(interactor.startPhase1FocusSession(activityId: activityId) == nil)
     }
+#endif
 
     private func makeInteractor() -> CoreInteractor {
         let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))

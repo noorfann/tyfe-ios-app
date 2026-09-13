@@ -125,9 +125,14 @@ struct Dependencies {
         soundEffectManager = SoundEffectManager(logger: logManager)
         switch config {
         case .mock:
-            let snapshot = ProcessInfo.processInfo.arguments.contains("HOME_FLOW")
-                ? LocalAppSnapshot.homeFlowMock
-                : LocalAppSnapshot.mock
+            let snapshot: LocalAppSnapshot
+            if ProcessInfo.processInfo.arguments.contains("HOME_FLOW") {
+                snapshot = LocalAppSnapshot.homeFlowMock
+            } else if ProcessInfo.processInfo.arguments.contains("REWARD_FLOW") {
+                snapshot = LocalAppSnapshot.rewardFlowMock
+            } else {
+                snapshot = LocalAppSnapshot.mock
+            }
             repository = MockLocalAppRepository(snapshot: snapshot)
         case .dev, .prod:
             repository = LocalFileRepository(persistence: LocalFileRepositoryPersistence())

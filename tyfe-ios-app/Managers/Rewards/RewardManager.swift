@@ -9,6 +9,8 @@ final class RewardManager {
     private let clock: FocusClock
     private let notificationScheduler: LocalTimerNotificationScheduling?
 
+    private(set) var stateRevision = 0
+
     init(
         repository: LocalAppRepository = MockLocalAppRepository(),
         clock: FocusClock = SystemFocusClock(),
@@ -20,7 +22,7 @@ final class RewardManager {
     }
 
     var rewards: [RewardModel] {
-        (RewardModel.starters + repository.snapshot.customRewards).map { reward in
+        (RewardModel.starters + observableSnapshot.customRewards).map { reward in
             RewardModel(
                 rewardId: reward.rewardId,
                 name: reward.name,
@@ -33,11 +35,11 @@ final class RewardManager {
     }
 
     var rewardClaims: [RewardClaimModel] {
-        repository.snapshot.rewardClaims
+        observableSnapshot.rewardClaims
     }
 
     var rewardCredits: Int {
-        repository.snapshot.creditLedger.balance
+        observableSnapshot.creditLedger.balance
     }
 
     var activeRewardClaim: RewardClaimModel? {
@@ -48,7 +50,7 @@ final class RewardManager {
         if activeRewardClaim != nil {
             return .unavailable
         }
-        return repository.snapshot.creditLedger.balance >= reward.durationTier.creditCost
+        return observableSnapshot.creditLedger.balance >= reward.durationTier.creditCost
             ? .available
             : .insufficientBalance
     }
@@ -74,6 +76,7 @@ final class RewardManager {
                 snapshot.customRewards.append(reward)
                 snapshot.nextRewardNumber += 1
             }
+            stateRevision += 1
             return reward
         } catch {
             return nil
@@ -126,6 +129,7 @@ final class RewardManager {
                 snapshot.rewardClaims.append(claim)
                 snapshot.nextRewardClaimNumber += 1
             }
+            stateRevision += 1
             return claim
         } catch let error as RewardManagerError {
             throw error
@@ -194,6 +198,12 @@ final class RewardManager {
             }
             snapshot.rewardClaims[index] = claim
         }
+        stateRevision += 1
+    }
+
+    private var observableSnapshot: LocalAppSnapshot {
+        _ = stateRevision
+        return repository.snapshot
     }
 }
 

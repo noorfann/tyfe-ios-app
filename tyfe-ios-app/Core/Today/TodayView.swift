@@ -148,7 +148,7 @@ struct TodayView: View {
                         accent: TyfeEditorialPalette.saffron
                     )
                     TyfeMetricCardView(
-                        title: "Today Sessions",
+                        title: "Sessions",
                         value: presenter.planProgressLabel,
                         systemImage: "list.bullet.rectangle",
                         accent: TyfeEditorialPalette.teal
@@ -171,6 +171,12 @@ struct TodayView: View {
                             Text(activity.name)
                                 .font(TyfeTypography.interface)
                                 .foregroundStyle(TyfeEditorialPalette.onDark.opacity(0.72))
+
+                            if presenter.isRewardInProgress {
+                                Text("Finish your Reward before returning to Focus.")
+                                    .font(TyfeTypography.caption)
+                                    .foregroundStyle(TyfeEditorialPalette.onDark.opacity(0.66))
+                            }
                         }
 
                     }
@@ -178,6 +184,7 @@ struct TodayView: View {
                     .asButton(.press) {
                         presenter.onResumeActiveFocusPressed()
                     }
+                    .disabled(presenter.isRewardInProgress)
                     .accessibilityLabel("Resume focus session for \(activity.name)")
                 }
             }
@@ -210,6 +217,7 @@ struct TodayView: View {
                 completedSessionCounts: presenter.completedSessionCounts,
                 selectedPlanItemId: presenter.selectedPlanItemId,
                 nextPlanItemId: presenter.nextPlanItem?.id,
+                isRewardInProgress: presenter.isRewardInProgress,
                 canDecrement: { presenter.canDecrement($0) },
                 onStart: { presenter.onStartFocusPressed(for: $0) },
                 onIncrement: { presenter.increment($0) },
@@ -277,6 +285,7 @@ struct TodayActivityDeckView: View {
     let completedSessionCounts: [String: Int]
     let selectedPlanItemId: String?
     let nextPlanItemId: String?
+    let isRewardInProgress: Bool
     let canDecrement: (DailyPlanItemModel) -> Bool
     let onStart: (DailyPlanItemModel) -> Void
     let onIncrement: (DailyPlanItemModel) -> Void
@@ -352,6 +361,7 @@ struct TodayActivityDeckView: View {
             item: card.item,
             completedCount: completedCount,
             isNext: nextPlanItemId == card.item.id,
+            isRewardInProgress: isRewardInProgress,
             canDecrement: canDecrement(card.item),
             onStart: { onStart(card.item) },
             onIncrement: { onIncrement(card.item) },
@@ -415,6 +425,7 @@ struct TodayPlanCardView: View {
     let item: DailyPlanItemModel
     let completedCount: Int
     let isNext: Bool
+    let isRewardInProgress: Bool
     let canDecrement: Bool
     let onStart: () -> Void
     let onIncrement: () -> Void
@@ -494,15 +505,31 @@ struct TodayPlanCardView: View {
                 }
 
                 TyfeActionButtonView(
-                    title: isComplete ? "Completed" : "Start " + activity.name,
-                    systemImage: isComplete ? "checkmark" : "play.fill",
-                    isEnabled: !isComplete,
+                    title: startButtonTitle,
+                    systemImage: startButtonSystemImage,
+                    isEnabled: !isComplete && !isRewardInProgress,
                     onTap: onStart
                 )
             }
         }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("\(activity.name), \(completedCount) of \(item.plannedSessionCount) sessions")
+        .accessibilityLabel(accessibilityLabel)
+    }
+
+    private var startButtonTitle: String {
+        if isComplete { return "Completed" }
+        return isRewardInProgress ? "Reward in progress" : "Start"
+    }
+
+    private var startButtonSystemImage: String {
+        if isComplete { return "checkmark" }
+        return isRewardInProgress ? "clock.fill" : "play.fill"
+    }
+
+    private var accessibilityLabel: String {
+        let progress = "\(activity.name), \(completedCount) of \(item.plannedSessionCount) sessions"
+        guard isRewardInProgress && !isComplete else { return progress }
+        return progress + ". Focus unavailable while Reward is in progress."
     }
 
     private func stepperButton(

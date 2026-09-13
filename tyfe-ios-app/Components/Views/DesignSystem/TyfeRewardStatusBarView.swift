@@ -1,10 +1,12 @@
 import SwiftUI
+import SwiftfulUI
 
 struct TyfeRewardStatusBarView: View {
 
-    let title: String
-    let timeText: String
-    let systemImage: String
+    var title: String
+    var timeText: String
+    var systemImage: String
+    var onTap: () -> Void = { }
 
     var body: some View {
         HStack(spacing: TyfeSpacing.small) {
@@ -35,13 +37,24 @@ struct TyfeRewardStatusBarView: View {
             x: TyfeShadow.offset.width,
             y: TyfeShadow.offset.height
         )
+        .asButton(.press) {
+            onTap()
+        }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text("\(title), \(timeText) remaining"))
+        .accessibilityHint("Opens Rewards")
+        .accessibilityIdentifier("reward-in-progress-status")
+        .accessibilityAddTraits(.isButton)
     }
 }
 
 #Preview("Reward status bar") {
-    TyfeRewardStatusBarView(title: "Reward in progress", timeText: "12:30", systemImage: "clock.fill")
+    TyfeRewardStatusBarView(
+        title: "Reward in progress",
+        timeText: "12:30",
+        systemImage: "clock.fill",
+        onTap: { }
+    )
         .padding(TyfeSpacing.card)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(TyfeEditorialPalette.canvas)

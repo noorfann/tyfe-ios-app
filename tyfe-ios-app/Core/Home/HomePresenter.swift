@@ -25,11 +25,18 @@ class HomePresenter {
         dashboardState.rewardCredits
     }
 
+    var isRewardInProgress: Bool {
+        interactor.isRewardInProgress
+    }
+
     var canStartFocus: Bool {
-        dashboardState.activeFocusActivity != nil || dashboardState.nextActivity != nil
+        !isRewardInProgress && (dashboardState.activeFocusActivity != nil || dashboardState.nextActivity != nil)
     }
 
     var heroEyebrow: String {
+        if isRewardInProgress {
+            return "REWARD IN PROGRESS"
+        }
         if dashboardState.activeFocusSession != nil {
             return "FOCUS IN PROGRESS"
         }
@@ -37,6 +44,9 @@ class HomePresenter {
     }
 
     var heroTitle: String {
+        if isRewardInProgress {
+            return "Take your\nReward time."
+        }
         if dashboardState.activeFocusSession != nil {
             return "Return to\n\(activityTitle)."
         }
@@ -47,6 +57,9 @@ class HomePresenter {
     }
 
     var heroSubtitle: String {
+        if isRewardInProgress {
+            return "Finish your current Reward before starting Focus."
+        }
         if dashboardState.activeFocusSession != nil {
             return "Your current Focus Session is ready to continue."
         }
@@ -57,6 +70,9 @@ class HomePresenter {
     }
 
     var focusActionTitle: String {
+        if isRewardInProgress {
+            return "Reward in progress"
+        }
         if dashboardState.activeFocusSession != nil {
             return "Resume Focus"
         }
@@ -64,6 +80,9 @@ class HomePresenter {
     }
 
     var focusActionSystemImage: String {
+        if isRewardInProgress {
+            return "clock.fill"
+        }
         if dashboardState.activeFocusSession != nil {
             return "arrow.clockwise"
         }
@@ -71,6 +90,9 @@ class HomePresenter {
     }
 
     var focusActionAccessibilityLabel: String {
+        if isRewardInProgress {
+            return "Focus unavailable while Reward is in progress"
+        }
         if dashboardState.activeFocusSession != nil {
             return "Resume Focus Session"
         }
@@ -78,6 +100,9 @@ class HomePresenter {
     }
 
     var focusActionAccessibilityHint: String {
+        if isRewardInProgress {
+            return "Finish your current Reward before starting a Focus Session."
+        }
         if dashboardState.activeFocusSession != nil {
             return "Returns to the Focus Session for \(activityTitle)."
         }
@@ -110,6 +135,8 @@ class HomePresenter {
     }
 
     func onStartFocusPressed() {
+        guard !isRewardInProgress else { return }
+
         guard let session = interactor.startFocusFromHome() else {
             reload()
             return

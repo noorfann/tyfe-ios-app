@@ -57,7 +57,7 @@ class TabBarPresenter {
 
     var isRewardStatusVisible: Bool {
         guard let claim = interactor.activeRewardClaim else { return false }
-        return claim.state == .active && !interactor.isFocusScreenVisible
+        return claim.state == .active
     }
 
     var rewardStatusTimeText: String {
@@ -89,6 +89,14 @@ class TabBarPresenter {
         selectedTab = tabId
     }
 
+    func onRewardStatusPressed(delegate: TabBarDelegate) {
+        guard isRewardStatusVisible,
+              let rewardsTab = tabs.first(where: { $0.title == "Rewards" }) else { return }
+
+        interactor.trackEvent(event: Event.rewardStatusPressed(delegate: delegate))
+        selectedTab = rewardsTab.id
+    }
+
     func syncRewardTicker() {
         _ = try? interactor.refreshRewardClaim()
         if isRewardStatusVisible {
@@ -117,7 +125,11 @@ class TabBarPresenter {
 
     private func tickReward() {
         _ = try? interactor.refreshRewardClaim()
-        updateRewardRemaining()
+        if isRewardStatusVisible {
+            updateRewardRemaining()
+        } else {
+            stopRewardTicker()
+        }
     }
 
     private func updateRewardRemaining() {
@@ -138,6 +150,7 @@ extension TabBarPresenter {
         case onDisappear(delegate: TabBarDelegate)
         case tabSelected(tab: TabBarTab, delegate: TabBarDelegate)
         case tabReselected(tab: TabBarTab, delegate: TabBarDelegate)
+        case rewardStatusPressed(delegate: TabBarDelegate)
 
         var eventName: String {
             switch self {
@@ -145,6 +158,7 @@ extension TabBarPresenter {
             case .onDisappear:              return "TabBarView_Disappear"
             case .tabSelected:              return "TabBar_TabSelected"
             case .tabReselected:            return "TabBar_TabReselected"
+            case .rewardStatusPressed:      return "TabBar_RewardStatusPressed"
             }
         }
 
@@ -156,6 +170,8 @@ extension TabBarPresenter {
                 var params = tab.eventParameters
                 params.merge(delegate.eventParameters)
                 return params
+            case .rewardStatusPressed(delegate: let delegate):
+                return delegate.eventParameters
             }
         }
 

@@ -28,6 +28,7 @@ struct TabBarView: View {
     let delegate: TabBarDelegate
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
 
     private var statusBarAnimation: Animation? {
         reduceMotion ? nil : .easeInOut(duration: TyfeMotion.normalDuration)
@@ -47,7 +48,19 @@ struct TabBarView: View {
     }
 
     var body: some View {
-        ZStack(alignment: .top) {
+        VStack(spacing: presenter.isRewardStatusVisible ? TyfeSpacing.small : 0) {
+            if presenter.isRewardStatusVisible {
+                TyfeRewardStatusBarView(
+                    title: "Reward in progress",
+                    timeText: presenter.rewardStatusTimeText,
+                    systemImage: "clock.fill",
+                    onTap: { presenter.onRewardStatusPressed(delegate: delegate) }
+                )
+                .padding(.horizontal, TyfeSpacing.control)
+                .padding(.top, TyfeSpacing.small)
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+
             TabView(selection: selectionHandler) {
                 ForEach(delegate.tabs) { tab in
                     tab.content
@@ -57,17 +70,8 @@ struct TabBarView: View {
                         .tag(tab.id)
                 }
             }
-
-            if presenter.isRewardStatusVisible {
-                TyfeRewardStatusBarView(
-                    title: "Reward in progress",
-                    timeText: presenter.rewardStatusTimeText,
-                    systemImage: "clock.fill"
-                )
-                .padding(.top, TyfeSpacing.small)
-                .transition(.move(edge: .top).combined(with: .opacity))
-            }
         }
+        .background(TyfeEditorialPalette.canvas.ignoresSafeArea())
         .animation(statusBarAnimation, value: presenter.isRewardStatusVisible)
         .onAppear {
             presenter.onViewAppear(delegate: delegate)
@@ -77,6 +81,11 @@ struct TabBarView: View {
         }
         .onChange(of: presenter.isRewardStatusVisible) { _, _ in
             presenter.syncRewardTicker()
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                presenter.syncRewardTicker()
+            }
         }
     }
 }

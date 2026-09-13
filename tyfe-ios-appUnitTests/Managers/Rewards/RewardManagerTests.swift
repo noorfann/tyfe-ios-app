@@ -165,12 +165,12 @@ struct RewardManagerTests {
 
     @Test func rewardClaimChangesInvalidateObservers() throws {
         let manager = makeManager()
-        var observedChanges = 0
+        let recorder = ObservationRecorder()
 
         withObservationTracking {
             _ = manager.activeRewardClaim
         } onChange: {
-            observedChanges += 1
+            recorder.count += 1
         }
 
         let claim = try manager.createRewardClaim(
@@ -178,17 +178,17 @@ struct RewardManagerTests {
             durationTier: .fifteenMinutes
         )
 
-        #expect(observedChanges == 1)
+        #expect(recorder.count == 1)
 
         withObservationTracking {
             _ = manager.activeRewardClaim
         } onChange: {
-            observedChanges += 1
+            recorder.count += 1
         }
 
         _ = try manager.startRewardClaim(rewardClaimId: claim.rewardClaimId)
 
-        #expect(observedChanges == 2)
+        #expect(recorder.count == 2)
     }
 
     @Test func refreshExpiresOverdueClaimWithoutRefund() throws {
@@ -244,6 +244,7 @@ struct RewardManagerTests {
             rewardId: "reward-starter-social",
             durationTier: .fifteenMinutes
         )
+        _ = try first.startRewardClaim(rewardClaimId: claim.rewardClaimId)
 
         let relaunched = RewardManager(
             repository: LocalFileRepository(persistence: persistence, fallback: Self.seededSnapshot),
@@ -251,6 +252,7 @@ struct RewardManagerTests {
         )
 
         #expect(relaunched.activeRewardClaim?.rewardClaimId == claim.rewardClaimId)
+        #expect(relaunched.activeRewardClaim?.state == .active)
         #expect(relaunched.rewardCredits == 1)
     }
 
@@ -282,4 +284,8 @@ struct RewardManagerTests {
 
         #expect(scheduler.cancelledRewardClaimIds == [claim.rewardClaimId])
     }
+}
+
+private final class ObservationRecorder: @unchecked Sendable {
+    var count = 0
 }

@@ -56,6 +56,10 @@ final class TodayPresenter {
         activeFocusSession != nil
     }
 
+    var isRewardInProgress: Bool {
+        interactor.isRewardInProgress
+    }
+
     var nextPlanItem: DailyPlanItemModel? {
         planItems.first { remainingSessionCount(for: $0) > 0 }
     }
@@ -165,6 +169,8 @@ final class TodayPresenter {
     }
 
     func onStartFocusPressed(for item: DailyPlanItemModel) {
+        guard !isRewardInProgress else { return }
+
         if let activeFocusSession,
            let activity = activities.first(where: { $0.activityId == activeFocusSession.activityId }) {
             selectedPlanItemId = item.id
@@ -184,6 +190,8 @@ final class TodayPresenter {
     }
 
     func onResumeActiveFocusPressed() {
+        guard !isRewardInProgress else { return }
+
         guard let activeFocusSession,
               let activity = activities.first(where: { $0.activityId == activeFocusSession.activityId }) else {
             return
