@@ -452,6 +452,19 @@ struct CoreInteractor: GlobalInteractor {
         activeRewardClaim?.state == .active
     }
 
+    var hasLiveFocusSession: Bool {
+        focusManager.activeFocusSession != nil
+    }
+
+    var isFocusInProgress: Bool {
+        guard let state = focusManager.activeFocusSession?.state else { return false }
+        return state == .running || state == .paused
+    }
+
+    func activity(forFocusSession session: FocusSessionModel) -> ActivityModel? {
+        todayManager.activities.first { $0.activityId == session.activityId }
+    }
+
     var rewardClaims: [RewardClaimModel] {
         rewardManager.rewardClaims
     }
@@ -466,12 +479,18 @@ struct CoreInteractor: GlobalInteractor {
         rewardId: String,
         durationTier: RewardDurationTier
     ) throws -> RewardClaimModel {
-        try rewardManager.createRewardClaim(rewardId: rewardId, durationTier: durationTier)
+        guard !hasLiveFocusSession else {
+            throw RewardManagerError.focusSessionInProgress
+        }
+        return try rewardManager.createRewardClaim(rewardId: rewardId, durationTier: durationTier)
     }
 
     @discardableResult
     func startRewardClaim(rewardClaimId: String) throws -> RewardClaimModel {
-        try rewardManager.startRewardClaim(rewardClaimId: rewardClaimId)
+        guard !hasLiveFocusSession else {
+            throw RewardManagerError.focusSessionInProgress
+        }
+        return try rewardManager.startRewardClaim(rewardClaimId: rewardClaimId)
     }
 
     @discardableResult

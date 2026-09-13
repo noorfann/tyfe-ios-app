@@ -4,10 +4,11 @@ struct TyfeRewardCardView: View {
 
     let reward: RewardModel
     let balance: Int
+    var blockingMessage: String?
     let onTap: () -> Void
 
     private var isAvailable: Bool {
-        reward.availability == .available
+        reward.availability == .available && blockingMessage == nil
     }
 
     var body: some View {
@@ -39,17 +40,21 @@ struct TyfeRewardCardView: View {
 
     @ViewBuilder
     private var actionSlot: some View {
-        switch reward.availability {
-        case .available:
-            TyfeActionButtonView(
-                title: "Take this Reward",
-                systemImage: "gift.fill",
-                onTap: onTap
-            )
-        case .insufficientBalance:
-            slotMessage("You need \(costLabel). You have \(balance).")
-        case .unavailable:
-            slotMessage("Unavailable right now.")
+        if let blockingMessage {
+            slotMessage(blockingMessage)
+        } else {
+            switch reward.availability {
+            case .available:
+                TyfeActionButtonView(
+                    title: "Take this Reward",
+                    systemImage: "gift.fill",
+                    onTap: onTap
+                )
+            case .insufficientBalance:
+                slotMessage("You need \(costLabel). You have \(balance).")
+            case .unavailable:
+                slotMessage("Unavailable right now.")
+            }
         }
     }
 
@@ -69,6 +74,7 @@ struct TyfeRewardCardView: View {
     }
 
     private var availabilityLabel: String {
+        if blockingMessage != nil { return "Focus active" }
         switch reward.availability {
         case .available: return "Available"
         case .insufficientBalance: return "Need more"
@@ -77,6 +83,7 @@ struct TyfeRewardCardView: View {
     }
 
     private var availabilitySymbol: String {
+        if blockingMessage != nil { return "timer" }
         switch reward.availability {
         case .available: return "checkmark.circle.fill"
         case .insufficientBalance: return "lock.fill"
@@ -85,6 +92,7 @@ struct TyfeRewardCardView: View {
     }
 
     private var availabilityTone: TyfePillTone {
+        if blockingMessage != nil { return .neutral }
         switch reward.availability {
         case .available: return .accent
         case .insufficientBalance: return .warning

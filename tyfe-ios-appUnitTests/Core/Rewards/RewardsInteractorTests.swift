@@ -54,6 +54,62 @@ struct RewardsInteractorTests {
         #expect(interactor.isRewardInProgress)
         #expect(interactor.startPhase1FocusSession(activityId: activityId) == nil)
     }
+
+    @Test func readyFocusSessionBlocksCreatingARewardClaim() throws {
+        let interactor = makeInteractor()
+        let session = try #require(
+            interactor.focusManager.startFocusSession(activityId: ActivityModel.mock.activityId)
+        )
+        _ = try interactor.focusManager.markFocusSessionCompleteForTesting(
+            focusSessionId: session.focusSessionId
+        )
+        let liveSession = try #require(
+            interactor.focusManager.startFocusSession(activityId: ActivityModel.mock.activityId)
+        )
+
+        #expect(liveSession.state == .ready)
+        #expect(interactor.hasLiveFocusSession)
+        #expect(throws: RewardManagerError.focusSessionInProgress) {
+            try interactor.createRewardClaim(
+                rewardId: "reward-starter-social",
+                durationTier: .fifteenMinutes
+            )
+        }
+    }
+
+    @Test func runningFocusSessionBlocksStartingASavedRewardClaim() throws {
+        let interactor = makeInteractor()
+        let earningSession = try #require(
+            interactor.focusManager.startFocusSession(activityId: ActivityModel.mock.activityId)
+        )
+        _ = try interactor.focusManager.markFocusSessionCompleteForTesting(
+            focusSessionId: earningSession.focusSessionId
+        )
+        #expect(!interactor.hasLiveFocusSession)
+        let claim = try interactor.createRewardClaim(
+            rewardId: "reward-starter-social",
+            durationTier: .fifteenMinutes
+        )
+        let focusSession = try #require(
+            interactor.focusManager.startFocusSession(activityId: ActivityModel.mock.activityId)
+        )
+        _ = try interactor.focusManager.beginFocusSession(focusSessionId: focusSession.focusSessionId)
+
+        #expect(throws: RewardManagerError.focusSessionInProgress) {
+            try interactor.startRewardClaim(rewardClaimId: claim.rewardClaimId)
+        }
+
+        _ = try interactor.focusManager.pauseFocusSession(focusSessionId: focusSession.focusSessionId)
+        #expect(throws: RewardManagerError.focusSessionInProgress) {
+            try interactor.startRewardClaim(rewardClaimId: claim.rewardClaimId)
+        }
+
+        _ = try interactor.focusManager.abandonFocusSession(focusSessionId: focusSession.focusSessionId)
+        #expect(!interactor.hasLiveFocusSession)
+        let activeClaim = try interactor.startRewardClaim(rewardClaimId: claim.rewardClaimId)
+        #expect(activeClaim.state == .active)
+        #expect(interactor.activeRewardClaim?.state == .active)
+    }
 #endif
 
     private func makeInteractor() -> CoreInteractor {

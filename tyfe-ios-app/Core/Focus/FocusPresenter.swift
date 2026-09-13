@@ -101,11 +101,13 @@ final class FocusPresenter {
                 guard !session.pauseUsed else { return }
                 session = try interactor.pauseFocusSession(focusSessionId: session.focusSessionId)
                 refresh()
-                stopTicker()
+                startTicker()
                 interactor.trackEvent(event: Event.onPause)
             case .completed, .abandoned:
                 break
             }
+        } catch FocusManagerError.rewardInProgress {
+            showRewardBlockingAlert()
         } catch {
             showPersistenceAlert()
         }
@@ -115,7 +117,7 @@ final class FocusPresenter {
         router.showAlert(
             .alert,
             title: "Start Focus Session?",
-            subtitle: "Once you begin, you can't browse the app until you finish or abandon this session.",
+            subtitle: "The timer keeps running if you minimize Focus or lock your phone.",
             buttons: {
                 AnyView(
                     Group {
@@ -135,6 +137,8 @@ final class FocusPresenter {
             refresh()
             startTicker()
             interactor.trackEvent(event: Event.onBegin)
+        } catch FocusManagerError.rewardInProgress {
+            showRewardBlockingAlert()
         } catch {
             showPersistenceAlert()
         }
@@ -142,7 +146,7 @@ final class FocusPresenter {
 
     func onSceneBecameActive() {
         refresh()
-        if session.state == .running {
+        if session.state == .running || session.state == .paused {
             startTicker()
         }
     }
@@ -154,6 +158,8 @@ final class FocusPresenter {
             remainingFocusSeconds = session.durationSeconds
             remainingPauseSeconds = session.pauseRemainingSeconds
             startTicker()
+        } catch FocusManagerError.rewardInProgress {
+            showRewardBlockingAlert()
         } catch {
             showPersistenceAlert()
         }
@@ -174,6 +180,12 @@ final class FocusPresenter {
 #endif
 
     func onBackToTodayPressed() {
+        router.dismissScreen()
+    }
+
+    func onMinimizePressed() {
+        guard session.state == .running || session.state == .paused else { return }
+        interactor.trackEvent(event: Event.onMinimize)
         router.dismissScreen()
     }
 
@@ -224,6 +236,13 @@ final class FocusPresenter {
                     Button("OK", role: .cancel) { }
                 )
             }
+        )
+    }
+
+    private func showRewardBlockingAlert() {
+        router.showSimpleAlert(
+            title: "Reward in progress",
+            subtitle: "Finish your Reward before returning to Focus."
         )
     }
 
@@ -286,6 +305,7 @@ extension FocusPresenter {
         case onBegin
         case onPause
         case onResume
+        case onMinimize
         case onAbandonStart
         case onAbandonConfirmed
         case onClaimReward
@@ -302,6 +322,8 @@ extension FocusPresenter {
                 return "FocusView_Pause"
             case .onResume:
                 return "FocusView_Resume"
+            case .onMinimize:
+                return "FocusView_Minimize"
             case .onAbandonStart:
                 return "FocusView_Abandon_Start"
             case .onAbandonConfirmed:

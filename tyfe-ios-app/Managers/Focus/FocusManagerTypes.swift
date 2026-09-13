@@ -18,5 +18,6 @@ enum FocusManagerError: Error, Equatable {
     case invalidState
     case pauseAlreadyUsed
     case activeSessionExists
+    case rewardInProgress
     case persistenceFailed
 }

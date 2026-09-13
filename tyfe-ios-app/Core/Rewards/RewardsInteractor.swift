@@ -6,6 +6,7 @@ protocol RewardsInteractor: GlobalInteractor {
     var rewardCredits: Int { get }
     var activeRewardClaim: RewardClaimModel? { get }
     var rewardClaims: [RewardClaimModel] { get }
+    var hasLiveFocusSession: Bool { get }
 
     @discardableResult
     func createCustomReward(name: String, durationTier: RewardDurationTier) -> RewardModel?

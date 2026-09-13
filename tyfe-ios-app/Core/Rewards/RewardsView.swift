@@ -26,6 +26,7 @@ struct RewardsView: View {
                 VStack(alignment: .leading, spacing: TyfeSpacing.section) {
                     header
                     summaryCards
+                    focusBlockingNotice
                     claimSection
                     starterSection
                     customSection
@@ -53,6 +54,20 @@ struct RewardsView: View {
             if newPhase == .active {
                 presenter.onSceneBecameActive()
             }
+        }
+    }
+
+    @ViewBuilder
+    private var focusBlockingNotice: some View {
+        if presenter.isFocusBlockingRewards {
+            TyfeSurfaceView(role: .warning) {
+                Label(
+                    "Finish or abandon Focus before starting a Reward.",
+                    systemImage: "timer"
+                )
+                .font(TyfeTypography.interfaceStrong)
+            }
+            .accessibilityLabel("Rewards unavailable while Focus is active")
         }
     }
 
@@ -110,6 +125,9 @@ struct RewardsView: View {
                     claim: claim,
                     remainingSeconds: presenter.remainingClaimSeconds,
                     endText: presenter.claimEndText,
+                    startBlockingMessage: presenter.isFocusBlockingRewards
+                        ? "Finish or abandon Focus before starting this Reward."
+                        : nil,
                     onStart: presenter.onStartClaimPressed
                 )
             }
@@ -159,6 +177,9 @@ struct RewardsView: View {
                     TyfeRewardCardView(
                         reward: reward,
                         balance: presenter.balance,
+                        blockingMessage: presenter.isFocusBlockingRewards
+                            ? "Finish or abandon Focus before claiming a Reward."
+                            : nil,
                         onTap: { presenter.onSelectReward(reward) }
                     )
                     .frame(width: Self.rewardCardWidth)

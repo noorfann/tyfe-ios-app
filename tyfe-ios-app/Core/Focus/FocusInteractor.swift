@@ -31,6 +31,7 @@ extension CoreInteractor: FocusInteractor {
     }
 
     func beginFocusSession(focusSessionId: String) throws -> FocusSessionModel {
+        guard !isRewardInProgress else { throw FocusManagerError.rewardInProgress }
         let session = try focusManager.beginFocusSession(focusSessionId: focusSessionId)
         Task { await updateSocialFocusStatus(.focusing) }
         return session
@@ -43,6 +44,7 @@ extension CoreInteractor: FocusInteractor {
     }
 
     func resumeFocusSession(focusSessionId: String) throws -> FocusSessionModel {
+        guard !isRewardInProgress else { throw FocusManagerError.rewardInProgress }
         let session = try focusManager.resumeFocusSession(focusSessionId: focusSessionId)
         Task { await updateSocialFocusStatus(.focusing) }
         return session
@@ -55,7 +57,8 @@ extension CoreInteractor: FocusInteractor {
     }
 
     func startAnotherFocusSession(activityId: String) throws -> FocusSessionModel {
-        try focusManager.startAnotherFocusSession(activityId: activityId)
+        guard !isRewardInProgress else { throw FocusManagerError.rewardInProgress }
+        return try focusManager.startAnotherFocusSession(activityId: activityId)
     }
 
 #if MOCK

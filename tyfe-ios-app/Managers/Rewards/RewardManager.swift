@@ -214,5 +214,6 @@ enum RewardManagerError: Error, Equatable {
     case activeClaimExists
     case claimNotFound
     case invalidClaimState
+    case focusSessionInProgress
     case persistenceFailed
 }

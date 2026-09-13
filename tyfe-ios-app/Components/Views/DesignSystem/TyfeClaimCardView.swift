@@ -5,6 +5,7 @@ struct TyfeClaimCardView: View {
     let claim: RewardClaimModel
     let remainingSeconds: Int
     let endText: String
+    var startBlockingMessage: String?
     let onStart: () -> Void
 
     var body: some View {
@@ -31,12 +32,23 @@ struct TyfeClaimCardView: View {
                 TyfeActionButtonView(
                     title: "Start now",
                     systemImage: "play.fill",
+                    isEnabled: startBlockingMessage == nil,
                     onTap: onStart
                 )
+
+                if let startBlockingMessage {
+                    Text(startBlockingMessage)
+                        .font(TyfeTypography.caption)
+                        .foregroundStyle(TyfeEditorialPalette.muted)
+                }
             }
         }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Reward ready")
+        .accessibilityLabel(
+            startBlockingMessage == nil
+                ? "Reward ready"
+                : "Reward ready. Start unavailable while Focus is active."
+        )
     }
 
     private var activeCard: some View {

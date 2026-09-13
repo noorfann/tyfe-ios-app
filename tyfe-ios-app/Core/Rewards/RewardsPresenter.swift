@@ -30,6 +30,10 @@ final class RewardsPresenter {
         rewards.filter { $0.kind == .custom }
     }
 
+    var isFocusBlockingRewards: Bool {
+        interactor.hasLiveFocusSession
+    }
+
     var claimEndText: String {
         guard let endsAt = (activeClaim ?? finishedClaim)?.endsAt else {
             return "—"
@@ -54,17 +58,27 @@ final class RewardsPresenter {
     }
 
     func onSelectReward(_ reward: RewardModel) {
+        guard !isFocusBlockingRewards else {
+            showFocusBlockingAlert()
+            return
+        }
         interactor.trackEvent(event: Event.selectReward(reward: reward))
         requestClaimConfirmation(for: reward)
     }
 
     func onStartClaimPressed() {
+        guard !isFocusBlockingRewards else {
+            showFocusBlockingAlert()
+            return
+        }
         guard let claim = activeClaim, claim.state == .ready else { return }
         do {
             activeClaim = try interactor.startRewardClaim(rewardClaimId: claim.rewardClaimId)
             interactor.trackEvent(event: Event.startClaim(claim: claim))
             refresh()
             startTickerIfNeeded()
+        } catch RewardManagerError.focusSessionInProgress {
+            showFocusBlockingAlert()
         } catch {
             showPersistenceAlert()
         }
@@ -110,6 +124,10 @@ final class RewardsPresenter {
     }
 
     private func createClaim(for reward: RewardModel, startNow: Bool) {
+        guard !isFocusBlockingRewards else {
+            showFocusBlockingAlert()
+            return
+        }
         do {
             var claim = try interactor.createRewardClaim(
                 rewardId: reward.rewardId,
@@ -123,6 +141,8 @@ final class RewardsPresenter {
             interactor.trackEvent(event: Event.createClaim(reward: reward, startNow: startNow))
             refresh()
             startTickerIfNeeded()
+        } catch RewardManagerError.focusSessionInProgress {
+            showFocusBlockingAlert()
         } catch {
             showPersistenceAlert()
         }
@@ -183,6 +203,13 @@ final class RewardsPresenter {
             buttons: {
                 AnyView(Button("OK", role: .cancel) { })
             }
+        )
+    }
+
+    private func showFocusBlockingAlert() {
+        router.showSimpleAlert(
+            title: "Focus Session in progress",
+            subtitle: "Finish or abandon Focus before starting a Reward."
         )
     }
 

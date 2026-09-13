@@ -127,6 +127,24 @@ struct FocusView: View {
                 .foregroundStyle(TyfeEditorialPalette.onDark.opacity(0.7))
                 .frame(maxWidth: .infinity, alignment: .leading)
 
+            if presenter.session.state == .running || presenter.session.state == .paused {
+                Image(systemName: "chevron.down")
+                    .font(.subheadline.weight(.black))
+                    .foregroundStyle(TyfeEditorialPalette.onAccent)
+                    .frame(width: 36, height: 36)
+                    .background(TyfeEditorialPalette.focus)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(TyfeEditorialPalette.onDark, lineWidth: 2)
+                    }
+                    .asButton(.press) {
+                        presenter.onMinimizePressed()
+                    }
+                    .accessibilityLabel("Minimize Focus")
+                    .accessibilityHint("Returns to the app while the Focus timer continues")
+            }
+
             Text("T")
                 .font(.headline.weight(.black))
                 .foregroundStyle(TyfeEditorialPalette.onAccent)
