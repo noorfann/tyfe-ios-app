@@ -27,7 +27,7 @@ final class SupabaseSocialService: SocialService {
         guard !trimmed.isEmpty else { throw SocialServiceError.invalidName }
         try await client
             .from("profiles")
-            .update(ProfileUpdate(displayName: trimmed))
+            .update(ProfileUpdate(displayName: trimmed), returning: .minimal)
             .eq("id", value: userId)
             .execute()
     }
@@ -106,7 +106,7 @@ final class SupabaseSocialService: SocialService {
     func revokeInvite(inviteId: String) async throws {
         try await client
             .from("circle_invites")
-            .update(InviteRevoke(revokedAt: .now))
+            .update(InviteRevoke(revokedAt: .now), returning: .minimal)
             .eq("id", value: inviteId)
             .execute()
     }
@@ -123,7 +123,7 @@ final class SupabaseSocialService: SocialService {
     func leaveCircle(circleId: String, userId: String) async throws {
         try await client
             .from("circle_memberships")
-            .delete()
+            .delete(returning: .minimal)
             .eq("circle_id", value: circleId)
             .eq("user_id", value: userId)
             .execute()
@@ -132,7 +132,7 @@ final class SupabaseSocialService: SocialService {
     func removeMember(circleId: String, userId: String) async throws {
         try await client
             .from("circle_memberships")
-            .delete()
+            .delete(returning: .minimal)
             .eq("circle_id", value: circleId)
             .eq("user_id", value: userId)
             .execute()
@@ -153,7 +153,8 @@ final class SupabaseSocialService: SocialService {
                     plannedSessions: max(plannedSessions, 0),
                     completedSessions: max(completedSessions, 0)
                 ),
-                onConflict: "user_id,local_date"
+                onConflict: "user_id,local_date",
+                returning: .minimal
             )
             .execute()
     }
@@ -263,7 +264,7 @@ final class SupabaseSocialService: SocialService {
     func unblockUser(_ blockedId: String, blockerId: String) async throws {
         try await client
             .from("user_blocks")
-            .delete()
+            .delete(returning: .minimal)
             .eq("blocker_id", value: blockerId)
             .eq("blocked_id", value: blockedId)
             .execute()
@@ -282,7 +283,7 @@ final class SupabaseSocialService: SocialService {
     func setCircleSharingPaused(_ paused: Bool, circleId: String, userId: String) async throws {
         try await client
             .from("circle_memberships")
-            .update(MembershipSharingUpdate(sharingPaused: paused))
+            .update(MembershipSharingUpdate(sharingPaused: paused), returning: .minimal)
             .eq("circle_id", value: circleId)
             .eq("user_id", value: userId)
             .execute()
@@ -291,7 +292,7 @@ final class SupabaseSocialService: SocialService {
     func setGlobalSharingPaused(_ paused: Bool, userId: String) async throws {
         try await client
             .from("profiles")
-            .update(ProfileSharingUpdate(sharingPaused: paused))
+            .update(ProfileSharingUpdate(sharingPaused: paused), returning: .minimal)
             .eq("id", value: userId)
             .execute()
     }
