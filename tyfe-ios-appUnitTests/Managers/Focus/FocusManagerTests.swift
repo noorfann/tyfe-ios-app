@@ -61,7 +61,7 @@ struct FocusManagerTests {
         #expect(firstRefresh.completion?.rewardCreditsAwarded == 1)
         #expect(secondRefresh.session.state == .completed)
         #expect(secondRefresh.completion?.rewardCreditsAwarded == 1)
-        #expect(manager.rewardCredits == 3)
+        #expect(manager.rewardCredits == 1)
         #expect(manager.rewardCredits == manager.creditLedger.reduce(0) { $0 + $1.amount })
         #expect(manager.completedSessionCount == 1)
         #expect(manager.creditLedger.count == 1)
@@ -125,7 +125,7 @@ struct FocusManagerTests {
         let completed = try manager.refreshFocusSession(focusSessionId: session.focusSessionId).session
 
         #expect(completed.isBonusSession)
-        #expect(manager.rewardCredits == 3)
+        #expect(manager.rewardCredits == 1)
     }
 
     @Test func abandoningAFocusSessionDoesNotAwardRewards() throws {
@@ -136,7 +136,7 @@ struct FocusManagerTests {
         let abandoned = try manager.abandonFocusSession(focusSessionId: session.focusSessionId)
 
         #expect(abandoned.state == .abandoned)
-        #expect(manager.rewardCredits == 2)
+        #expect(manager.rewardCredits == 0)
         #expect(manager.completedSessionCount == 0)
         #expect(manager.activeFocusSession == nil)
     }
@@ -256,7 +256,7 @@ struct FocusManagerTests {
         #expect(secondRefresh.session.state == .completed)
         #expect(recreatedManager.creditLedger.count == 1)
         #expect(recreatedManager.completedSessionCount == 1)
-        #expect(recreatedManager.rewardCredits == 3)
+        #expect(recreatedManager.rewardCredits == 1)
     }
 
     @Test func relaunchRestoresPausedSessionWithoutAwards() throws {
@@ -284,7 +284,7 @@ struct FocusManagerTests {
         #expect(refresh.session.focusSessionId == session.focusSessionId)
         #expect(refresh.session.state == .paused)
         #expect(refresh.completion == nil)
-        #expect(relaunchedManager.rewardCredits == 2)
+        #expect(relaunchedManager.rewardCredits == 0)
     }
 
     @Test func terminalSessionsReportNoRemainingFocusTime() throws {
@@ -369,7 +369,7 @@ struct FocusManagerTests {
         )
 
         #expect(completed.state == .completed)
-        #expect(manager.rewardCredits == 3)
+        #expect(manager.rewardCredits == 1)
         #expect(manager.completedSessionCount == 1)
     }
 #endif

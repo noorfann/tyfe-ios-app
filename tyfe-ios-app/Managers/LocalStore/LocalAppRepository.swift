@@ -43,10 +43,15 @@ struct LocalAppSnapshot: Codable, Hashable {
             activities: [ActivityModel.mock],
             dailyPlans: [],
             focusSessions: [],
-            creditLedger: .openingBalance(amount: 2),
             nextActivityNumber: 2,
             nextSessionNumber: 1
         )
+    }
+
+    static var rewardFlowMock: Self {
+        var snapshot = Self.mock
+        snapshot.creditLedger = .openingBalance(amount: 1)
+        return snapshot
     }
 
     static var homeFlowMock: Self {
@@ -72,7 +77,6 @@ struct LocalAppSnapshot: Codable, Hashable {
             activities: [activity],
             dailyPlans: [plan],
             focusSessions: [],
-            creditLedger: .openingBalance(amount: 2),
             nextActivityNumber: 2,
             nextSessionNumber: 1
         )

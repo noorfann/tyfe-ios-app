@@ -115,6 +115,33 @@ final class TyfeappUITests: XCTestCase {
 
 #if MOCK
     @MainActor
+    func testStartingLaterRewardShowsTopStatusBarWhenStarted() throws {
+        let app = XCUIApplication()
+        app.launchArguments.append("REWARD_FLOW")
+        app.launch()
+
+        XCTAssertTrue(app.buttons["Rewards"].waitForExistence(timeout: 5))
+        app.buttons["Rewards"].tap()
+
+        XCTAssertTrue(app.buttons["Take this Reward"].waitForExistence(timeout: 5))
+        app.buttons["Take this Reward"].tap()
+
+        let claimAlert = app.alerts["Claim Scroll social media?"]
+        XCTAssertTrue(claimAlert.waitForExistence(timeout: 5))
+        claimAlert.buttons["Start later"].tap()
+
+        XCTAssertTrue(app.buttons["Start now"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["reward-in-progress-status"].exists)
+
+        app.buttons["Start now"].tap()
+
+        XCTAssertTrue(app.buttons["reward-in-progress-status"].waitForExistence(timeout: 5))
+        app.buttons["Today"].tap()
+        app.buttons["reward-in-progress-status"].tap()
+        XCTAssertTrue(app.buttons["Rewards"].isSelected)
+    }
+
+    @MainActor
     func testHomeFlowDisplaysLivePlanAndReachesFocusReady() throws {
         let app = XCUIApplication()
         app.launchArguments.append("HOME_FLOW")
@@ -122,7 +149,7 @@ final class TyfeappUITests: XCTestCase {
 
         XCTAssertTrue(app.staticTexts["Study Swift"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["DAILY PLAN, 0/2, sessions complete"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["CREDITS, 2, Reward Credits"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["CREDITS, 0, Reward Credits"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["Start Focus for Study Swift"].waitForExistence(timeout: 5))
 
         app.buttons["Start Focus for Study Swift"].tap()
@@ -147,7 +174,7 @@ final class TyfeappUITests: XCTestCase {
         app.buttons["Back to Today"].tap()
 
         XCTAssertTrue(app.staticTexts["DAILY PLAN, 1/2, sessions complete"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["CREDITS, 3, Reward Credits"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["CREDITS, 1, Reward Credits"].waitForExistence(timeout: 5))
     }
 
     @MainActor

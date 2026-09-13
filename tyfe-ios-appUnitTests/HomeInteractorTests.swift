@@ -19,7 +19,7 @@ struct HomeInteractorTests {
         #expect(state.nextActivity?.activityId == activityId)
         #expect(state.plannedSessionCount == 2)
         #expect(state.completedSessionCount == 0)
-        #expect(state.rewardCredits == 2)
+        #expect(state.rewardCredits == 0)
         #expect(state.activeFocusSession == nil)
         #expect(state.activeFocusActivity == nil)
     }
@@ -47,6 +47,28 @@ struct HomeInteractorTests {
         #expect(interactor.focusManager.focusSessions.count == 1)
         #expect(interactor.dashboardState.activeFocusSession?.focusSessionId == firstSession.focusSessionId)
         #expect(interactor.dashboardState.activeFocusActivity?.activityId == activityId)
+    }
+
+    @Test func activeRewardBlocksStartingFocusFromHome() throws {
+        let interactor = makeInteractor()
+        let activityId = ActivityModel.mock.activityId
+        _ = interactor.todayManager.addActivityToDailyPlan(
+            activityId: activityId,
+            sessionCount: 2
+        )
+
+        let session = try #require(interactor.focusManager.startFocusSession(activityId: activityId))
+        _ = try interactor.focusManager.markFocusSessionCompleteForTesting(
+            focusSessionId: session.focusSessionId
+        )
+        let claim = try interactor.createRewardClaim(
+            rewardId: "reward-starter-social",
+            durationTier: .fifteenMinutes
+        )
+        _ = try interactor.startRewardClaim(rewardClaimId: claim.rewardClaimId)
+
+        #expect(interactor.isRewardInProgress)
+        #expect(interactor.startFocusFromHome() == nil)
     }
 
     private func makeInteractor() -> CoreInteractor {

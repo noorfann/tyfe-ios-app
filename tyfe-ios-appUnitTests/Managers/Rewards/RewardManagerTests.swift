@@ -1,9 +1,16 @@
 import Foundation
+import Observation
 import Testing
 @testable import tyfe_ios_app
 
 @MainActor
 struct RewardManagerTests {
+
+    private static var seededSnapshot: LocalAppSnapshot {
+        var snapshot = LocalAppSnapshot.mock
+        snapshot.creditLedger = .openingBalance(amount: 2)
+        return snapshot
+    }
 
     private func makeManager(
         repository: LocalAppRepository? = nil,
@@ -11,7 +18,7 @@ struct RewardManagerTests {
         scheduler: LocalTimerNotificationScheduling? = nil
     ) -> RewardManager {
         RewardManager(
-            repository: repository ?? MockLocalAppRepository(),
+            repository: repository ?? MockLocalAppRepository(snapshot: Self.seededSnapshot),
             clock: clock ?? TestFocusClock(),
             notificationScheduler: scheduler
         )
@@ -82,7 +89,7 @@ struct RewardManagerTests {
     }
 
     @Test func createClaimDeductsCreditsImmediately() throws {
-        let repository = MockLocalAppRepository()
+        let repository = MockLocalAppRepository(snapshot: Self.seededSnapshot)
         let manager = makeManager(repository: repository)
 
         let claim = try manager.createRewardClaim(
@@ -98,7 +105,7 @@ struct RewardManagerTests {
     }
 
     @Test func createClaimWithoutBalanceThrowsAndMutatesNothing() {
-        let repository = MockLocalAppRepository()
+        let repository = MockLocalAppRepository(snapshot: Self.seededSnapshot)
         let manager = makeManager(repository: repository)
 
         #expect(throws: RewardManagerError.insufficientCredits) {
@@ -156,6 +163,34 @@ struct RewardManagerTests {
         #expect(manager.activeRewardClaim?.state == .ready)
     }
 
+    @Test func rewardClaimChangesInvalidateObservers() throws {
+        let manager = makeManager()
+        var observedChanges = 0
+
+        withObservationTracking {
+            _ = manager.activeRewardClaim
+        } onChange: {
+            observedChanges += 1
+        }
+
+        let claim = try manager.createRewardClaim(
+            rewardId: "reward-starter-social",
+            durationTier: .fifteenMinutes
+        )
+
+        #expect(observedChanges == 1)
+
+        withObservationTracking {
+            _ = manager.activeRewardClaim
+        } onChange: {
+            observedChanges += 1
+        }
+
+        _ = try manager.startRewardClaim(rewardClaimId: claim.rewardClaimId)
+
+        #expect(observedChanges == 2)
+    }
+
     @Test func refreshExpiresOverdueClaimWithoutRefund() throws {
         let clock = TestFocusClock()
         let manager = makeManager(clock: clock)
@@ -202,7 +237,7 @@ struct RewardManagerTests {
         let persistence = LocalFileRepositoryPersistence(fileURL: fileURL)
 
         let first = RewardManager(
-            repository: LocalFileRepository(persistence: persistence),
+            repository: LocalFileRepository(persistence: persistence, fallback: Self.seededSnapshot),
             clock: TestFocusClock()
         )
         let claim = try first.createRewardClaim(
@@ -211,7 +246,7 @@ struct RewardManagerTests {
         )
 
         let relaunched = RewardManager(
-            repository: LocalFileRepository(persistence: persistence),
+            repository: LocalFileRepository(persistence: persistence, fallback: Self.seededSnapshot),
             clock: TestFocusClock()
         )
 

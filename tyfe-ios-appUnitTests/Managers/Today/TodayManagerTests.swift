@@ -16,7 +16,7 @@ struct TodayManagerTests {
 
         #expect(manager.dailyPlan == nil)
         #expect(manager.activities.first?.name == "Study Swift")
-        #expect(manager.rewardCredits == 2)
+        #expect(manager.rewardCredits == 0)
     }
 
     @Test func creatingActivityTrimsNameAndKeepsStableIdentity() throws {
@@ -69,7 +69,7 @@ struct TodayManagerTests {
 
         #expect(today.completedSessionCount == 1)
         #expect(today.completedSessionCount(for: ActivityModel.mock.activityId) == 1)
-        #expect(today.rewardCredits == 3)
+        #expect(today.rewardCredits == 1)
     }
 
     @Test func plansRemainAvailableAcrossLocalDayRollover() throws {
