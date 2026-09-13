@@ -9,9 +9,11 @@ protocol TodayInteractor: GlobalInteractor {
     var phase1CompletedSessionCount: Int { get }
     var phase1CompletedSessionCounts: [String: Int] { get }
     var phase1RewardCredits: Int { get }
+    var hasSeenDeckSwipeCoachmark: Bool { get }
     var colorScheme: ColorScheme { get }
 
     func toggleColorScheme()
+    func markDeckSwipeCoachmarkSeen()
 
     @discardableResult
     func createPhase1Activity(

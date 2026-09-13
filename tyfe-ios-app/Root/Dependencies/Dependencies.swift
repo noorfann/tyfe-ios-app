@@ -4,6 +4,7 @@
 //
 //  
 //
+import Foundation
 import SwiftUI
 import SwiftfulRouting
 import SwiftfulDataManagers
@@ -140,7 +141,8 @@ struct Dependencies {
         }
         todayManager = TodayManager(
             repository: repository,
-            notificationScheduler: pushManager
+            notificationScheduler: pushManager,
+            userDefaults: Self.todayUserDefaults(for: config)
         )
         focusManager = FocusManager(
             repository: repository,
@@ -185,7 +187,14 @@ struct Dependencies {
     static let progressConfiguration = ProgressConfiguration(
         progressKey: Constants.progressKey
     )
-    
+
+    private static func todayUserDefaults(for config: BuildConfiguration) -> UserDefaults? {
+        switch config {
+        case .mock: return nil
+        case .dev, .prod: return .standard
+        }
+    }
+
 }
 
 @MainActor

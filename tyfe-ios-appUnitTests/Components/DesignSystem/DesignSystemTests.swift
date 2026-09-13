@@ -34,6 +34,12 @@ struct DesignSystemTests {
                 Text("Sheet content")
             }
         )
+        let coachmark = TyfeCoachmarkView(
+            title: "More activities",
+            message: "Swipe to move between them.",
+            systemImage: "rectangle.stack.fill",
+            onDismiss: {}
+        )
 
         _ = Group {
             surface
@@ -42,6 +48,7 @@ struct DesignSystemTests {
             metric
             badge
             bottomSheet
+            coachmark
         }
     }
 

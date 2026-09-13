@@ -9,17 +9,25 @@ final class TodayManager {
     private let clock: FocusClock
     private let calendar: Calendar
     private let notificationScheduler: LocalTimerNotificationScheduling?
+    @ObservationIgnored private let userDefaults: UserDefaults?
+
+    private static let deckSwipeCoachmarkKey = "tyfe.today-deck-coachmark-seen"
+
+    private(set) var hasSeenDeckSwipeCoachmark: Bool
 
     init(
         repository: LocalAppRepository = MockLocalAppRepository(),
         clock: FocusClock = SystemFocusClock(),
         calendar: Calendar = .autoupdatingCurrent,
-        notificationScheduler: LocalTimerNotificationScheduling? = nil
+        notificationScheduler: LocalTimerNotificationScheduling? = nil,
+        userDefaults: UserDefaults? = nil
     ) {
         self.repository = repository
         self.clock = clock
         self.calendar = calendar
         self.notificationScheduler = notificationScheduler
+        self.userDefaults = userDefaults
+        self.hasSeenDeckSwipeCoachmark = userDefaults?.bool(forKey: Self.deckSwipeCoachmarkKey) ?? false
 
         if let dailyPlan {
             notificationScheduler?.schedulePlanReminders(for: dailyPlan)
@@ -81,6 +89,11 @@ final class TodayManager {
             return nil
         }
         return createdActivity
+    }
+
+    func markDeckSwipeCoachmarkSeen() {
+        hasSeenDeckSwipeCoachmark = true
+        userDefaults?.set(true, forKey: Self.deckSwipeCoachmarkKey)
     }
 
     @discardableResult

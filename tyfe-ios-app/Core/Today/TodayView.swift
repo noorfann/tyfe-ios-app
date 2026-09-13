@@ -9,6 +9,7 @@ struct TodayView: View {
 
     @State private var presenter: TodayPresenter
     let delegate: TodayDelegate
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(presenter: TodayPresenter, delegate: TodayDelegate) {
         _presenter = State(initialValue: presenter)
@@ -54,6 +55,10 @@ struct TodayView: View {
         }
         .onDisappear {
             presenter.onViewDisappear(delegate: delegate)
+        }
+        .onChange(of: presenter.isAddActivitySheetPresented) { _, isPresented in
+            guard !isPresented else { return }
+            presenter.onAddActivitySheetDismissed()
         }
     }
 
@@ -211,22 +216,48 @@ struct TodayView: View {
                 .tracking(1.2)
                 .foregroundStyle(TyfeEditorialPalette.muted)
 
-            TodayActivityDeckView(
-                planItems: presenter.planItems,
-                activities: presenter.activities,
-                completedSessionCounts: presenter.completedSessionCounts,
-                selectedPlanItemId: presenter.selectedPlanItemId,
-                nextPlanItemId: presenter.nextPlanItem?.id,
-                isRewardInProgress: presenter.isRewardInProgress,
-                canDecrement: { presenter.canDecrement($0) },
-                onStart: { presenter.onStartFocusPressed(for: $0) },
-                onIncrement: { presenter.increment($0) },
-                onDecrement: { presenter.decrement($0) },
-                onRemove: { presenter.remove($0) },
-                onNext: presenter.selectNextPlanItem,
-                onPrevious: presenter.selectPreviousPlanItem
+            ZStack(alignment: .top) {
+                TodayActivityDeckView(
+                    planItems: presenter.planItems,
+                    activities: presenter.activities,
+                    completedSessionCounts: presenter.completedSessionCounts,
+                    selectedPlanItemId: presenter.selectedPlanItemId,
+                    nextPlanItemId: presenter.nextPlanItem?.id,
+                    isRewardInProgress: presenter.isRewardInProgress,
+                    canDecrement: { presenter.canDecrement($0) },
+                    onStart: { presenter.onStartFocusPressed(for: $0) },
+                    onIncrement: { presenter.increment($0) },
+                    onDecrement: { presenter.decrement($0) },
+                    onRemove: { presenter.remove($0) },
+                    onNext: presenter.selectNextPlanItem,
+                    onPrevious: presenter.selectPreviousPlanItem
+                )
+
+                if presenter.isDeckSwipeCoachmarkPresented {
+                    deckSwipeCoachmark
+                }
+            }
+            .animation(
+                reduceMotion ? nil : TyfeMotion.normalAnimation,
+                value: presenter.isDeckSwipeCoachmarkPresented
             )
         }
+    }
+
+    private var deckSwipeCoachmark: some View {
+        TyfeCoachmarkView(
+            title: "More activities",
+            message: "Your activity cards stack here. Swipe to move between them.",
+            systemImage: "rectangle.stack.fill",
+            onDismiss: presenter.dismissDeckSwipeCoachmark
+        )
+        .padding(.horizontal, TyfeSpacing.control)
+        .transition(.opacity.combined(with: .scale(scale: 0.94, anchor: .top)))
+        .task {
+            try? await Task.sleep(for: .seconds(4))
+            presenter.dismissDeckSwipeCoachmark()
+        }
+        .accessibilitySortPriority(1)
     }
 
     private var floatingAddButton: some View {

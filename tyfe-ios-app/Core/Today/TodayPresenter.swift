@@ -18,6 +18,8 @@ final class TodayPresenter {
 
     var selectedPlanItemId: String?
     var isAddActivitySheetPresented = false
+    private(set) var isDeckSwipeCoachmarkPresented = false
+    private var pendingDeckCoachmark = false
     private(set) var addActivitySessionCount = 1
 
     init(interactor: TodayInteractor, router: TodayRouter) {
@@ -130,6 +132,22 @@ final class TodayPresenter {
         )
         isAddActivitySheetPresented = false
         reload()
+        pendingDeckCoachmark =
+            planItems.count >= 2 && !interactor.hasSeenDeckSwipeCoachmark
+    }
+
+    func onAddActivitySheetDismissed() {
+        guard pendingDeckCoachmark else { return }
+        pendingDeckCoachmark = false
+        guard planItems.count >= 2, !interactor.hasSeenDeckSwipeCoachmark else { return }
+        isDeckSwipeCoachmarkPresented = true
+        interactor.trackEvent(event: Event.deckSwipeCoachmarkShown)
+    }
+
+    func dismissDeckSwipeCoachmark() {
+        guard isDeckSwipeCoachmarkPresented else { return }
+        isDeckSwipeCoachmarkPresented = false
+        interactor.markDeckSwipeCoachmarkSeen()
     }
 
     func increment(_ item: DailyPlanItemModel) {
@@ -252,6 +270,7 @@ extension TodayPresenter {
         case editPlan
         case startFocus
         case toggleAppearance
+        case deckSwipeCoachmarkShown
 
         var eventName: String {
             switch self {
@@ -262,6 +281,7 @@ extension TodayPresenter {
             case .editPlan: return "Today_EditPlan"
             case .startFocus: return "Today_StartFocus"
             case .toggleAppearance: return "Today_ToggleAppearance"
+            case .deckSwipeCoachmarkShown: return "Today_DeckSwipeCoachmark_Shown"
             }
         }
 
@@ -269,7 +289,7 @@ extension TodayPresenter {
             switch self {
             case .onAppear(delegate: let delegate), .onDisappear(delegate: let delegate):
                 return delegate.eventParameters
-            case .createPlan, .addActivity, .editPlan, .startFocus, .toggleAppearance:
+            case .createPlan, .addActivity, .editPlan, .startFocus, .toggleAppearance, .deckSwipeCoachmarkShown:
                 return nil
             }
         }

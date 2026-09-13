@@ -326,6 +326,14 @@ struct CoreInteractor: GlobalInteractor {
         todayManager.rewardCredits
     }
 
+    var hasSeenDeckSwipeCoachmark: Bool {
+        todayManager.hasSeenDeckSwipeCoachmark
+    }
+
+    func markDeckSwipeCoachmarkSeen() {
+        todayManager.markDeckSwipeCoachmarkSeen()
+    }
+
     @discardableResult
     func createPhase1Activity(
         name: String,

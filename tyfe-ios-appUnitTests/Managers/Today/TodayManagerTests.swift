@@ -138,4 +138,21 @@ struct TodayManagerTests {
         #expect(progress.bonusCompletionCount == 1)
         #expect(progress.isSuccessful)
     }
+
+    @Test func deckSwipeCoachmarkFlagPersistsThroughUserDefaults() throws {
+        let suiteName = "TodayManagerTests.deckCoachmark.\(UUID().uuidString)"
+        let userDefaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { userDefaults.removePersistentDomain(forName: suiteName) }
+
+        let manager = TodayManager(repository: MockLocalAppRepository(), userDefaults: userDefaults)
+        #expect(manager.hasSeenDeckSwipeCoachmark == false)
+
+        manager.markDeckSwipeCoachmarkSeen()
+
+        #expect(manager.hasSeenDeckSwipeCoachmark == true)
+        #expect(userDefaults.bool(forKey: "tyfe.today-deck-coachmark-seen") == true)
+
+        let reloaded = TodayManager(repository: MockLocalAppRepository(), userDefaults: userDefaults)
+        #expect(reloaded.hasSeenDeckSwipeCoachmark == true)
+    }
 }
