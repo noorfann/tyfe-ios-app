@@ -19,10 +19,19 @@ final class SocialManager {
 
     @ObservationIgnored private var cheerTask: Task<Void, Never>?
     @ObservationIgnored private var focusTasks: [String: Task<Void, Never>] = [:]
+    @ObservationIgnored private let userDefaults: UserDefaults?
 
-    init(service: SocialService, logManager: LogManager? = nil) {
+    private static let migrationKey = "tyfe.social-migrated"
+
+    init(
+        service: SocialService,
+        logManager: LogManager? = nil,
+        userDefaults: UserDefaults? = nil
+    ) {
         self.service = service
         self.logManager = logManager
+        self.userDefaults = userDefaults
+        self.hasMigratedToSocial = userDefaults?.bool(forKey: Self.migrationKey) ?? false
     }
 
     func refreshCircles(for userId: String) async throws {
@@ -228,6 +237,25 @@ final class SocialManager {
 
     func markSocialMigrationComplete() {
         hasMigratedToSocial = true
+        userDefaults?.set(true, forKey: Self.migrationKey)
+    }
+
+    func startRealtime(circleIds: [String]) {
+        startCheerDelivery()
+        setFocusCircles(Set(circleIds))
+    }
+
+    func setFocusCircles(_ circleIds: Set<String>) {
+        for circleId in activeFocusCircleIds.subtracting(circleIds) {
+            focusTasks[circleId]?.cancel()
+            focusTasks[circleId] = nil
+            focusStatusesByCircle[circleId] = nil
+            activeFocusCircleIds.remove(circleId)
+            Task { await service.stopFocusStatus(circleId: circleId) }
+        }
+        for circleId in circleIds where focusTasks[circleId] == nil {
+            startFocusStatus(circleId: circleId)
+        }
     }
 
     func setCircleSharingPaused(_ paused: Bool, circleId: String, userId: String) async throws {
@@ -245,7 +273,6 @@ final class SocialManager {
         progressByCircle = [:]
         cheers = []
         blockedUserIds = []
-        hasMigratedToSocial = false
         focusStatusesByCircle = [:]
         isLoading = false
     }

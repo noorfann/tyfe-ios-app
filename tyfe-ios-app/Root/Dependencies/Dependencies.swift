@@ -82,11 +82,11 @@ struct Dependencies {
                 let liveService = LiveSupabaseClientService(configuration: configuration)
                 supabaseService = liveService
                 authManager = AuthManager(service: SupabaseAuthService(client: liveService.client), logger: logManager)
-                socialManager = SocialManager(service: SupabaseSocialService(client: liveService.client), logManager: logManager)
+                socialManager = SocialManager(service: SupabaseSocialService(client: liveService.client), logManager: logManager, userDefaults: .standard)
             } else {
                 supabaseService = MockSupabaseClientService()
                 authManager = AuthManager(service: MockAuthService(user: nil), logger: logManager)
-                socialManager = SocialManager(service: MockSocialService(), logManager: logManager)
+                socialManager = SocialManager(service: MockSocialService(), logManager: logManager, userDefaults: .standard)
             }
             #else
             supabaseService = MockSupabaseClientService()

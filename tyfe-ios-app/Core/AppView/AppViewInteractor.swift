@@ -15,6 +15,7 @@ protocol AppViewInteractor: GlobalInteractor {
     func toggleColorScheme()
     func logIn(user: UserAuthInfo, isNewUser: Bool) async throws
     func signInAnonymously() async throws -> (user: UserAuthInfo, isNewUser: Bool)
+    func syncSocialRealtime() async
 }
 
 extension CoreInteractor: AppViewInteractor { }

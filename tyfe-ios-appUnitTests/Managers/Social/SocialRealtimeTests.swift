@@ -87,6 +87,33 @@ struct SocialRealtimeTests {
         #expect(manager.activeFocusCircleIds.isEmpty)
     }
 
+    @Test func setFocusCirclesStartsAndStopsChannels() async throws {
+        let manager = SocialManager(service: makeService())
+
+        manager.setFocusCircles(["c1"])
+        #expect(manager.activeFocusCircleIds == ["c1"])
+
+        await manager.updateFocusStatus(.focusing, userId: "u1", circleId: "c1")
+        try await Task.sleep(nanoseconds: 30_000_000)
+        #expect(manager.focusStatusesByCircle["c1"] != nil)
+
+        manager.setFocusCircles([])
+        #expect(manager.activeFocusCircleIds.isEmpty)
+        #expect(manager.focusStatusesByCircle["c1"] == nil)
+    }
+
+    @Test func startRealtimeDeliversCheersAndTracksCircles() async throws {
+        let manager = SocialManager(service: makeService())
+        let today = LocalDay(containing: .now, calendar: .current)
+
+        manager.startRealtime(circleIds: ["c1"])
+        try await manager.sendCheer(.star, senderId: "u1", recipientId: "u2", localDate: today)
+        try await Task.sleep(nanoseconds: 50_000_000)
+
+        #expect(manager.activeFocusCircleIds == ["c1"])
+        #expect(manager.cheers.contains { $0.kind == .star })
+    }
+
     private func makeService() -> MockSocialService {
         MockSocialService(
             currentUserId: "u1",

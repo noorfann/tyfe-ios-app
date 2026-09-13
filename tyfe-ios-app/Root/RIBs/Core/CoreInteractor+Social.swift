@@ -116,6 +116,17 @@ extension CoreInteractor {
         socialManager.stopRealtime()
     }
 
+    func syncSocialRealtime() async {
+        guard socialManager.hasMigratedToSocial, let userId = auth?.uid else {
+            socialManager.stopRealtime()
+            return
+        }
+        if socialManager.circles.isEmpty {
+            try? await socialManager.refreshCircles(for: userId)
+        }
+        socialManager.startRealtime(circleIds: socialManager.circles.map(\.circleId))
+    }
+
     func updateSocialFocusStatus(_ status: CircleFocusStatus) async {
         guard let userId = auth?.uid else { return }
         await socialManager.updateFocusStatusForActiveCircles(status, userId: userId)

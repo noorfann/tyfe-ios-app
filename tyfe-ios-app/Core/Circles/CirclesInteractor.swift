@@ -28,8 +28,7 @@ protocol CirclesInteractor: GlobalInteractor {
     func removeCircleMember(circleId: String, userId: String) async throws
     func sendCheer(_ kind: CheerKind, recipientId: String) async throws
     func refreshSocialCheers() async throws
-    func startSocialRealtime(circleIds: [String])
-    func stopSocialRealtime()
+    func syncSocialRealtime() async
     func blockSocialUser(_ blockedId: String) async throws
     func unblockSocialUser(_ blockedId: String) async throws
     func refreshSocialBlockedUsers() async throws

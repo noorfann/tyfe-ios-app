@@ -492,6 +492,8 @@ struct CoreInteractor: GlobalInteractor {
 
         // Add user properties
         logManager.addUserProperties(dict: Utilities.eventParameters, isHighPriority: false)
+
+        await syncSocialRealtime()
     }
 
     func signOut() async throws {

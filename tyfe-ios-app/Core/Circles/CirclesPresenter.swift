@@ -78,7 +78,6 @@ final class CirclesPresenter {
     }
 
     func onViewDisappear(delegate: CirclesDelegate) {
-        interactor.stopSocialRealtime()
         interactor.trackEvent(event: Event.onDisappear(delegate: delegate))
     }
 
@@ -297,7 +296,7 @@ final class CirclesPresenter {
             if selectedCircleId == nil || !circles.contains(where: { $0.circleId == selectedCircleId }) {
                 selectedCircleId = circles.first?.circleId
             }
-            interactor.startSocialRealtime(circleIds: circles.map(\.circleId))
+            await interactor.syncSocialRealtime()
             await loadSelectedCircle()
         } catch {
             errorMessage = error.localizedDescription
