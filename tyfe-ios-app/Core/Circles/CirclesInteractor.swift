@@ -30,8 +30,6 @@ protocol CirclesInteractor: GlobalInteractor {
     func blockSocialUser(_ blockedId: String) async throws
     func unblockSocialUser(_ blockedId: String) async throws
     func refreshSocialBlockedUsers() async throws
-    func setCircleSharingPaused(_ paused: Bool, circleId: String, userId: String) async throws
-    func setGlobalSharingPaused(_ paused: Bool, userId: String) async throws
 }
 
 extension CoreInteractor: CirclesInteractor { }

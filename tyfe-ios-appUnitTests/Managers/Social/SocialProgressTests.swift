@@ -114,7 +114,6 @@ struct SocialProgressTests {
             circleId: circleId,
             userId: userId,
             role: role,
-            sharingPaused: false,
             joinedAt: .now
         )
     }

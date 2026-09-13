@@ -64,13 +64,6 @@ struct SettingsView: View {
                         .font(TyfeTypography.interface)
                         .foregroundStyle(TyfeEditorialPalette.muted)
 
-                    TyfeActionButtonView(
-                        title: presenter.globalSharingPaused ? "Resume sharing" : "Pause all sharing",
-                        systemImage: presenter.globalSharingPaused ? "play.fill" : "pause.fill",
-                        role: .secondary,
-                        onTap: { presenter.onToggleGlobalSharing() }
-                    )
-
                     if presenter.isAnonymousUser {
                         TyfeActionButtonView(
                             title: "Save & back up account",

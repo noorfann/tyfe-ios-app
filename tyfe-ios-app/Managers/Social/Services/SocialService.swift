@@ -2,7 +2,6 @@ import Foundation
 
 @MainActor
 protocol SocialService: Sendable {
-    func fetchProfile(userId: String) async throws -> SocialProfileModel?
     func updateDisplayName(_ name: String, userId: String) async throws
     func createCircle(name: String, ownerId: String) async throws -> CircleModel
     func fetchCircles(userId: String) async throws -> [CircleModel]
@@ -28,8 +27,6 @@ protocol SocialService: Sendable {
     func blockUser(_ blockedId: String, blockerId: String) async throws
     func unblockUser(_ blockedId: String, blockerId: String) async throws
     func fetchBlockedUserIds(userId: String) async throws -> [String]
-    func setCircleSharingPaused(_ paused: Bool, circleId: String, userId: String) async throws
-    func setGlobalSharingPaused(_ paused: Bool, userId: String) async throws
 }
 
 enum SocialServiceError: LocalizedError, Equatable {

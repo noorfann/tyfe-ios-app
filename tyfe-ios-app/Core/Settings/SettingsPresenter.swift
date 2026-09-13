@@ -12,7 +12,6 @@ final class SettingsPresenter {
     private(set) var isAnonymousUser = false
     private(set) var isSignedIn = false
     private(set) var cheersToday = 0
-    private(set) var globalSharingPaused = false
 
     init(interactor: SettingsInteractor, router: SettingsRouter) {
         self.interactor = interactor
@@ -42,20 +41,6 @@ final class SettingsPresenter {
 
     func setAnonymousAccountStatus() {
         isAnonymousUser = interactor.auth?.isAnonymous == true
-    }
-
-    func onToggleGlobalSharing() {
-        guard let userId = interactor.currentAuthUserId else { return }
-        Task {
-            do {
-                let newValue = !globalSharingPaused
-                try await interactor.setGlobalSharingPaused(newValue, userId: userId)
-                globalSharingPaused = newValue
-                interactor.trackEvent(event: Event.globalSharingToggled(paused: newValue))
-            } catch {
-                router.showAlert(error: error)
-            }
-        }
     }
 
     func onContactUsPressed() {
@@ -146,18 +131,11 @@ final class SettingsPresenter {
     private func refreshSocialState() async {
         guard interactor.currentAuthUserId != nil else {
             cheersToday = 0
-            globalSharingPaused = false
             return
         }
         do {
             try await interactor.refreshSocialCheers()
             cheersToday = interactor.socialCheers.count
-        } catch {
-            // Account settings stay usable when social stats cannot load.
-        }
-        do {
-            try await interactor.refreshSocialProfile()
-            globalSharingPaused = interactor.isGlobalSharingPaused
         } catch {
             // Account settings stay usable when social stats cannot load.
         }
@@ -174,7 +152,6 @@ extension SettingsPresenter {
     enum Event: LoggableEvent {
         case onAppear
         case onDisappear
-        case globalSharingToggled(paused: Bool)
         case signOutStart
         case signOutSuccess
         case signOutFail(error: Error)
@@ -189,7 +166,6 @@ extension SettingsPresenter {
             switch self {
             case .onAppear:                     return "SettingsView_Appear"
             case .onDisappear:                  return "SettingsView_Disappear"
-            case .globalSharingToggled:         return "SettingsView_GlobalSharing_Toggled"
             case .signOutStart:                 return "SettingsView_SignOut_Start"
             case .signOutSuccess:               return "SettingsView_SignOut_Success"
             case .signOutFail:                  return "SettingsView_SignOut_Fail"
@@ -204,8 +180,6 @@ extension SettingsPresenter {
 
         var parameters: [String: Any]? {
             switch self {
-            case .globalSharingToggled(paused: let paused):
-                return ["paused": paused]
             case .signOutFail(error: let error), .deleteAccountFail(error: let error):
                 return error.eventParameters
             default:

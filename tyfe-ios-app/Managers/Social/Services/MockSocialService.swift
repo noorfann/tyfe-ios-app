@@ -14,7 +14,6 @@ final class MockSocialService: SocialService {
     private var focusStatuses: [String: [String: CircleFocusStatus]] = [:]
     private var focusContinuations: [String: [UUID: AsyncStream<[CircleFocusStatusEntry]>.Continuation]] = [:]
     private var blocks: [String: Set<String>] = [:]
-    private var globalSharingPaused: Set<String> = []
     private var circleCounter: Int
     private var membershipCounter: Int
     private var inviteCounter: Int
@@ -33,8 +32,7 @@ final class MockSocialService: SocialService {
             currentUserId: SocialProfileModel(
                 userId: currentUserId,
                 displayName: "You",
-                avatarToken: nil,
-                sharingPaused: false
+                avatarToken: nil
             )
         ]
         self.circles = circles
@@ -45,13 +43,6 @@ final class MockSocialService: SocialService {
         self.inviteCounter = invites.count
     }
 
-    func fetchProfile(userId: String) async throws -> SocialProfileModel? {
-        if userId == currentUserId || sharesCircle(with: userId) {
-            return profiles[userId]
-        }
-        return nil
-    }
-
     func updateDisplayName(_ name: String, userId: String) async throws {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { throw SocialServiceError.invalidName }
@@ -59,8 +50,7 @@ final class MockSocialService: SocialService {
         profiles[userId] = SocialProfileModel(
             userId: userId,
             displayName: trimmed,
-            avatarToken: profiles[userId]?.avatarToken,
-            sharingPaused: profiles[userId]?.sharingPaused ?? false
+            avatarToken: profiles[userId]?.avatarToken
         )
     }
 
@@ -84,7 +74,6 @@ final class MockSocialService: SocialService {
             circleId: circle.circleId,
             userId: ownerId,
             role: .owner,
-            sharingPaused: false,
             joinedAt: now
         ))
         membershipCounter += 1
@@ -107,7 +96,6 @@ final class MockSocialService: SocialService {
                     displayName: profile?.displayName ?? "Friend",
                     avatarToken: profile?.avatarToken,
                     role: membership.role,
-                    sharingPaused: membership.sharingPaused,
                     joinedAt: membership.joinedAt
                 )
             }
@@ -166,7 +154,6 @@ final class MockSocialService: SocialService {
             circleId: invite.circleId,
             userId: currentUserId,
             role: .member,
-            sharingPaused: false,
             joinedAt: .now
         ))
         membershipCounter += 1
@@ -324,31 +311,6 @@ final class MockSocialService: SocialService {
 
     func fetchBlockedUserIds(userId: String) async throws -> [String] {
         blocks[userId, default: []].sorted()
-    }
-
-    func setCircleSharingPaused(_ paused: Bool, circleId: String, userId: String) async throws {
-        guard userId == currentUserId, currentUserIsMember(of: circleId),
-              let index = memberships.firstIndex(where: { $0.circleId == circleId && $0.userId == userId }) else {
-            throw SocialServiceError.notPermitted
-        }
-        let membership = memberships[index]
-        memberships[index] = CircleMembershipModel(
-            membershipId: membership.membershipId,
-            circleId: membership.circleId,
-            userId: membership.userId,
-            role: membership.role,
-            sharingPaused: paused,
-            joinedAt: membership.joinedAt
-        )
-    }
-
-    func setGlobalSharingPaused(_ paused: Bool, userId: String) async throws {
-        guard userId == currentUserId else { throw SocialServiceError.notPermitted }
-        if paused {
-            globalSharingPaused.insert(userId)
-        } else {
-            globalSharingPaused.remove(userId)
-        }
     }
 
     private func emitCheer(_ cheer: CheerModel) {

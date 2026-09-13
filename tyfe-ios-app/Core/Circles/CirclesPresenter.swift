@@ -13,6 +13,8 @@ final class CirclesPresenter {
     private(set) var members: [CircleMemberModel] = []
     private(set) var progressByUser: [String: CircleMemberProgressModel] = [:]
     private(set) var isLoading = false
+    private(set) var isOffline = false
+    private(set) var lastSyncedAt: Date?
     private(set) var errorMessage: String?
     private(set) var inviteCode: String?
 
@@ -46,14 +48,6 @@ final class CirclesPresenter {
 
     var blockedUserIds: [String] {
         interactor.socialBlockedUserIds
-    }
-
-    var selectedCircleSharingPaused: Bool {
-        guard let userId = interactor.currentAuthUserId,
-              let membership = members.first(where: { $0.userId == userId }) else {
-            return false
-        }
-        return membership.sharingPaused
     }
 
     func memberProgress(for userId: String) -> CircleMemberProgressModel? {
@@ -221,18 +215,6 @@ final class CirclesPresenter {
         }
     }
 
-    func onToggleCircleSharing() {
-        Task {
-            guard let userId = interactor.currentAuthUserId, let circleId = selectedCircleId else { return }
-            do {
-                try await interactor.setCircleSharingPaused(!selectedCircleSharingPaused, circleId: circleId, userId: userId)
-                await loadSelectedCircle()
-            } catch {
-                errorMessage = error.localizedDescription
-            }
-        }
-    }
-
     func onDismissError() {
         errorMessage = nil
     }
@@ -255,10 +237,12 @@ final class CirclesPresenter {
             if selectedCircleId == nil || !circles.contains(where: { $0.circleId == selectedCircleId }) {
                 selectedCircleId = circles.first?.circleId
             }
+            lastSyncedAt = .now
+            isOffline = false
             await interactor.syncSocialRealtime()
             await loadSelectedCircle()
         } catch {
-            errorMessage = error.localizedDescription
+            isOffline = true
         }
     }
 
@@ -283,6 +267,8 @@ final class CirclesPresenter {
         selectedCircleId = nil
         members = []
         progressByUser = [:]
+        isOffline = false
+        lastSyncedAt = nil
     }
 }
 

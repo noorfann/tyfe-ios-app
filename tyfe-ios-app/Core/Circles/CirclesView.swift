@@ -27,13 +27,9 @@ struct CirclesView: View {
                 VStack(alignment: .leading, spacing: TyfeSpacing.section) {
                     header
                     if presenter.isSignedIn {
-                        circlesSection
-                        if presenter.selectedCircle != nil {
-                            circleDetail
-                        }
-                        blockedSection
+                        content
                     } else {
-                        enableCard
+                        TyfeCircleEnableCardView(onEnable: { presenter.onEnableCirclesTapped() })
                     }
                 }
                 .padding(.horizontal, TyfeSpacing.control)
@@ -44,25 +40,28 @@ struct CirclesView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $presenter.isCreateCirclePresented) {
-            nameSheet(
+            TyfeCircleNameSheetCardView(
                 title: "New Circle",
                 placeholder: "Family",
                 value: $presenter.createCircleName,
                 onSave: { presenter.onSubmitCreateCircle() },
                 onCancel: { presenter.isCreateCirclePresented = false }
             )
+            .presentationDetents([.medium])
         }
         .sheet(isPresented: $presenter.isJoinCirclePresented) {
-            nameSheet(
+            TyfeCircleNameSheetCardView(
                 title: "Join a Circle",
                 placeholder: "Invite code",
                 value: $presenter.joinCode,
                 onSave: { presenter.onSubmitJoinCode() },
                 onCancel: { presenter.isJoinCirclePresented = false }
             )
+            .presentationDetents([.medium])
         }
         .sheet(isPresented: $presenter.isInvitePresented) {
-            inviteSheet
+            TyfeCircleInviteCardView(code: presenter.inviteCode ?? "", onDone: { presenter.onDismissInvite() })
+                .presentationDetents([.medium])
         }
         .alert("Something went wrong", isPresented: Binding(
             get: { presenter.errorMessage != nil },
@@ -80,6 +79,27 @@ struct CirclesView: View {
         }
     }
 
+    @ViewBuilder
+    private var content: some View {
+        if presenter.isLoading && presenter.circles.isEmpty {
+            TyfeStatusView(kind: .loading)
+        } else if presenter.isOffline && presenter.circles.isEmpty {
+            TyfeStatusView(kind: .offline, onRetry: { presenter.onRetry() })
+        } else {
+            if presenter.isOffline {
+                offlineBanner
+            }
+            circlesSection
+            if presenter.selectedCircle != nil {
+                circleDetail
+            }
+            TyfeCircleBlockedListView(
+                blockedUserIds: presenter.blockedUserIds,
+                onUnblock: { presenter.onUnblockUser($0) }
+            )
+        }
+    }
+
     private var header: some View {
         VStack(alignment: .leading, spacing: TyfeSpacing.small) {
             Text("Circles")
@@ -92,22 +112,13 @@ struct CirclesView: View {
         }
     }
 
-    private var enableCard: some View {
-        TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
-                Label("Turn on Circles", systemImage: "person.3.fill")
-                    .font(TyfeTypography.displayCompact)
-
-                Text("Circles share only today's planned and completed session counts, an available/focusing status, and Cheers. Activities, notes, credits, and rewards stay private.")
-                    .font(TyfeTypography.interface)
+    private var offlineBanner: some View {
+        VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+            TyfeStatusView(kind: .offline, onRetry: { presenter.onRetry() })
+            if let lastSyncedText = presenter.lastSyncedText {
+                Text("Last synced \(lastSyncedText)")
+                    .font(TyfeTypography.caption)
                     .foregroundStyle(TyfeEditorialPalette.muted)
-
-                TyfeActionButtonView(
-                    title: "Turn on Circles",
-                    systemImage: "checkmark.circle.fill",
-                    role: .primary,
-                    onTap: { presenter.onEnableCirclesTapped() }
-                )
             }
         }
     }
@@ -120,23 +131,11 @@ struct CirclesView: View {
             if presenter.circles.isEmpty {
                 TyfeStatusView(kind: .empty)
             } else {
-                ScrollView(.horizontal) {
-                    HStack(spacing: TyfeSpacing.small) {
-                        ForEach(presenter.circles) { circle in
-                            Button {
-                                presenter.onSelectCircle(circle.circleId)
-                            } label: {
-                                TyfePillView(
-                                    label: circle.name,
-                                    systemImage: presenter.selectedCircleId == circle.circleId ? "checkmark.circle.fill" : "person.3",
-                                    tone: presenter.selectedCircleId == circle.circleId ? .accent : .neutral
-                                )
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                }
-                .scrollIndicators(.hidden)
+                TyfeCirclePillRowView(
+                    circles: presenter.circles,
+                    selectedCircleId: presenter.selectedCircleId,
+                    onSelect: { presenter.onSelectCircle($0) }
+                )
             }
 
             HStack(spacing: TyfeSpacing.small) {
@@ -164,23 +163,26 @@ struct CirclesView: View {
             }
 
             ForEach(presenter.members) { member in
-                memberRow(member)
+                TyfeCircleMemberRowView(
+                    member: member,
+                    progress: presenter.memberProgress(for: member.userId),
+                    focusStatus: presenter.focusStatus(for: member.userId),
+                    isSelf: member.userId == presenter.currentUserId,
+                    isViewerOwner: presenter.isSelectedCircleOwner,
+                    isBlocked: presenter.blockedUserIds.contains(member.userId),
+                    onCheer: { presenter.onSendCheer($0, to: member.userId) },
+                    onRemove: { presenter.onRemoveMember(member.userId) },
+                    onBlock: { presenter.onBlockUser(member.userId) },
+                    onUnblock: { presenter.onUnblockUser(member.userId) }
+                )
             }
 
-            HStack(spacing: TyfeSpacing.small) {
-                TyfeActionButtonView(
-                    title: "Invite",
-                    systemImage: "person.badge.plus",
-                    role: .primary,
-                    onTap: { presenter.onGenerateInviteTapped() }
-                )
-                TyfeActionButtonView(
-                    title: presenter.selectedCircleSharingPaused ? "Resume this Circle" : "Pause this Circle",
-                    systemImage: presenter.selectedCircleSharingPaused ? "play.fill" : "pause.fill",
-                    role: .secondary,
-                    onTap: { presenter.onToggleCircleSharing() }
-                )
-            }
+            TyfeActionButtonView(
+                title: "Invite",
+                systemImage: "person.badge.plus",
+                role: .primary,
+                onTap: { presenter.onGenerateInviteTapped() }
+            )
 
             if !presenter.isSelectedCircleOwner {
                 TyfeActionButtonView(
@@ -191,148 +193,6 @@ struct CirclesView: View {
                 )
             }
         }
-    }
-
-    private func memberRow(_ member: CircleMemberModel) -> some View {
-        TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.small) {
-                memberHeader(member)
-                memberProgress(member)
-                if member.userId != presenter.currentUserId {
-                    memberActions(member)
-                }
-            }
-        }
-    }
-
-    private func memberHeader(_ member: CircleMemberModel) -> some View {
-        HStack {
-            Text(member.displayName)
-                .font(TyfeTypography.interfaceStrong)
-            if member.role == .owner {
-                TyfePillView(label: "Owner", systemImage: "crown.fill", tone: .warning)
-            }
-            Spacer()
-            if let status = presenter.focusStatus(for: member.userId) {
-                TyfePillView(
-                    label: status.displayName,
-                    systemImage: status.symbolName,
-                    tone: status == .focusing ? .accent : .neutral
-                )
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func memberProgress(_ member: CircleMemberModel) -> some View {
-        if let progress = presenter.memberProgress(for: member.userId) {
-            Text("Today \(progress.todayCompleted)/\(progress.todayPlanned) · 7 days \(progress.sevenDayCompleted)")
-                .font(TyfeTypography.caption)
-                .foregroundStyle(TyfeEditorialPalette.muted)
-        }
-    }
-
-    private func memberActions(_ member: CircleMemberModel) -> some View {
-        HStack(spacing: TyfeSpacing.small) {
-            cheerMenu(member)
-            if presenter.isSelectedCircleOwner {
-                Button("Remove", role: .destructive) {
-                    presenter.onRemoveMember(member.userId)
-                }
-                .font(TyfeTypography.caption)
-            }
-            if presenter.blockedUserIds.contains(member.userId) {
-                Button("Unblock") { presenter.onUnblockUser(member.userId) }
-                    .font(TyfeTypography.caption)
-            } else {
-                Button("Block", role: .destructive) { presenter.onBlockUser(member.userId) }
-                    .font(TyfeTypography.caption)
-            }
-        }
-    }
-
-    private func cheerMenu(_ member: CircleMemberModel) -> some View {
-        Menu {
-            ForEach(CheerKind.allCases, id: \.self) { kind in
-                Button {
-                    presenter.onSendCheer(kind, to: member.userId)
-                } label: {
-                    Label(kind.displayName, systemImage: kind.symbolName)
-                }
-            }
-        } label: {
-            Label("Cheer", systemImage: "hands.clap")
-                .font(TyfeTypography.caption)
-        }
-    }
-
-    private var blockedSection: some View {
-        Group {
-            if !presenter.blockedUserIds.isEmpty {
-                VStack(alignment: .leading, spacing: TyfeSpacing.control) {
-                    Text("Blocked")
-                        .font(TyfeTypography.interfaceStrong)
-                    TyfeSurfaceView(role: .paper) {
-                        VStack(alignment: .leading, spacing: TyfeSpacing.small) {
-                            ForEach(presenter.blockedUserIds, id: \.self) { userId in
-                                HStack {
-                                    Text(userId)
-                                        .font(TyfeTypography.caption)
-                                        .lineLimit(1)
-                                    Spacer()
-                                    Button("Unblock") { presenter.onUnblockUser(userId) }
-                                        .font(TyfeTypography.caption)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private var inviteSheet: some View {
-        VStack(spacing: TyfeSpacing.control) {
-            Text("Invite code")
-                .font(TyfeTypography.displayCompact)
-            Text(presenter.inviteCode ?? "")
-                .font(TyfeTypography.timer)
-                .textSelection(.enabled)
-                .accessibilityLabel(Text("Invite code \(presenter.inviteCode ?? "")"))
-            Text("Single use. Expires in 7 days.")
-                .font(TyfeTypography.caption)
-                .foregroundStyle(TyfeEditorialPalette.muted)
-            TyfeActionButtonView(title: "Done", role: .primary, onTap: { presenter.onDismissInvite() })
-        }
-        .padding(TyfeSpacing.card)
-        .presentationDetents([.medium])
-    }
-
-    private func nameSheet(
-        title: String,
-        placeholder: String,
-        value: Binding<String>,
-        onSave: @escaping () -> Void,
-        onCancel: @escaping () -> Void
-    ) -> some View {
-        VStack(spacing: TyfeSpacing.control) {
-            Text(title)
-                .font(TyfeTypography.displayCompact)
-            TextField(placeholder, text: value)
-                .textFieldStyle(.roundedBorder)
-                .autocorrectionDisabled()
-            HStack(spacing: TyfeSpacing.small) {
-                TyfeActionButtonView(title: "Cancel", role: .secondary, onTap: onCancel)
-                TyfeActionButtonView(
-                    title: "Save",
-                    role: .primary,
-                    isEnabled: !value.wrappedValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                    onTap: onSave
-                )
-            }
-        }
-        .padding(TyfeSpacing.card)
-        .presentationDetents([.medium])
     }
 }
 

@@ -11,17 +11,6 @@ final class SupabaseSocialService: SocialService {
         self.client = client
     }
 
-    func fetchProfile(userId: String) async throws -> SocialProfileModel? {
-        let profiles: [SocialProfileModel] = try await client
-            .from("profiles")
-            .select()
-            .eq("id", value: userId)
-            .limit(1)
-            .execute()
-            .value
-        return profiles.first
-    }
-
     func updateDisplayName(_ name: String, userId: String) async throws {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { throw SocialServiceError.invalidName }
@@ -63,7 +52,7 @@ final class SupabaseSocialService: SocialService {
     func fetchMembers(circleId: String) async throws -> [CircleMemberModel] {
         let rows: [MembershipMemberRow] = try await client
             .from("circle_memberships")
-            .select("user_id, role, sharing_paused, joined_at, profiles(display_name, avatar_token)")
+            .select("user_id, role, joined_at, profiles(display_name, avatar_token)")
             .eq("circle_id", value: circleId)
             .execute()
             .value
@@ -74,7 +63,6 @@ final class SupabaseSocialService: SocialService {
                 displayName: row.profiles?.displayName ?? "Friend",
                 avatarToken: row.profiles?.avatarToken,
                 role: row.role,
-                sharingPaused: row.sharingPaused,
                 joinedAt: row.joinedAt
             )
         }
@@ -280,23 +268,6 @@ final class SupabaseSocialService: SocialService {
         return rows.map(\.blockedId)
     }
 
-    func setCircleSharingPaused(_ paused: Bool, circleId: String, userId: String) async throws {
-        try await client
-            .from("circle_memberships")
-            .update(MembershipSharingUpdate(sharingPaused: paused), returning: .minimal)
-            .eq("circle_id", value: circleId)
-            .eq("user_id", value: userId)
-            .execute()
-    }
-
-    func setGlobalSharingPaused(_ paused: Bool, userId: String) async throws {
-        try await client
-            .from("profiles")
-            .update(ProfileSharingUpdate(sharingPaused: paused), returning: .minimal)
-            .eq("id", value: userId)
-            .execute()
-    }
-
     private static func sortedStatuses(_ statuses: [String: CircleFocusStatus]) -> [CircleFocusStatusEntry] {
         statuses
             .map { CircleFocusStatusEntry(userId: $0.key, status: $0.value) }
@@ -378,14 +349,12 @@ private struct SharedProgressUpsert: Encodable {
 private struct MembershipMemberRow: Decodable {
     let userId: String
     let role: CircleMemberRole
-    let sharingPaused: Bool
     let joinedAt: Date
     let profiles: MembershipMemberProfile?
 
     enum CodingKeys: String, CodingKey {
         case userId = "user_id"
         case role
-        case sharingPaused = "sharing_paused"
         case joinedAt = "joined_at"
         case profiles
     }
@@ -430,22 +399,6 @@ private struct BlockedIdRow: Decodable {
 
     enum CodingKeys: String, CodingKey {
         case blockedId = "blocked_id"
-    }
-}
-
-private struct MembershipSharingUpdate: Encodable {
-    let sharingPaused: Bool
-
-    enum CodingKeys: String, CodingKey {
-        case sharingPaused = "sharing_paused"
-    }
-}
-
-private struct ProfileSharingUpdate: Encodable {
-    let sharingPaused: Bool
-
-    enum CodingKeys: String, CodingKey {
-        case sharingPaused = "sharing_paused"
     }
 }
 

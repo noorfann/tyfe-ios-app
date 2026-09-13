@@ -168,21 +168,4 @@ extension CoreInteractor {
         )
         socialManager.markSocialMigrationComplete()
     }
-
-    func setCircleSharingPaused(_ paused: Bool, circleId: String, userId: String) async throws {
-        try await socialManager.setCircleSharingPaused(paused, circleId: circleId, userId: userId)
-    }
-
-    func setGlobalSharingPaused(_ paused: Bool, userId: String) async throws {
-        try await socialManager.setGlobalSharingPaused(paused, userId: userId)
-    }
-
-    var isGlobalSharingPaused: Bool {
-        socialManager.globalSharingPaused
-    }
-
-    func refreshSocialProfile() async throws {
-        guard let userId = auth?.uid else { throw SocialServiceError.notAuthenticated }
-        try await socialManager.refreshProfile(userId: userId)
-    }
 }

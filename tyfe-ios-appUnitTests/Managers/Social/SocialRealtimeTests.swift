@@ -119,8 +119,8 @@ struct SocialRealtimeTests {
             currentUserId: "u1",
             circles: [CircleModel(circleId: "c1", name: "Circle", ownerId: "u1", createdAt: .now, updatedAt: .now)],
             memberships: [
-                CircleMembershipModel(membershipId: "m1", circleId: "c1", userId: "u1", role: .owner, sharingPaused: false, joinedAt: .now),
-                CircleMembershipModel(membershipId: "m2", circleId: "c1", userId: "u2", role: .member, sharingPaused: false, joinedAt: .now)
+                CircleMembershipModel(membershipId: "m1", circleId: "c1", userId: "u1", role: .owner, joinedAt: .now),
+                CircleMembershipModel(membershipId: "m2", circleId: "c1", userId: "u2", role: .member, joinedAt: .now)
             ]
         )
     }

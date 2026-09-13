@@ -5,7 +5,6 @@ struct CircleMembershipModel: Identifiable, Codable, Hashable {
     let circleId: String
     let userId: String
     let role: CircleMemberRole
-    let sharingPaused: Bool
     let joinedAt: Date
 
     var id: String {
@@ -17,7 +16,6 @@ struct CircleMembershipModel: Identifiable, Codable, Hashable {
         case circleId = "circle_id"
         case userId = "user_id"
         case role
-        case sharingPaused = "sharing_paused"
         case joinedAt = "joined_at"
     }
 }
@@ -27,7 +25,6 @@ struct CircleMemberModel: Identifiable, Hashable {
     let displayName: String
     let avatarToken: String?
     let role: CircleMemberRole
-    let sharingPaused: Bool
     let joinedAt: Date
 
     var id: String {

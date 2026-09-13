@@ -166,7 +166,6 @@ struct SocialManagerTests {
             circleId: circleId,
             userId: userId,
             role: role,
-            sharingPaused: false,
             joinedAt: .now
         )
     }
