@@ -95,6 +95,11 @@ class DevSettingsPresenter {
         interactor.trackEvent(event: Event.onDesignSystemGallery)
         router.showDesignSystemGallery()
     }
+
+    func onCirclesGalleryPressed() {
+        interactor.trackEvent(event: Event.onCirclesGallery)
+        router.showCirclesGallery()
+    }
     #endif
 
 }
@@ -106,6 +111,7 @@ extension DevSettingsPresenter {
         case onDisappear
         #if MOCK || DEV
         case onDesignSystemGallery
+        case onCirclesGallery
         #endif
 
         var eventName: String {
@@ -114,6 +120,7 @@ extension DevSettingsPresenter {
             case .onDisappear:          return "TestView_Disappear"
             #if MOCK || DEV
             case .onDesignSystemGallery: return "DevSettings_DesignSystemGallery"
+            case .onCirclesGallery: return "DevSettings_CirclesGallery"
             #endif
             }
         }

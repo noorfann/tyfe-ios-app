@@ -93,4 +93,69 @@ struct DesignSystemTests {
             statusBar
         }
     }
+
+    @Test func circlesCardsAcceptDomainFixtures() {
+        let enable = TyfeCircleEnableCardView(onEnable: {})
+        let pills = TyfeCirclePillRowView(
+            circles: [CircleModel(circleId: "c1", name: "Family", ownerId: "u1", createdAt: .now, updatedAt: .now)],
+            selectedCircleId: "c1",
+            onSelect: { _ in }
+        )
+        let blocked = TyfeCircleBlockedListView(blockedUserIds: ["u3"], onUnblock: { _ in })
+        let invite = TyfeCircleInviteCardView(code: "ABCD2345", onDone: {})
+        let sheet = TyfeCircleNameSheetCardView(
+            title: "New Circle",
+            placeholder: "Family",
+            value: .constant(""),
+            onSave: {},
+            onCancel: {}
+        )
+        let error = TyfeCircleErrorCardView(message: "Expired", onDismiss: {})
+
+        _ = Group {
+            enable
+            pills
+            blocked
+            invite
+            sheet
+            error
+        }
+    }
+
+    @Test func circleMemberRowAcceptsDomainFixtures() {
+        let member = CircleMemberModel(
+            userId: "u2",
+            displayName: "Alex",
+            avatarToken: nil,
+            role: .member,
+            joinedAt: .now
+        )
+        let progress = CircleMemberProgressModel(
+            circleId: "c1",
+            userId: "u2",
+            displayName: "Alex",
+            avatarToken: nil,
+            isOwner: false,
+            latestDate: "2026-09-13",
+            todayPlanned: 3,
+            todayCompleted: 1,
+            sevenDayCompleted: 4,
+            cheersToday: 0,
+            progressUpdatedAt: .now
+        )
+        let memberRow = TyfeCircleMemberRowView(
+            member: member,
+            progress: progress,
+            focusStatus: .focusing,
+            isSelf: false,
+            isViewerOwner: true,
+            isBlocked: false,
+            onCheer: { _ in },
+            onRemove: {},
+            onBlock: {},
+            onUnblock: {}
+        )
+
+        _ = memberRow
+    }
 }

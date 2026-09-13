@@ -50,6 +50,15 @@ final class CirclesPresenter {
         interactor.socialBlockedUserIds
     }
 
+    var lastSyncedText: String? {
+        guard let lastSyncedAt else { return nil }
+        return lastSyncedAt.formatted(.relative(presentation: .named))
+    }
+
+    func onRetry() {
+        Task { await refresh() }
+    }
+
     func memberProgress(for userId: String) -> CircleMemberProgressModel? {
         progressByUser[userId]
     }

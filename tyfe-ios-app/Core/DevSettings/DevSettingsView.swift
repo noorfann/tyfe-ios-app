@@ -103,6 +103,11 @@ struct DevSettingsView: View {
                 .asButton(.press) {
                     presenter.onDesignSystemGalleryPressed()
                 }
+            Text("Open Circles gallery")
+                .font(.body.weight(.semibold))
+                .asButton(.press) {
+                    presenter.onCirclesGalleryPressed()
+                }
         } header: {
             Text("Design System")
         } footer: {
