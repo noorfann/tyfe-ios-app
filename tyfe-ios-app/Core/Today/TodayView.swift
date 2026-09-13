@@ -40,12 +40,14 @@ struct TodayView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
         }
         .toolbar(.hidden, for: .navigationBar)
-        .sheet(isPresented: $presenter.isAddActivitySheetPresented) {
+        .tyfeBottomSheet(
+            isPresented: $presenter.isAddActivitySheetPresented,
+            title: "Add to Today"
+        ) {
             TodayAddActivitySheet(
                 initialSessionCount: presenter.addActivitySessionCount,
                 onSave: presenter.saveActivity
             )
-            .presentationDetents([.fraction(0.8)])
         }
         .onAppear {
             presenter.onViewAppear(delegate: delegate)

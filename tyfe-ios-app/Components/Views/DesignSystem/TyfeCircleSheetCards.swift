@@ -1,30 +1,37 @@
 import SwiftUI
 
 struct TyfeCircleNameSheetCardView: View {
-    let title: String
+    let label: String
     let placeholder: String
     @Binding var value: String
+    let actionTitle: String
     let onSave: () -> Void
-    let onCancel: () -> Void
+
+    private var canSave: Bool {
+        !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
 
     var body: some View {
-        VStack(spacing: TyfeSpacing.control) {
-            Text(title)
-                .font(TyfeTypography.displayCompact)
+        VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+            TyfeSurfaceView(role: .paper) {
+                VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+                    Text(label)
+                        .font(TyfeTypography.eyebrow)
+                        .tracking(1.1)
+                        .textCase(.uppercase)
+                        .foregroundStyle(TyfeEditorialPalette.muted)
 
-            TyfeTextFieldView(placeholder: placeholder, text: $value)
-
-            HStack(spacing: TyfeSpacing.small) {
-                TyfeActionButtonView(title: "Cancel", role: .secondary, onTap: onCancel)
-                TyfeActionButtonView(
-                    title: "Save",
-                    role: .primary,
-                    isEnabled: !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                    onTap: onSave
-                )
+                    TyfeTextFieldView(placeholder: placeholder, text: $value)
+                }
             }
+
+            TyfeActionButtonView(
+                title: actionTitle,
+                systemImage: "checkmark",
+                isEnabled: canSave,
+                onTap: onSave
+            )
         }
-        .padding(TyfeSpacing.card)
     }
 }
 

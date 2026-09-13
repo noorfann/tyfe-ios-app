@@ -3,23 +3,29 @@ import UIKit
 
 struct TyfeCircleInviteCardView: View {
     let code: String
-    let onDone: () -> Void
 
     @State private var didCopy = false
 
     var body: some View {
-        VStack(spacing: TyfeSpacing.control) {
-            Text("Invite code")
-                .font(TyfeTypography.displayCompact)
+        VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+            TyfeSurfaceView(role: .paper) {
+                VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+                    Text("Invite code")
+                        .font(TyfeTypography.eyebrow)
+                        .tracking(1.1)
+                        .textCase(.uppercase)
+                        .foregroundStyle(TyfeEditorialPalette.muted)
 
-            Text(code)
-                .font(TyfeTypography.timer)
-                .textSelection(.enabled)
-                .accessibilityLabel(Text("Invite code \(code)"))
+                    Text(code)
+                        .font(TyfeTypography.timer)
+                        .textSelection(.enabled)
+                        .accessibilityLabel(Text("Invite code \(code)"))
 
-            Text("Single use. Expires in 7 days.")
-                .font(TyfeTypography.caption)
-                .foregroundStyle(TyfeEditorialPalette.muted)
+                    Text("Single use. Expires in 7 days.")
+                        .font(TyfeTypography.caption)
+                        .foregroundStyle(TyfeEditorialPalette.muted)
+                }
+            }
 
             TyfeActionButtonView(
                 title: didCopy ? "Copied" : "Copy code",
@@ -27,10 +33,7 @@ struct TyfeCircleInviteCardView: View {
                 role: .secondary,
                 onTap: { copyCode() }
             )
-
-            TyfeActionButtonView(title: "Done", role: .primary, onTap: onDone)
         }
-        .padding(TyfeSpacing.card)
     }
 
     private func copyCode() {

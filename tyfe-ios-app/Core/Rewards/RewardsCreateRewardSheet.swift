@@ -1,12 +1,8 @@
 import SwiftUI
-import SwiftfulUI
 
 struct RewardsCreateRewardSheet: View {
 
-    @Environment(\.dismiss) private var dismiss
-
     let onSave: (_ name: String, _ tier: RewardDurationTier) -> Void
-    let onCancel: () -> Void
 
     @State private var rewardName = ""
     @State private var selectedTier: RewardDurationTier = .fifteenMinutes
@@ -16,48 +12,15 @@ struct RewardsCreateRewardSheet: View {
     }
 
     var body: some View {
-        ZStack {
-            TyfeEditorialPalette.canvas
-                .ignoresSafeArea()
-
-            ScrollView {
-                VStack(alignment: .leading, spacing: TyfeSpacing.section) {
-                    header
-                    nameForm
-                    tierPicker
-                    TyfeActionButtonView(
-                        title: "Save Reward",
-                        systemImage: "checkmark",
-                        isEnabled: canSave,
-                        onTap: save
-                    )
-                }
-                .padding(.horizontal, TyfeSpacing.control)
-                .padding(.top, TyfeSpacing.control)
-                .padding(.bottom, TyfeSpacing.section)
-            }
-            .scrollIndicators(.hidden)
-        }
-        .toolbar(.hidden, for: .navigationBar)
-    }
-
-    private var header: some View {
-        HStack(spacing: TyfeSpacing.small) {
-            Text("NEW REWARD")
-                .font(TyfeTypography.eyebrow)
-                .tracking(1.2)
-                .foregroundStyle(TyfeEditorialPalette.muted)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            Image(systemName: "xmark")
-                .font(.headline.weight(.black))
-                .foregroundStyle(TyfeEditorialPalette.ink)
-                .frame(width: 44, height: 44)
-                .asButton(.press) {
-                    onCancel()
-                    dismiss()
-                }
-                .accessibilityLabel("Close")
+        VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+            nameForm
+            tierPicker
+            TyfeActionButtonView(
+                title: "Save Reward",
+                systemImage: "checkmark",
+                isEnabled: canSave,
+                onTap: save
+            )
         }
     }
 
@@ -101,10 +64,9 @@ struct RewardsCreateRewardSheet: View {
     private func save() {
         guard canSave else { return }
         onSave(rewardName, selectedTier)
-        dismiss()
     }
 }
 
 #Preview("New reward sheet") {
-    RewardsCreateRewardSheet(onSave: { _, _ in }, onCancel: {})
+    RewardsCreateRewardSheet(onSave: { _, _ in })
 }

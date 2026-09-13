@@ -38,12 +38,11 @@ struct RewardsView: View {
             .scrollIndicators(.hidden)
         }
         .toolbar(.hidden, for: .navigationBar)
-        .sheet(isPresented: $presenter.isCreateSheetPresented) {
-            RewardsCreateRewardSheet(
-                onSave: presenter.onCreateReward,
-                onCancel: presenter.onDismissCreateSheet
-            )
-            .presentationDetents([.fraction(0.8)])
+        .tyfeBottomSheet(
+            isPresented: $presenter.isCreateSheetPresented,
+            title: "New Reward"
+        ) {
+            RewardsCreateRewardSheet(onSave: presenter.onCreateReward)
         }
         .onAppear {
             presenter.onViewAppear(delegate: delegate)

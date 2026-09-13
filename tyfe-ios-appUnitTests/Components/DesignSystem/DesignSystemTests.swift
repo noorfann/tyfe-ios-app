@@ -27,6 +27,13 @@ struct DesignSystemTests {
             accent: TyfeEditorialPalette.saffron
         )
         let badge = TyfeStateBadgeView(state: .paused)
+        let bottomSheet = TyfeBottomSheet(
+            title: "New Reward",
+            onClose: {},
+            content: {
+                Text("Sheet content")
+            }
+        )
 
         _ = Group {
             surface
@@ -34,6 +41,7 @@ struct DesignSystemTests {
             pill
             metric
             badge
+            bottomSheet
         }
     }
 
@@ -101,13 +109,13 @@ struct DesignSystemTests {
             selectedCircleId: "c1",
             onSelect: { _ in }
         )
-        let invite = TyfeCircleInviteCardView(code: "ABCD2345", onDone: {})
+        let invite = TyfeCircleInviteCardView(code: "ABCD2345")
         let sheet = TyfeCircleNameSheetCardView(
-            title: "New Circle",
+            label: "Circle name",
             placeholder: "Family",
             value: .constant(""),
-            onSave: {},
-            onCancel: {}
+            actionTitle: "Create Circle",
+            onSave: {}
         )
         let error = TyfeCircleErrorCardView(message: "Expired", onDismiss: {})
 

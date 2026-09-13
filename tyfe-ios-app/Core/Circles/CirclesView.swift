@@ -39,30 +39,41 @@ struct CirclesView: View {
             .scrollIndicators(.hidden)
         }
         .toolbar(.hidden, for: .navigationBar)
-        .sheet(isPresented: $presenter.isCreateCirclePresented) {
+        .tyfeBottomSheet(
+            isPresented: $presenter.isCreateCirclePresented,
+            detents: [.medium],
+            title: "New Circle"
+        ) {
             TyfeCircleNameSheetCardView(
-                title: "New Circle",
+                label: "Circle name",
                 placeholder: "Family",
                 value: $presenter.createCircleName,
-                onSave: { presenter.onSubmitCreateCircle() },
-                onCancel: { presenter.isCreateCirclePresented = false }
+                actionTitle: "Create Circle",
+                onSave: { presenter.onSubmitCreateCircle() }
             )
-            .presentationDetents([.medium])
         }
-        .sheet(isPresented: $presenter.isJoinCirclePresented) {
+        .tyfeBottomSheet(
+            isPresented: $presenter.isJoinCirclePresented,
+            detents: [.medium],
+            title: "Join a Circle"
+        ) {
             TyfeCircleNameSheetCardView(
-                title: "Join a Circle",
-                placeholder: "Invite code",
+                label: "Invite code",
+                placeholder: "ABCD2345",
                 value: $presenter.joinCode,
-                onSave: { presenter.onSubmitJoinCode() },
-                onCancel: { presenter.isJoinCirclePresented = false }
+                actionTitle: "Join Circle",
+                onSave: { presenter.onSubmitJoinCode() }
             )
-            .presentationDetents([.medium])
         }
-        .sheet(isPresented: $presenter.isInvitePresented) {
-            TyfeCircleInviteCardView(code: presenter.inviteCode ?? "", onDone: { presenter.onDismissInvite() })
-                .presentationDetents([.medium])
-        }
+        .tyfeBottomSheet(
+            isPresented: $presenter.isInvitePresented,
+            detents: [.medium],
+            title: "Invite Code",
+            onClose: { presenter.onDismissInvite() },
+            content: {
+                TyfeCircleInviteCardView(code: presenter.inviteCode ?? "")
+            }
+        )
         .alert("Something went wrong", isPresented: Binding(
             get: { presenter.errorMessage != nil },
             set: { if !$0 { presenter.onDismissError() } }

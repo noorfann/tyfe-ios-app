@@ -3,8 +3,6 @@ import SwiftfulUI
 
 struct TodayAddActivitySheet: View {
 
-    @Environment(\.dismiss) private var dismiss
-
     let initialSessionCount: Int
     let onSave: (
         _ name: String,
@@ -36,47 +34,15 @@ struct TodayAddActivitySheet: View {
     }
 
     var body: some View {
-        ZStack {
-            TyfeEditorialPalette.canvas
-                .ignoresSafeArea()
-
-            ScrollView {
-                VStack(alignment: .leading, spacing: TyfeSpacing.section) {
-                    header
-                    activityForm
-                    sessionCountPicker
-                    TyfeActionButtonView(
-                        title: "Add to Today",
-                        systemImage: "checkmark",
-                        isEnabled: canSave,
-                        onTap: save
-                    )
-                }
-                .padding(.horizontal, TyfeSpacing.control)
-                .padding(.top, TyfeSpacing.control)
-                .padding(.bottom, TyfeSpacing.section)
-            }
-            .scrollIndicators(.hidden)
-        }
-        .toolbar(.hidden, for: .navigationBar)
-    }
-
-    private var header: some View {
-        HStack(spacing: TyfeSpacing.small) {
-            Text("ADD TO TODAY")
-                .font(TyfeTypography.eyebrow)
-                .tracking(1.2)
-                .foregroundStyle(TyfeEditorialPalette.muted)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            Image(systemName: "xmark")
-                .font(.headline.weight(.black))
-                .foregroundStyle(TyfeEditorialPalette.ink)
-                .frame(width: 44, height: 44)
-                .asButton(.press) {
-                    dismiss()
-                }
-                .accessibilityLabel("Close")
+        VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+            activityForm
+            sessionCountPicker
+            TyfeActionButtonView(
+                title: "Add to Today",
+                systemImage: "checkmark",
+                isEnabled: canSave,
+                onTap: save
+            )
         }
     }
 

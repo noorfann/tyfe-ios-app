@@ -74,10 +74,6 @@ final class RewardsPresenter {
         isCreateSheetPresented = true
     }
 
-    func onDismissCreateSheet() {
-        isCreateSheetPresented = false
-    }
-
     func onCreateReward(name: String, durationTier: RewardDurationTier) {
         _ = interactor.createCustomReward(name: name, durationTier: durationTier)
         isCreateSheetPresented = false

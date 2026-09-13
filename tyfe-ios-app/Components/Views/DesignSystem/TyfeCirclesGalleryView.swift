@@ -138,32 +138,26 @@ struct TyfeCirclesGalleryView: View {
 
     private var inviteSection: some View {
         gallerySection("Invite code") {
-            TyfeSurfaceView(role: .paper) {
-                TyfeCircleInviteCardView(code: presenter.inviteCode, onDone: {})
-            }
+            TyfeCircleInviteCardView(code: presenter.inviteCode)
         }
     }
 
     private var sheetSection: some View {
         gallerySection("Create · Join sheets") {
-            TyfeSurfaceView(role: .paper) {
-                TyfeCircleNameSheetCardView(
-                    title: "New Circle",
-                    placeholder: "Family",
-                    value: $sheetValue,
-                    onSave: {},
-                    onCancel: {}
-                )
-            }
-            TyfeSurfaceView(role: .paper) {
-                TyfeCircleNameSheetCardView(
-                    title: "Join a Circle",
-                    placeholder: "Invite code",
-                    value: $sheetValue,
-                    onSave: {},
-                    onCancel: {}
-                )
-            }
+            TyfeCircleNameSheetCardView(
+                label: "Circle name",
+                placeholder: "Family",
+                value: $sheetValue,
+                actionTitle: "Create Circle",
+                onSave: {}
+            )
+            TyfeCircleNameSheetCardView(
+                label: "Invite code",
+                placeholder: "ABCD2345",
+                value: $sheetValue,
+                actionTitle: "Join Circle",
+                onSave: {}
+            )
         }
     }
 
