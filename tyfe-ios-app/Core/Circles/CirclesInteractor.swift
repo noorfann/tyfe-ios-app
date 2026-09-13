@@ -10,8 +10,6 @@ protocol CirclesInteractor: GlobalInteractor {
     var isSocialMigrationComplete: Bool { get }
 
     func signInAnonymously() async throws -> (user: UserAuthInfo, isNewUser: Bool)
-    func signOut() async throws
-    func deleteAccount() async throws
     func migrateLocalToSocial() async throws
 
     func refreshSocialCircles(userId: String) async throws

@@ -20,11 +20,6 @@ class ProfilePresenter {
         interactor.trackEvent(event: Event.onDisappear(delegate: delegate))
     }
     
-    func onSettingsButtonPressed() {
-        interactor.trackEvent(event: Event.settingsPressed)
-        router.showSettingsView()
-    }
-    
 }
 
 extension ProfilePresenter {
@@ -32,13 +27,11 @@ extension ProfilePresenter {
     enum Event: LoggableEvent {
         case onAppear(delegate: ProfileDelegate)
         case onDisappear(delegate: ProfileDelegate)
-        case settingsPressed
 
         var eventName: String {
             switch self {
             case .onAppear:                 return "ProfileView_Appear"
             case .onDisappear:              return "ProfileView_Disappear"
-            case .settingsPressed:          return "ProfileView_Settings_Pressed"
             }
         }
         

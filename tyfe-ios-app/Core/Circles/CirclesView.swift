@@ -27,7 +27,6 @@ struct CirclesView: View {
                 VStack(alignment: .leading, spacing: TyfeSpacing.section) {
                     header
                     if presenter.isSignedIn {
-                        accountCard
                         circlesSection
                         if presenter.selectedCircle != nil {
                             circleDetail
@@ -64,12 +63,6 @@ struct CirclesView: View {
         }
         .sheet(isPresented: $presenter.isInvitePresented) {
             inviteSheet
-        }
-        .alert("Delete account?", isPresented: $presenter.isDeleteAccountConfirmPresented) {
-            Button("Cancel", role: .cancel) {}
-            Button("Delete", role: .destructive) { presenter.onConfirmDeleteAccount() }
-        } message: {
-            Text("This removes your Circles, shared progress, and Cheers from the server. Your private progress stays on this device.")
         }
         .alert("Something went wrong", isPresented: Binding(
             get: { presenter.errorMessage != nil },
@@ -114,46 +107,6 @@ struct CirclesView: View {
                     systemImage: "checkmark.circle.fill",
                     role: .primary,
                     onTap: { presenter.onEnableCirclesTapped() }
-                )
-            }
-        }
-    }
-
-    private var accountCard: some View {
-        TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
-                Text("Signed in")
-                    .font(TyfeTypography.interfaceStrong)
-
-                Text("Cheers today: \(presenter.cheersToday)")
-                    .font(TyfeTypography.caption)
-                    .foregroundStyle(TyfeEditorialPalette.muted)
-                    .accessibilityLabel(Text("Cheers today, \(presenter.cheersToday)"))
-
-                Text("Your Circles sync quietly in the background.")
-                    .font(TyfeTypography.interface)
-                    .foregroundStyle(TyfeEditorialPalette.muted)
-
-                HStack(spacing: TyfeSpacing.small) {
-                    TyfeActionButtonView(
-                        title: presenter.globalSharingPaused ? "Resume sharing" : "Pause all sharing",
-                        systemImage: presenter.globalSharingPaused ? "play.fill" : "pause.fill",
-                        role: .secondary,
-                        onTap: { presenter.onToggleGlobalSharing() }
-                    )
-                    TyfeActionButtonView(
-                        title: "Sign out",
-                        systemImage: "rectangle.portrait.and.arrow.right",
-                        role: .secondary,
-                        onTap: { presenter.onSignOutTapped() }
-                    )
-                }
-
-                TyfeActionButtonView(
-                    title: "Delete account",
-                    systemImage: "trash",
-                    role: .destructive,
-                    onTap: { presenter.onDeleteAccountTapped() }
                 )
             }
         }

@@ -125,6 +125,9 @@ extension CoreBuilder {
             }),
             TabBarTab(title: "Circles", systemImage: "person.3.fill", destination: { router in
                 circlesView(router: router, delegate: CirclesDelegate())
+            }),
+            TabBarTab(title: "Settings", systemImage: "gearshape.fill", destination: { router in
+                settingsView(router: router)
             })
         ]
         

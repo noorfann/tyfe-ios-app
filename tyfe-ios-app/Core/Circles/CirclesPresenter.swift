@@ -19,10 +19,8 @@ final class CirclesPresenter {
     var isCreateCirclePresented = false
     var isJoinCirclePresented = false
     var isInvitePresented = false
-    var isDeleteAccountConfirmPresented = false
     var createCircleName = ""
     var joinCode = ""
-    var globalSharingPaused = false
 
     init(interactor: CirclesInteractor, router: CirclesRouter) {
         self.interactor = interactor
@@ -48,10 +46,6 @@ final class CirclesPresenter {
 
     var blockedUserIds: [String] {
         interactor.socialBlockedUserIds
-    }
-
-    var cheersToday: Int {
-        interactor.socialCheers.count
     }
 
     var selectedCircleSharingPaused: Bool {
@@ -93,29 +87,6 @@ final class CirclesPresenter {
                 _ = try await interactor.signInAnonymously()
                 try await interactor.migrateLocalToSocial()
                 await refresh()
-            } catch {
-                errorMessage = error.localizedDescription
-            }
-        }
-    }
-
-    func onSignOutTapped() {
-        Task {
-            try? await interactor.signOut()
-            resetLocalState()
-        }
-    }
-
-    func onDeleteAccountTapped() {
-        isDeleteAccountConfirmPresented = true
-    }
-
-    func onConfirmDeleteAccount() {
-        isDeleteAccountConfirmPresented = false
-        Task {
-            do {
-                try await interactor.deleteAccount()
-                resetLocalState()
             } catch {
                 errorMessage = error.localizedDescription
             }
@@ -256,18 +227,6 @@ final class CirclesPresenter {
             do {
                 try await interactor.setCircleSharingPaused(!selectedCircleSharingPaused, circleId: circleId, userId: userId)
                 await loadSelectedCircle()
-            } catch {
-                errorMessage = error.localizedDescription
-            }
-        }
-    }
-
-    func onToggleGlobalSharing() {
-        Task {
-            guard let userId = interactor.currentAuthUserId else { return }
-            do {
-                try await interactor.setGlobalSharingPaused(!globalSharingPaused, userId: userId)
-                globalSharingPaused.toggle()
             } catch {
                 errorMessage = error.localizedDescription
             }

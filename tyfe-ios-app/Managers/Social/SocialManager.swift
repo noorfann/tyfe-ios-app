@@ -15,6 +15,7 @@ final class SocialManager {
     private(set) var hasMigratedToSocial = false
     private(set) var focusStatusesByCircle: [String: [CircleFocusStatusEntry]] = [:]
     private(set) var activeFocusCircleIds: Set<String> = []
+    private(set) var globalSharingPaused = false
     private(set) var isLoading = false
 
     @ObservationIgnored private var cheerTask: Task<Void, Never>?
@@ -38,6 +39,12 @@ final class SocialManager {
         isLoading = true
         defer { isLoading = false }
         circles = try await service.fetchCircles(userId: userId)
+    }
+
+    func refreshProfile(userId: String) async throws {
+        if let profile = try await service.fetchProfile(userId: userId) {
+            globalSharingPaused = profile.sharingPaused
+        }
     }
 
     func createCircle(name: String, ownerId: String) async throws -> CircleModel {
@@ -274,6 +281,7 @@ final class SocialManager {
         cheers = []
         blockedUserIds = []
         focusStatusesByCircle = [:]
+        globalSharingPaused = false
         isLoading = false
     }
 }

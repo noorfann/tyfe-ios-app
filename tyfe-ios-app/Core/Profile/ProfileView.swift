@@ -17,26 +17,12 @@ struct ProfileView: View {
             Text("Hello, world!")
         }
         .navigationTitle("Profile")
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                settingsButton
-            }
-        }
         .onAppear {
             presenter.onViewAppear(delegate: delegate)
         }
         .onDisappear {
             presenter.onViewDisappear(delegate: delegate)
         }
-    }
-    
-    private var settingsButton: some View {
-        Image(systemName: "gear")
-            .font(.headline)
-            .foregroundStyle(.accent)
-            .asButton {
-                presenter.onSettingsButtonPressed()
-            }
     }
 }
 
