@@ -12,12 +12,9 @@ final class CirclesPresenter {
     private(set) var selectedCircleId: String?
     private(set) var members: [CircleMemberModel] = []
     private(set) var progressByUser: [String: CircleMemberProgressModel] = [:]
-    private(set) var focusStatusByUser: [String: CircleFocusStatus] = [:]
-    private(set) var blockedUserIds: [String] = []
     private(set) var isLoading = false
     private(set) var errorMessage: String?
     private(set) var inviteCode: String?
-    private(set) var cheersToday = 0
 
     var isCreateCirclePresented = false
     var isJoinCirclePresented = false
@@ -42,6 +39,19 @@ final class CirclesPresenter {
 
     var isSelectedCircleOwner: Bool {
         selectedCircle?.ownerId == interactor.currentAuthUserId
+    }
+
+    var focusStatusByUser: [String: CircleFocusStatus] {
+        let entries = interactor.socialFocusStatuses[selectedCircleId ?? ""] ?? []
+        return Dictionary(uniqueKeysWithValues: entries.map { ($0.userId, $0.status) })
+    }
+
+    var blockedUserIds: [String] {
+        interactor.socialBlockedUserIds
+    }
+
+    var cheersToday: Int {
+        interactor.socialCheers.count
     }
 
     var selectedCircleSharingPaused: Bool {
@@ -187,7 +197,6 @@ final class CirclesPresenter {
             do {
                 try await interactor.sendCheer(kind, recipientId: userId)
                 try await interactor.refreshSocialCheers()
-                cheersToday = interactor.socialCheers.count
             } catch {
                 errorMessage = error.localizedDescription
             }
@@ -225,7 +234,6 @@ final class CirclesPresenter {
             do {
                 try await interactor.blockSocialUser(userId)
                 try await interactor.refreshSocialBlockedUsers()
-                blockedUserIds = interactor.socialBlockedUserIds
             } catch {
                 errorMessage = error.localizedDescription
             }
@@ -237,7 +245,6 @@ final class CirclesPresenter {
             do {
                 try await interactor.unblockSocialUser(userId)
                 try await interactor.refreshSocialBlockedUsers()
-                blockedUserIds = interactor.socialBlockedUserIds
             } catch {
                 errorMessage = error.localizedDescription
             }
@@ -287,8 +294,6 @@ final class CirclesPresenter {
             try await interactor.refreshSocialBlockedUsers()
             try await interactor.refreshSocialCheers()
             circles = interactor.socialCircles
-            blockedUserIds = interactor.socialBlockedUserIds
-            cheersToday = interactor.socialCheers.count
             if selectedCircleId == nil || !circles.contains(where: { $0.circleId == selectedCircleId }) {
                 selectedCircleId = circles.first?.circleId
             }
@@ -303,15 +308,12 @@ final class CirclesPresenter {
         guard let circleId = selectedCircleId else {
             members = []
             progressByUser = [:]
-            focusStatusByUser = [:]
             return
         }
         do {
             members = try await interactor.circleMembers(circleId: circleId)
             let progress = try await interactor.circleMemberProgress(circleId: circleId)
             progressByUser = Dictionary(uniqueKeysWithValues: progress.map { ($0.userId, $0) })
-            let entries = interactor.socialFocusStatuses[circleId] ?? []
-            focusStatusByUser = Dictionary(uniqueKeysWithValues: entries.map { ($0.userId, $0.status) })
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -323,9 +325,6 @@ final class CirclesPresenter {
         selectedCircleId = nil
         members = []
         progressByUser = [:]
-        focusStatusByUser = [:]
-        blockedUserIds = []
-        cheersToday = 0
     }
 }
 

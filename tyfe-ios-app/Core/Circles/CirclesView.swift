@@ -125,6 +125,11 @@ struct CirclesView: View {
                 Text("Signed in")
                     .font(TyfeTypography.interfaceStrong)
 
+                Text("Cheers today: \(presenter.cheersToday)")
+                    .font(TyfeTypography.caption)
+                    .foregroundStyle(TyfeEditorialPalette.muted)
+                    .accessibilityLabel(Text("Cheers today, \(presenter.cheersToday)"))
+
                 Text("Your Circles sync quietly in the background.")
                     .font(TyfeTypography.interface)
                     .foregroundStyle(TyfeEditorialPalette.muted)
