@@ -2,6 +2,12 @@ import SwiftUI
 
 struct TyfeTierLegendView: View {
 
+    let minContentHeight: CGFloat?
+
+    init(minContentHeight: CGFloat? = nil) {
+        self.minContentHeight = minContentHeight
+    }
+
     var body: some View {
         TyfeSurfaceView(role: .paper) {
             VStack(alignment: .leading, spacing: TyfeSpacing.small) {
@@ -10,26 +16,37 @@ struct TyfeTierLegendView: View {
                     .tracking(1.1)
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
-                ForEach(RewardDurationTier.allCases, id: \.self) { tier in
-                    HStack(spacing: TyfeSpacing.small) {
-                        Image(systemName: "clock")
-                            .imageScale(.small)
-                            .foregroundStyle(TyfeEditorialPalette.terracotta)
-                            .accessibilityHidden(true)
+                HStack(alignment: .top, spacing: TyfeSpacing.small) {
+                    ForEach(RewardDurationTier.allCases, id: \.self) { tier in
+                        VStack(spacing: TyfeSpacing.unit) {
+                            Image(systemName: "clock")
+                                .imageScale(.small)
+                                .foregroundStyle(TyfeEditorialPalette.terracotta)
+                                .accessibilityHidden(true)
 
-                        Text("\(tier.durationMinutes) minutes")
-                            .font(TyfeTypography.interface)
+                            Text("\(tier.durationMinutes) MIN")
+                                .font(TyfeTypography.eyebrow)
+                                .tracking(0.8)
+                                .foregroundStyle(TyfeEditorialPalette.muted)
+                                .multilineTextAlignment(.center)
 
-                        Spacer(minLength: TyfeSpacing.small)
+                            Text(String(tier.creditCost))
+                                .font(TyfeTypography.displayCompact)
 
-                        Text(creditLabel(for: tier))
-                            .font(TyfeTypography.caption)
-                            .foregroundStyle(TyfeEditorialPalette.muted)
+                            Text(tier.creditCost == 1 ? "CREDIT" : "CREDITS")
+                                .font(TyfeTypography.caption)
+                                .foregroundStyle(TyfeEditorialPalette.muted)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("\(tier.durationMinutes) minutes")
+                        .accessibilityValue(creditLabel(for: tier))
                     }
                 }
             }
+            .frame(minHeight: minContentHeight)
         }
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .contain)
         .accessibilityLabel("Fixed duration tiers")
     }
 

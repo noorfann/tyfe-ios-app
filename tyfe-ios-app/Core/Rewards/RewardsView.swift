@@ -25,9 +25,8 @@ struct RewardsView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: TyfeSpacing.section) {
                     header
-                    balanceCard
+                    summaryCards
                     claimSection
-                    TyfeTierLegendView()
                     starterSection
                     customSection
                 }
@@ -69,14 +68,38 @@ struct RewardsView: View {
         }
     }
 
-    private var balanceCard: some View {
+    private func balanceCard(minContentHeight: CGFloat? = nil) -> some View {
         TyfeMetricCardView(
             title: "Credits",
             value: String(presenter.balance),
-            detail: "Reward Credits",
-            systemImage: "circle.fill",
-            accent: TyfeEditorialPalette.saffron
+            systemImage: "creditcard.rewards",
+            accent: TyfeEditorialPalette.saffron,
+            minContentHeight: minContentHeight
         )
+    }
+
+    private var summaryCards: some View {
+        ViewThatFits(in: .horizontal) {
+            GeometryReader { proxy in
+                let spacing = TyfeSpacing.control
+                let cardWidth = max(0, proxy.size.width - spacing)
+
+                HStack(alignment: .top, spacing: spacing) {
+                    balanceCard(minContentHeight: Self.summaryCardContentHeight)
+                        .frame(width: cardWidth * 0.4)
+
+                    TyfeTierLegendView(minContentHeight: Self.summaryCardContentHeight)
+                        .frame(width: cardWidth * 0.6)
+                }
+            }
+            .frame(minWidth: Self.summaryRowMinimumWidth, maxWidth: .infinity)
+            .frame(height: Self.summaryCardHeight)
+
+            VStack(spacing: TyfeSpacing.section) {
+                balanceCard()
+                TyfeTierLegendView()
+            }
+        }
     }
 
     @ViewBuilder
@@ -150,6 +173,9 @@ struct RewardsView: View {
     }
 
     private static let rewardCardWidth: CGFloat = 260
+    private static let summaryCardHeight: CGFloat = 132
+    private static let summaryCardContentHeight: CGFloat = summaryCardHeight - (TyfeSpacing.card * 2)
+    private static let summaryRowMinimumWidth: CGFloat = 320
 
     private func sectionTitle(_ text: String) -> some View {
         Text(text)

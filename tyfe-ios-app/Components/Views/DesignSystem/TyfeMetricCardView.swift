@@ -6,39 +6,51 @@ struct TyfeMetricCardView: View {
     let detail: String?
     let systemImage: String
     let accent: Color
+    let minContentHeight: CGFloat?
 
     init(
         title: String,
         value: String,
         detail: String? = nil,
         systemImage: String,
-        accent: Color
+        accent: Color,
+        minContentHeight: CGFloat? = nil
     ) {
         self.title = title
         self.value = value
         self.detail = detail
         self.systemImage = systemImage
         self.accent = accent
+        self.minContentHeight = minContentHeight
     }
 
     var body: some View {
         TyfeSurfaceView(role: .paper) {
-            if let detail {
-                VStack(alignment: .leading, spacing: TyfeSpacing.small) {
-                    HStack(alignment: .center, spacing: TyfeSpacing.small) {
-                        RoundedRectangle(cornerRadius: TyfeSpacing.unit)
-                            .fill(accent)
-                            .frame(width: 12, height: 12)
-                            .overlay {
-                                RoundedRectangle(cornerRadius: TyfeSpacing.unit)
-                                    .stroke(TyfeEditorialPalette.onAccent, lineWidth: TyfeStroke.hairline)
-                            }
-                        Image(systemName: systemImage)
-                            .imageScale(.small)
-                        Text(title)
-                            .font(TyfeTypography.eyebrow)
-                            .textCase(.uppercase)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+            Group {
+                if let detail {
+                    VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+                        HStack(alignment: .center, spacing: TyfeSpacing.small) {
+                            RoundedRectangle(cornerRadius: TyfeSpacing.unit)
+                                .fill(accent)
+                                .frame(width: 12, height: 12)
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: TyfeSpacing.unit)
+                                        .stroke(TyfeEditorialPalette.onAccent, lineWidth: TyfeStroke.hairline)
+                                }
+                            Image(systemName: systemImage)
+                                .imageScale(.small)
+                            Text(title)
+                                .font(TyfeTypography.eyebrow)
+                                .textCase(.uppercase)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        HStack(alignment: .firstTextBaseline, spacing: TyfeSpacing.small) {
+                            Text(value)
+                                .font(TyfeTypography.displayCompact)
+                            Text(detail)
+                                .font(TyfeTypography.caption)
+                                .frame(maxWidth: .infinity, alignment: .trailing)
+                        }
                     }
                     HStack(alignment: .firstTextBaseline, spacing: TyfeSpacing.small) {
                         Text(value)
@@ -59,6 +71,7 @@ struct TyfeMetricCardView: View {
                         .frame(maxWidth: .infinity, alignment: .center)
                 }
             }
+            .frame(minHeight: minContentHeight)
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text(title))
