@@ -4,6 +4,7 @@ import SwiftUI
 struct CoreInteractor: GlobalInteractor {
     private let appState: AppState
     private let authManager: AuthManager
+    private let emailAuthService: EmailAuthServicing
     private let userManager: UserManager
     private let logManager: LogManager
     private let abTestManager: ABTestManager
@@ -21,6 +22,7 @@ struct CoreInteractor: GlobalInteractor {
     init(container: DependencyContainer) {
         self.appState = container.resolve(AppState.self)!
         self.authManager = container.resolve(AuthManager.self)!
+        self.emailAuthService = container.resolve(EmailAuthServicing.self)!
         self.userManager = container.resolve(UserManager.self)!
         self.logManager = container.resolve(LogManager.self)!
         self.abTestManager = container.resolve(ABTestManager.self)!
@@ -63,6 +65,10 @@ struct CoreInteractor: GlobalInteractor {
     var auth: UserAuthInfo? {
         authManager.auth
     }
+
+    var suggestedDisplayName: String? {
+        userManager.currentUser?.commonNameCalculated
+    }
     
     func getAuthId() throws -> String {
         try authManager.getAuthId()
@@ -72,12 +78,19 @@ struct CoreInteractor: GlobalInteractor {
         try await authManager.signInAnonymously()
     }
 
-    func signInApple() async throws -> (user: UserAuthInfo, isNewUser: Bool) {
-        try await authManager.signInApple()
+    func registerWithEmail(
+        email: String,
+        password: String,
+        displayName: String?
+    ) async throws -> (user: UserAuthInfo, isNewUser: Bool) {
+        try await emailAuthService.register(email: email, password: password, displayName: displayName)
     }
-    
-    func signInGoogle() async throws -> (user: UserAuthInfo, isNewUser: Bool) {
-        throw AppError("Google sign-in is unavailable until Supabase authentication is integrated.")
+
+    func signInWithEmail(
+        email: String,
+        password: String
+    ) async throws -> (user: UserAuthInfo, isNewUser: Bool) {
+        try await emailAuthService.signIn(email: email, password: password)
     }
     
     // MARK: UserManager
@@ -520,8 +533,6 @@ struct CoreInteractor: GlobalInteractor {
         var option: SignInOption = .anonymous
         if auth.authProviders.contains(.apple) {
             option = .apple
-        } else if auth.authProviders.contains(.google) {
-            throw AppError("Google account deletion is unavailable until Supabase authentication is integrated.")
         }
         
         // Delete auth

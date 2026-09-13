@@ -31,6 +31,7 @@ struct Dependencies {
         let rewardManager: RewardManager
         let supabaseService: SupabaseClientProviding
         let socialManager: SocialManager
+        let emailAuthService: EmailAuthServicing
         
         switch config {
         case .mock(isSignedIn: let isSignedIn, addLogging: let addLogging):
@@ -63,6 +64,7 @@ struct Dependencies {
                 service: MockSocialService(currentUserId: UserAuthInfo.mock().uid),
                 logManager: logManager
             )
+            emailAuthService = MockEmailAuthService()
         case .dev, .prod:
             if case .dev = config {
                 logManager = LogManager(services: [
@@ -83,15 +85,18 @@ struct Dependencies {
                 supabaseService = liveService
                 authManager = AuthManager(service: SupabaseAuthService(client: liveService.client), logger: logManager)
                 socialManager = SocialManager(service: SupabaseSocialService(client: liveService.client), logManager: logManager, userDefaults: .standard)
+                emailAuthService = SupabaseEmailAuthService(client: liveService.client)
             } else {
                 supabaseService = MockSupabaseClientService()
                 authManager = AuthManager(service: MockAuthService(user: nil), logger: logManager)
                 socialManager = SocialManager(service: MockSocialService(), logManager: logManager, userDefaults: .standard)
+                emailAuthService = MockEmailAuthService()
             }
             #else
             supabaseService = MockSupabaseClientService()
             authManager = AuthManager(service: MockAuthService(user: nil), logger: logManager)
             socialManager = SocialManager(service: MockSocialService(), logManager: logManager)
+            emailAuthService = MockEmailAuthService()
             #endif
             userManager = UserManager(userSyncEngine: DocumentSyncEngine<UserModel>(
                 remote: MockRemoteDocumentService(document: nil),
@@ -167,6 +172,7 @@ struct Dependencies {
         container.register(RewardManager.self, service: rewardManager)
         container.register(SupabaseClientProviding.self, service: supabaseService)
         container.register(SocialManager.self, service: socialManager)
+        container.register(EmailAuthServicing.self, service: emailAuthService)
 
         self.container = container
         

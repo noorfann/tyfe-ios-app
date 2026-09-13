@@ -12,14 +12,14 @@ final class SupabaseAuthService: AuthService {
     }
 
     func getAuthenticatedUser() -> UserAuthInfo? {
-        client.auth.currentSession.map(Self.userAuthInfo(from:))
+        client.auth.currentSession.map { SupabaseUserAuthMapper.userAuthInfo(from: $0) }
     }
 
     func addAuthenticatedUserListener() -> AsyncStream<UserAuthInfo?> {
         AsyncStream { continuation in
             let task = Task {
                 for await (_, session) in client.auth.authStateChanges {
-                    continuation.yield(session.map(Self.userAuthInfo(from:)))
+                    continuation.yield(session.map { SupabaseUserAuthMapper.userAuthInfo(from: $0) })
                 }
                 continuation.finish()
             }
@@ -33,7 +33,7 @@ final class SupabaseAuthService: AuthService {
         switch option {
         case .anonymous:
             let session = try await client.auth.signInAnonymously()
-            let user = Self.userAuthInfo(from: session)
+            let user = SupabaseUserAuthMapper.userAuthInfo(from: session)
             let isNewUser = AuthSignInSupport.isNewUser(
                 createdAt: session.user.createdAt,
                 lastSignInAt: session.user.lastSignInAt
@@ -61,31 +61,6 @@ final class SupabaseAuthService: AuthService {
     ) async throws {
         try await performDeleteActionsBeforeAuthIsDeleted()
         try await client.rpc("delete_account").execute()
-    }
-
-    private static func userAuthInfo(from session: Session) -> UserAuthInfo {
-        let user = session.user
-        let providers = (user.identities ?? []).compactMap { authProvider(for: $0.provider) }
-        return UserAuthInfo(
-            uid: user.id.uuidString,
-            email: user.email,
-            isAnonymous: user.isAnonymous,
-            authProviders: providers,
-            displayName: user.userMetadata["display_name"]?.stringValue,
-            phoneNumber: user.phone,
-            creationDate: user.createdAt,
-            lastSignInDate: user.lastSignInAt
-        )
-    }
-
-    private static func authProvider(for providerId: String) -> AuthProviderOption? {
-        switch providerId {
-        case "apple": return .apple
-        case "google": return .google
-        case "email": return .email
-        case "phone": return .phone
-        default: return nil
-        }
     }
 }
 
