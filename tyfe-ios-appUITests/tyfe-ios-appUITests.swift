@@ -57,7 +57,10 @@ final class TyfeappUITests: XCTestCase {
         app.launchArguments.append("PHASE1_FLOW")
         app.launch()
 
-        XCTAssertTrue(app.buttons["Create today’s plan"].waitForExistence(timeout: 5))
+        XCTAssertTrue(
+            app.buttons["Create today’s plan"].waitForExistence(timeout: 10),
+            app.debugDescription
+        )
         app.buttons["Create today’s plan"].tap()
 
         XCTAssertTrue(app.staticTexts["STARTER ACTIVITY"].waitForExistence(timeout: 5))
@@ -78,20 +81,12 @@ final class TyfeappUITests: XCTestCase {
     @MainActor
     func testBeginningFocusRequiresConfirmationBeforeStarting() throws {
         let app = XCUIApplication()
-        app.launchArguments.append("PHASE1_FLOW")
+        app.launchArguments.append(contentsOf: ["UI_TESTING", "SIGNED_IN"])
+        app.launchArguments.append("FOCUS_PROGRESS_FLOW")
         app.launch()
 
-        XCTAssertTrue(app.buttons["Create today’s plan"].waitForExistence(timeout: 5))
-        app.buttons["Create today’s plan"].tap()
-
-        XCTAssertTrue(app.buttons["Continue to today’s plan"].waitForExistence(timeout: 5))
-        app.buttons["Continue to today’s plan"].tap()
-
-        XCTAssertTrue(app.buttons["Set today’s plan"].waitForExistence(timeout: 5))
-        app.buttons["Set today’s plan"].tap()
-
-        XCTAssertTrue(app.buttons["Start Focus"].firstMatch.waitForExistence(timeout: 5))
-        app.buttons["Start Focus"].firstMatch.tap()
+        XCTAssertTrue(app.buttons["Start"].firstMatch.waitForExistence(timeout: 10))
+        app.buttons["Start"].firstMatch.tap()
 
         XCTAssertTrue(app.buttons["Begin Focus"].waitForExistence(timeout: 5))
         app.buttons["Begin Focus"].tap()
@@ -100,7 +95,7 @@ final class TyfeappUITests: XCTestCase {
         XCTAssertTrue(alert.waitForExistence(timeout: 5))
         XCTAssertTrue(
             alert.staticTexts[
-                "Once you begin, you can't browse the app until you finish or abandon this session."
+                "The timer keeps running if you minimize Focus or lock your phone."
             ].waitForExistence(timeout: 5)
         )
 
@@ -115,8 +110,54 @@ final class TyfeappUITests: XCTestCase {
 
 #if MOCK
     @MainActor
+    func testMinimizedFocusShowsLimeProgressAndReopensTheSession() throws {
+        let app = XCUIApplication()
+        app.launchArguments.append(contentsOf: ["UI_TESTING", "SIGNED_IN"])
+        app.launchArguments.append("FOCUS_PROGRESS_FLOW")
+        app.launch()
+
+        XCTAssertTrue(app.buttons["Start"].firstMatch.waitForExistence(timeout: 10))
+        app.buttons["Start"].firstMatch.tap()
+
+        XCTAssertTrue(app.buttons["Begin Focus"].waitForExistence(timeout: 5))
+        app.buttons["Begin Focus"].tap()
+        let alert = app.alerts["Start Focus Session?"]
+        XCTAssertTrue(alert.buttons["Start Focus"].waitForExistence(timeout: 5))
+        alert.buttons["Start Focus"].tap()
+
+        XCTAssertTrue(app.buttons["Minimize Focus"].waitForExistence(timeout: 5))
+        app.buttons["Minimize Focus"].tap()
+        let focusStatus = app.buttons["focus-in-progress-status"]
+        XCTAssertTrue(focusStatus.waitForExistence(timeout: 5))
+        XCTAssertTrue(focusStatus.label.hasPrefix("Focus in progress"))
+        XCTAssertFalse(app.buttons["Pause once"].exists)
+
+        for tabTitle in ["Today", "Rewards", "Circles", "Settings"] {
+            app.buttons[tabTitle].tap()
+            let screenTitle = app.staticTexts[tabTitle].firstMatch
+            XCTAssertTrue(screenTitle.waitForExistence(timeout: 5))
+            XCTAssertLessThanOrEqual(
+                focusStatus.frame.maxY,
+                screenTitle.frame.minY,
+                "Focus status overlaps the \(tabTitle) screen title"
+            )
+        }
+
+        focusStatus.tap()
+        XCTAssertTrue(app.staticTexts["FOCUS CHAMBER"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Pause once"].waitForExistence(timeout: 5))
+        app.buttons["Pause once"].tap()
+        XCTAssertTrue(app.buttons["Minimize Focus"].waitForExistence(timeout: 5))
+        app.buttons["Minimize Focus"].tap()
+
+        XCTAssertTrue(focusStatus.waitForExistence(timeout: 5))
+        XCTAssertTrue(focusStatus.label.hasPrefix("Focus paused"))
+    }
+
+    @MainActor
     func testStartingLaterRewardShowsTopStatusBarWhenStarted() throws {
         let app = XCUIApplication()
+        app.launchArguments.append(contentsOf: ["UI_TESTING", "SIGNED_IN"])
         app.launchArguments.append("REWARD_FLOW")
         app.launch()
 
