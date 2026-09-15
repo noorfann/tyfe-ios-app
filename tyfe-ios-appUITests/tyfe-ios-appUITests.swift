@@ -112,6 +112,28 @@ final class TyfeappUITests: XCTestCase {
 
 #if MOCK
     @MainActor
+    func testReadyFocusDoesNotShowTodayStatusCardAndCanReopen() throws {
+        let app = XCUIApplication()
+        app.launchArguments.append(contentsOf: ["UI_TESTING", "SIGNED_IN"])
+        app.launchArguments.append("FOCUS_PROGRESS_FLOW")
+        app.launch()
+
+        XCTAssertTrue(app.buttons["Start"].firstMatch.waitForExistence(timeout: 10))
+        app.buttons["Start"].firstMatch.tap()
+
+        XCTAssertTrue(app.buttons["Begin Focus"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Minimize Focus"].waitForExistence(timeout: 5))
+        app.buttons["Minimize Focus"].tap()
+
+        XCTAssertFalse(app.staticTexts["Focus is ready"].exists)
+        XCTAssertTrue(app.buttons["Start"].firstMatch.waitForExistence(timeout: 5))
+        app.buttons["Start"].firstMatch.tap()
+
+        XCTAssertTrue(app.staticTexts["FOCUS CHAMBER"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Begin Focus"].exists)
+    }
+
+    @MainActor
     func testMinimizedFocusShowsLimeProgressAndReopensTheSession() throws {
         let app = XCUIApplication()
         app.launchArguments.append(contentsOf: ["UI_TESTING", "SIGNED_IN"])

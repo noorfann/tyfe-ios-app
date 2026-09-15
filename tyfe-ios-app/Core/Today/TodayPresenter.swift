@@ -207,17 +207,6 @@ final class TodayPresenter {
         router.showFocusView(delegate: FocusDelegate(activity: activity, session: session))
     }
 
-    func onResumeActiveFocusPressed() {
-        guard !isRewardInProgress else { return }
-
-        guard let activeFocusSession,
-              let activity = activities.first(where: { $0.activityId == activeFocusSession.activityId }) else {
-            return
-        }
-        interactor.trackEvent(event: Event.startFocus)
-        router.showFocusView(delegate: FocusDelegate(activity: activity, session: activeFocusSession))
-    }
-
     func onDevSettingsPressed() {
         #if MOCK || DEV
         router.showDevSettingsView()
