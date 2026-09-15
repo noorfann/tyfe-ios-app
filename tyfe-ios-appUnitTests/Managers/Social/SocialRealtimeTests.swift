@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 import Testing
 @testable import tyfe_ios_app
 
@@ -20,7 +21,7 @@ struct SocialRealtimeTests {
     @Test func cheerStreamDeliversSentCheers() async throws {
         let manager = SocialManager(service: makeService())
         let today = LocalDay(containing: .now, calendar: .current)
-        manager.startCheerDelivery()
+        manager.startCheerDelivery(recipientId: "u1")
 
         try await manager.sendCheer(.fire, senderId: "u1", recipientId: "u2", localDate: today)
         try await Task.sleep(nanoseconds: 50_000_000)
@@ -74,7 +75,7 @@ struct SocialRealtimeTests {
     @Test func signOutStopsRealtimeAndClearsState() async throws {
         let manager = SocialManager(service: makeService())
         let today = LocalDay(containing: .now, calendar: .current)
-        manager.startCheerDelivery()
+        manager.startCheerDelivery(recipientId: "u1")
         manager.startFocusStatus(circleId: "c1")
         try await manager.sendCheer(.clap, senderId: "u1", recipientId: "u2", localDate: today)
         try await Task.sleep(nanoseconds: 50_000_000)
@@ -106,12 +107,109 @@ struct SocialRealtimeTests {
         let manager = SocialManager(service: makeService())
         let today = LocalDay(containing: .now, calendar: .current)
 
-        manager.startRealtime(circleIds: ["c1"])
+        manager.startRealtime(circleIds: ["c1"], recipientId: "u1")
         try await manager.sendCheer(.star, senderId: "u1", recipientId: "u2", localDate: today)
         try await Task.sleep(nanoseconds: 50_000_000)
 
         #expect(manager.activeFocusCircleIds == ["c1"])
         #expect(manager.cheers.contains { $0.kind == .star })
+    }
+
+    @Test func incomingCheersAreQueuedForTheRecipient() async throws {
+        let service = makeService()
+        let manager = SocialManager(service: service)
+        manager.startCheerDelivery(recipientId: "u1")
+
+        await seedCheerAndWait(
+            CheerModel(
+                cheerId: "incoming",
+                senderId: "u2",
+                recipientId: "u1",
+                localDate: LocalDay(containing: .now, calendar: .current).socialDateString,
+                kind: .heart,
+                createdAt: .now
+            ),
+            service: service,
+            manager: manager
+        )
+
+        #expect(manager.pendingReceivedCheers.map(\.kind) == [.heart])
+    }
+
+    @Test func outgoingCheersDoNotEnterTheReceivedQueue() async throws {
+        let manager = SocialManager(service: makeService())
+        let today = LocalDay(containing: .now, calendar: .current)
+        manager.startCheerDelivery(recipientId: "u1")
+
+        try await manager.sendCheer(.fire, senderId: "u1", recipientId: "u2", localDate: today)
+        try await Task.sleep(for: .milliseconds(50))
+
+        #expect(manager.cheers.contains { $0.kind == .fire })
+        #expect(manager.pendingReceivedCheers.isEmpty)
+    }
+
+    @Test func consumingReceivedCheersReturnsTheBatchAndClearsIt() async throws {
+        let service = makeService()
+        let manager = SocialManager(service: service)
+        manager.startCheerDelivery(recipientId: "u1")
+
+        for (id, kind) in [("heart", CheerKind.heart), ("star", CheerKind.star)] {
+            await seedCheerAndWait(
+                CheerModel(
+                    cheerId: id,
+                    senderId: "u2",
+                    recipientId: "u1",
+                    localDate: LocalDay(containing: .now, calendar: .current).socialDateString,
+                    kind: kind,
+                    createdAt: .now
+                ),
+                service: service,
+                manager: manager
+            )
+        }
+
+        let batch = manager.consumePendingReceivedCheers()
+
+        #expect(batch.map(\.kind) == [.heart, .star])
+        #expect(manager.pendingReceivedCheers.isEmpty)
+    }
+
+    @Test func signOutClearsPendingReceivedCheers() async throws {
+        let service = makeService()
+        let manager = SocialManager(service: service)
+        manager.startCheerDelivery(recipientId: "u1")
+        await seedCheerAndWait(
+            CheerModel(
+                cheerId: "incoming",
+                senderId: "u2",
+                recipientId: "u1",
+                localDate: LocalDay(containing: .now, calendar: .current).socialDateString,
+                kind: .clap,
+                createdAt: .now
+            ),
+            service: service,
+            manager: manager
+        )
+
+        manager.signOut()
+
+        #expect(manager.pendingReceivedCheers.isEmpty)
+    }
+
+    private func seedCheerAndWait(
+        _ cheer: CheerModel,
+        service: MockSocialService,
+        manager: SocialManager
+    ) async {
+        await confirmation("Received cheer is queued") { confirmation in
+            _ = withObservationTracking {
+                manager.pendingReceivedCheers.count
+            } onChange: {
+                confirmation()
+            }
+            service.seedCheer(cheer)
+            await Task.yield()
+        }
     }
 
     private func makeService() -> MockSocialService {

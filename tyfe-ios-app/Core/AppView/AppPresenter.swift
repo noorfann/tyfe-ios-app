@@ -12,6 +12,12 @@ import SwiftfulUtilities
 class AppPresenter {
     
     private let interactor: AppViewInteractor
+
+    private(set) var activeCheerKinds: [CheerKind] = []
+    @ObservationIgnored private var cheerBatchTask: Task<Void, Never>?
+    @ObservationIgnored private var isApplicationActive = false
+
+    private static let cheerBatchDelay = Duration.milliseconds(250)
     
     var auth: UserAuthInfo? {
         interactor.auth
@@ -19,6 +25,10 @@ class AppPresenter {
     
     var colorScheme: ColorScheme {
         interactor.colorScheme
+    }
+
+    var pendingReceivedCheerCount: Int {
+        interactor.pendingReceivedCheerCount
     }
     
     func toggleColorScheme() {
@@ -34,7 +44,36 @@ class AppPresenter {
     }
     
     func onViewDisappear() {
+        stopCheerCelebration()
         interactor.trackEvent(event: Event.onDisappear)
+    }
+
+    func onScenePhaseChanged(_ scenePhase: ScenePhase) {
+        guard scenePhase == .active else {
+            stopCheerCelebration()
+            return
+        }
+        interactor.discardPendingReceivedCheers()
+        isApplicationActive = true
+    }
+
+    func onPendingReceivedCheersChanged() {
+        guard isApplicationActive else {
+            interactor.discardPendingReceivedCheers()
+            return
+        }
+        schedulePendingCheerCelebration()
+    }
+
+    func presentPendingCheers() {
+        guard isApplicationActive, activeCheerKinds.isEmpty else { return }
+        let receivedCheers = interactor.consumePendingReceivedCheers()
+        activeCheerKinds = receivedCheers.map(\.kind)
+    }
+
+    func onCheerCelebrationCompleted() {
+        activeCheerKinds = []
+        schedulePendingCheerCelebration()
     }
 
     func showATTPromptIfNeeded() async {
@@ -75,6 +114,30 @@ class AppPresenter {
                 await checkUserStatus()
             }
         }
+    }
+
+    private func schedulePendingCheerCelebration() {
+        guard activeCheerKinds.isEmpty,
+              pendingReceivedCheerCount > 0,
+              cheerBatchTask == nil else { return }
+        cheerBatchTask = Task { [weak self] in
+            do {
+                try await Task.sleep(for: Self.cheerBatchDelay)
+            } catch {
+                return
+            }
+            guard let self else { return }
+            cheerBatchTask = nil
+            presentPendingCheers()
+        }
+    }
+
+    private func stopCheerCelebration() {
+        isApplicationActive = false
+        cheerBatchTask?.cancel()
+        cheerBatchTask = nil
+        activeCheerKinds = []
+        interactor.discardPendingReceivedCheers()
     }
     
 }

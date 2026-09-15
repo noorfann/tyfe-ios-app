@@ -95,6 +95,18 @@ extension CoreInteractor {
         socialManager.cheers
     }
 
+    var pendingReceivedCheerCount: Int {
+        socialManager.pendingReceivedCheers.count
+    }
+
+    func consumePendingReceivedCheers() -> [CheerModel] {
+        socialManager.consumePendingReceivedCheers()
+    }
+
+    func discardPendingReceivedCheers() {
+        socialManager.discardPendingReceivedCheers()
+    }
+
     var socialFocusStatuses: [String: [CircleFocusStatusEntry]] {
         socialManager.focusStatusesByCircle
     }
@@ -114,8 +126,8 @@ extension CoreInteractor {
     }
 
     func startSocialRealtime(circleIds: [String]) {
-        guard auth != nil else { return }
-        socialManager.startCheerDelivery()
+        guard let recipientId = auth?.uid else { return }
+        socialManager.startCheerDelivery(recipientId: recipientId)
         for circleId in circleIds {
             socialManager.startFocusStatus(circleId: circleId)
         }
@@ -138,7 +150,10 @@ extension CoreInteractor {
             return
         }
         socialManager.markSocialMigrationComplete()
-        socialManager.startRealtime(circleIds: socialManager.circles.map(\.circleId))
+        socialManager.startRealtime(
+            circleIds: socialManager.circles.map(\.circleId),
+            recipientId: userId
+        )
     }
 
     func updateSocialFocusStatus(_ status: CircleFocusStatus) async {

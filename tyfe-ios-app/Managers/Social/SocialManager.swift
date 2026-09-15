@@ -11,12 +11,14 @@ final class SocialManager {
     private(set) var membersByCircle: [String: [CircleMemberModel]] = [:]
     private(set) var progressByCircle: [String: [CircleMemberProgressModel]] = [:]
     private(set) var cheers: [CheerModel] = []
+    private(set) var pendingReceivedCheers: [CheerModel] = []
     private(set) var hasMigratedToSocial = false
     private(set) var focusStatusesByCircle: [String: [CircleFocusStatusEntry]] = [:]
     private(set) var activeFocusCircleIds: Set<String> = []
     private(set) var isLoading = false
 
     @ObservationIgnored private var cheerTask: Task<Void, Never>?
+    @ObservationIgnored private var cheerRecipientId: String?
     @ObservationIgnored private var focusTasks: [String: Task<Void, Never>] = [:]
     @ObservationIgnored private let userDefaults: UserDefaults?
 
@@ -212,14 +214,31 @@ final class SocialManager {
         cheers = try await service.fetchCheers(localDate: localDate)
     }
 
-    func startCheerDelivery() {
-        guard cheerTask == nil else { return }
+    func startCheerDelivery(recipientId: String) {
+        let normalizedRecipientId = recipientId.lowercased()
+        guard cheerTask == nil || cheerRecipientId != normalizedRecipientId else { return }
+        cheerTask?.cancel()
+        pendingReceivedCheers = []
+        cheerRecipientId = normalizedRecipientId
         let stream = service.cheerStream()
         cheerTask = Task { [weak self] in
             for await cheer in stream {
                 self?.cheers.append(cheer)
+                if cheer.recipientId.lowercased() == normalizedRecipientId {
+                    self?.pendingReceivedCheers.append(cheer)
+                }
             }
         }
+    }
+
+    func consumePendingReceivedCheers() -> [CheerModel] {
+        let receivedCheers = pendingReceivedCheers
+        pendingReceivedCheers = []
+        return receivedCheers
+    }
+
+    func discardPendingReceivedCheers() {
+        pendingReceivedCheers = []
     }
 
     func startFocusStatus(circleId: String) {
@@ -246,6 +265,8 @@ final class SocialManager {
     func stopRealtime() {
         cheerTask?.cancel()
         cheerTask = nil
+        cheerRecipientId = nil
+        pendingReceivedCheers = []
         for task in focusTasks.values {
             task.cancel()
         }
@@ -258,8 +279,8 @@ final class SocialManager {
         userDefaults?.set(true, forKey: Self.migrationKey)
     }
 
-    func startRealtime(circleIds: [String]) {
-        startCheerDelivery()
+    func startRealtime(circleIds: [String], recipientId: String) {
+        startCheerDelivery(recipientId: recipientId)
         setFocusCircles(Set(circleIds))
     }
 
@@ -282,6 +303,7 @@ final class SocialManager {
         membersByCircle = [:]
         progressByCircle = [:]
         cheers = []
+        pendingReceivedCheers = []
         focusStatusesByCircle = [:]
         isLoading = false
     }

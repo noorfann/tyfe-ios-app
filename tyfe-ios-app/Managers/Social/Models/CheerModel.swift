@@ -23,6 +23,15 @@ enum CheerKind: String, Codable, CaseIterable, Hashable, Sendable {
         case .star: return "star.fill"
         }
     }
+
+    var emoji: String {
+        switch self {
+        case .clap: return "👏"
+        case .heart: return "❤️"
+        case .fire: return "🔥"
+        case .star: return "⭐️"
+        }
+    }
 }
 
 struct CheerModel: Identifiable, Codable, Hashable {

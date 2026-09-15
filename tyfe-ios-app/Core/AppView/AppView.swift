@@ -10,6 +10,8 @@ import SwiftfulUI
 struct AppView<Content: View>: View {
 
     @State private var presenter: AppPresenter
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private let content: () -> Content
 
     init(
@@ -55,10 +57,27 @@ struct AppView<Content: View>: View {
             )
             .onAppear {
                 presenter.onViewAppear()
+                presenter.onScenePhaseChanged(scenePhase)
             }
             .onDisappear {
                 presenter.onViewDisappear()
             }
+
+            if !presenter.activeCheerKinds.isEmpty {
+                CheerRainView(
+                    kinds: presenter.activeCheerKinds,
+                    onCompleted: presenter.onCheerCelebrationCompleted
+                )
+                .transition(.opacity)
+                .zIndex(1)
+            }
+        }
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.15), value: presenter.activeCheerKinds)
+        .onChange(of: scenePhase) { _, newValue in
+            presenter.onScenePhaseChanged(newValue)
+        }
+        .onChange(of: presenter.pendingReceivedCheerCount) { _, _ in
+            presenter.onPendingReceivedCheersChanged()
         }
         .preferredColorScheme(presenter.colorScheme)
     }
