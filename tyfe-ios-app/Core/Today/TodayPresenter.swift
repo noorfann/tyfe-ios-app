@@ -13,6 +13,7 @@ final class TodayPresenter {
     private(set) var completedSessionCount = 0
     private(set) var completedSessionCounts: [String: Int] = [:]
     private(set) var rewardCredits = 0
+    private(set) var currentStreakCount = 0
     private(set) var activeFocusSession: FocusSessionModel?
     var colorScheme: ColorScheme = .light
 
@@ -30,6 +31,10 @@ final class TodayPresenter {
 
     var isDarkAppearance: Bool {
         colorScheme == .dark
+    }
+
+    static func streakCount(from data: CurrentStreakData) -> Int {
+        data.currentStreak ?? 0
     }
 
     func onToggleAppearancePressed() {
@@ -109,6 +114,11 @@ final class TodayPresenter {
     func onAddActivityPressed() {
         presentAddActivityFlow(sessionCount: 1)
         interactor.trackEvent(event: Event.addActivity)
+    }
+
+    func onStreakPressed() {
+        interactor.trackEvent(event: Event.openStreak)
+        router.showStreakView(delegate: StreakDelegate())
     }
 
     func onEditPlanPressed() {
@@ -225,6 +235,7 @@ final class TodayPresenter {
         completedSessionCount = interactor.phase1CompletedSessionCount
         completedSessionCounts = interactor.phase1CompletedSessionCounts
         rewardCredits = interactor.phase1RewardCredits
+        currentStreakCount = Self.streakCount(from: interactor.currentStreakData)
         activeFocusSession = interactor.activeFocusSession
 
         if let selectedPlanItemId,
@@ -259,6 +270,7 @@ extension TodayPresenter {
         case editPlan
         case startFocus
         case toggleAppearance
+        case openStreak
         case deckSwipeCoachmarkShown
 
         var eventName: String {
@@ -270,6 +282,7 @@ extension TodayPresenter {
             case .editPlan: return "Today_EditPlan"
             case .startFocus: return "Today_StartFocus"
             case .toggleAppearance: return "Today_ToggleAppearance"
+            case .openStreak: return "Today_Streak_Open"
             case .deckSwipeCoachmarkShown: return "Today_DeckSwipeCoachmark_Shown"
             }
         }
@@ -278,7 +291,7 @@ extension TodayPresenter {
             switch self {
             case .onAppear(delegate: let delegate), .onDisappear(delegate: let delegate):
                 return delegate.eventParameters
-            case .createPlan, .addActivity, .editPlan, .startFocus, .toggleAppearance, .deckSwipeCoachmarkShown:
+            case .createPlan, .addActivity, .editPlan, .startFocus, .toggleAppearance, .openStreak, .deckSwipeCoachmarkShown:
                 return nil
             }
         }

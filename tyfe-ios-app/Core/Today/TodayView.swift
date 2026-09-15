@@ -91,17 +91,30 @@ struct TodayView: View {
                 .accessibilityValue(presenter.isDarkAppearance ? "Dark" : "Light")
                 .accessibilityHint("Switches between light and dark appearance")
 
-            Text("T")
+            HStack(spacing: 5) {
+                Image(systemName: "flame.fill")
+                    .accessibilityHidden(true)
+                Text(String(presenter.currentStreakCount))
+                    .monospacedDigit()
+            }
                 .font(TyfeTypography.interfaceStrong)
                 .foregroundStyle(TyfeEditorialPalette.onAccent)
-                .frame(width: 40, height: 40)
-                .background(TyfeEditorialPalette.teal)
+                .padding(.horizontal, TyfeSpacing.small)
+                .frame(minWidth: 40, minHeight: 40)
+                .background(TyfeEditorialPalette.saffron)
                 .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
                 .overlay {
                     RoundedRectangle(cornerRadius: TyfeRadius.control)
                         .stroke(TyfeEditorialPalette.onAccent, lineWidth: TyfeStroke.standard)
                 }
-                .accessibilityLabel("Profile")
+                .asButton(.press) {
+                    presenter.onStreakPressed()
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Current streak")
+                .accessibilityValue("\(presenter.currentStreakCount) days")
+                .accessibilityHint("Opens streak details")
+                .accessibilityIdentifier("today-streak-button")
         }
     }
 
