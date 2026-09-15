@@ -363,7 +363,8 @@ extension TodayPresenter {
             switch self {
             case .onAppear(delegate: let delegate), .onDisappear(delegate: let delegate):
                 return delegate.eventParameters
-            case .createPlan, .addActivity, .editPlan, .startFocus, .toggleAppearance, .openStreak, .deckSwipeCoachmarkShown:
+            case .createPlan, .addActivity, .editPlan, .startFocus, .toggleAppearance, .openStreak,
+                    .deckSwipeCoachmarkShown, .viewPreviousDay, .viewNextDay:
                 return nil
             }
         }

@@ -24,20 +24,15 @@ struct TodayView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: TyfeSpacing.section) {
                     header
-                    TodayDateNavigatorView(
-                        title: presenter.selectedDayTitle,
-                        dateLabel: presenter.selectedDayDateLabel,
-                        canViewPreviousDay: presenter.canViewPreviousDay,
-                        canViewNextDay: presenter.canViewNextDay,
-                        onPreviousDay: presenter.onPreviousDayPressed,
-                        onNextDay: presenter.onNextDayPressed
-                    )
                     if presenter.hasPlan {
                         plannedContent
-                    } else if presenter.isViewingToday {
-                        emptyContent
                     } else {
-                        TodayHistoricalEmptyView(completedSessionCount: presenter.completedSessionCount)
+                        dayNavigator
+                        if presenter.isViewingToday {
+                            emptyContent
+                        } else {
+                            TodayHistoricalEmptyView(completedSessionCount: presenter.completedSessionCount)
+                        }
                     }
                 }
                 .padding(.horizontal, TyfeSpacing.control)
@@ -185,6 +180,7 @@ struct TodayView: View {
                 }
             }
 
+            dayNavigator
             planDeck
 
             if !presenter.hasUnfinishedPlan {
@@ -200,6 +196,17 @@ struct TodayView: View {
                 }
             }
         }
+    }
+
+    private var dayNavigator: some View {
+        TodayDateNavigatorView(
+            title: presenter.selectedDayTitle,
+            dateLabel: presenter.selectedDayDateLabel,
+            canViewPreviousDay: presenter.canViewPreviousDay,
+            canViewNextDay: presenter.canViewNextDay,
+            onPreviousDay: presenter.onPreviousDayPressed,
+            onNextDay: presenter.onNextDayPressed
+        )
     }
 
     private var planDeck: some View {

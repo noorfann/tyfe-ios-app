@@ -39,17 +39,10 @@ extension ProfilePresenter {
             switch self {
             case .onAppear(delegate: let delegate), .onDisappear(delegate: let delegate):
                 return delegate.eventParameters
-            default:
-                return nil
             }
         }
         
-        var type: LogType {
-            switch self {
-            default:
-                return .analytic
-            }
-        }
+        var type: LogType { .analytic }
     }
 
 }

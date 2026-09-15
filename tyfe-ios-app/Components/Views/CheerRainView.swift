@@ -4,8 +4,9 @@ struct CheerRainView: View {
 
     var kinds: [CheerKind] = [.clap]
     var onCompleted: () -> Void = { }
+    var reduceMotionOverride: Bool?
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
     @State private var hasStarted = false
 
     private let particleCount = 20
@@ -13,7 +14,7 @@ struct CheerRainView: View {
 
     var body: some View {
         Group {
-            if reduceMotion {
+            if reduceMotionOverride ?? accessibilityReduceMotion {
                 staticBadge
             } else {
                 emojiRain
@@ -121,7 +122,6 @@ struct CheerRainView: View {
 }
 
 #Preview("Reduce Motion") {
-    CheerRainView(kinds: [.heart, .fire])
+    CheerRainView(kinds: [.heart, .fire], reduceMotionOverride: true)
         .background(TyfeEditorialPalette.canvas)
-        .environment(\.accessibilityReduceMotion, true)
 }
