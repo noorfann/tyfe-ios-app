@@ -40,7 +40,7 @@ final class FocusPresenter {
     }
 
     var timerText: String {
-        formatted(seconds: remainingFocusSeconds)
+        isPaused ? formattedPauseRemaining : formatted(seconds: remainingFocusSeconds)
     }
 
     var allowanceText: String {
@@ -50,7 +50,7 @@ final class FocusPresenter {
         case .running:
             return session.pauseUsed ? "Pause used · stay with it" : "One pause available · phone lock will not pause"
         case .paused:
-            return "Pause remaining: \(formatted(seconds: remainingPauseSeconds))"
+            return "Your Focus timer is held while paused"
         case .completed, .abandoned:
             return "No pause available"
         }
@@ -184,14 +184,16 @@ final class FocusPresenter {
     }
 
     func onMinimizePressed() {
-        guard session.state == .running || session.state == .paused else { return }
-        interactor.trackEvent(event: Event.onMinimize)
+        if session.state == .running || session.state == .paused {
+            interactor.trackEvent(event: Event.onMinimize)
+        }
         router.dismissScreen()
     }
 
-    func onClaimRewardPressed() {
+    func onClaimRewardPressed(onNavigateToRewards: () -> Void) {
         interactor.trackEvent(event: Event.onClaimReward)
-        router.showRewardsView(delegate: RewardsDelegate())
+        router.dismissScreen()
+        onNavigateToRewards()
     }
 
     private func refresh() {

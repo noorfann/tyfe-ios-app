@@ -76,6 +76,8 @@ final class TyfeappUITests: XCTestCase {
 
         XCTAssertTrue(app.staticTexts["FOCUS CHAMBER"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["Begin Focus"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Minimize Focus"].exists)
+        XCTAssertFalse(app.tabBars.firstMatch.exists)
     }
 
     @MainActor
@@ -267,6 +269,12 @@ final class TyfeappUITests: XCTestCase {
 
         XCTAssertTrue(app.staticTexts["Session complete"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["You earned +1 Reward Credit."].waitForExistence(timeout: 5))
+
+        app.buttons["Claim Reward"].tap()
+
+        XCTAssertTrue(app.staticTexts["Rewards"].firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.tabBars.buttons["Rewards"].isSelected)
+        XCTAssertFalse(app.staticTexts["FOCUS CHAMBER"].exists)
     }
 #endif
 }

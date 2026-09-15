@@ -38,7 +38,7 @@ struct FocusView: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
-    @ScaledMetric(relativeTo: .largeTitle) private var timerDiameter: CGFloat = 270
+    @Environment(\.selectTab) private var selectTab
     @State private var showWarmSurface = true
     @State private var showCompletionConfetti = false
 
@@ -71,6 +71,7 @@ struct FocusView: View {
             }
         }
         .toolbar(.hidden, for: .navigationBar)
+        .toolbar(.hidden, for: .tabBar)
         .onAppear {
             presenter.onViewAppear(delegate: delegate)
             enterFocusChamber()
@@ -96,22 +97,28 @@ struct FocusView: View {
 
     private var chamberContent: some View {
         ScrollView {
-            VStack(spacing: 24) {
+            VStack(spacing: TyfeSpacing.card) {
                 focusTopBar
-                activityHeader
-                timer
-                allowance
+
                 if presenter.session.state == .completed || presenter.session.state == .abandoned {
                     outcome
+                        .transition(.asymmetric(
+                            insertion: .scale(scale: 0.96).combined(with: .opacity),
+                            removal: .opacity
+                        ))
                 } else {
-                    actions
+                    focusTimer
+                        .transition(.opacity)
                 }
             }
-            .padding(.horizontal, 22)
-            .padding(.top, 18)
-            .padding(.bottom, 30)
+            .frame(maxWidth: 560)
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, TyfeSpacing.control)
+            .padding(.top, TyfeSpacing.small)
+            .padding(.bottom, TyfeSpacing.section)
         }
         .scrollIndicators(.hidden)
+        .animation(reduceMotion ? nil : TyfeMotion.normalAnimation, value: presenter.session.state)
     }
 
     private var focusTopBar: some View {
@@ -122,227 +129,145 @@ struct FocusView: View {
                 .accessibilityHidden(true)
 
             Text("FOCUS CHAMBER")
-                .font(.caption.weight(.black))
+                .font(TyfeTypography.eyebrow)
                 .tracking(1.4)
-                .foregroundStyle(TyfeEditorialPalette.onDark.opacity(0.7))
+                .foregroundStyle(TyfeEditorialPalette.onDark.opacity(0.72))
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            if presenter.session.state == .running || presenter.session.state == .paused {
-                Image(systemName: "chevron.down")
-                    .font(.subheadline.weight(.black))
-                    .foregroundStyle(TyfeEditorialPalette.onAccent)
-                    .frame(width: 36, height: 36)
-                    .background(TyfeEditorialPalette.focus)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .stroke(TyfeEditorialPalette.onDark, lineWidth: 2)
-                    }
-                    .asButton(.press) {
-                        presenter.onMinimizePressed()
-                    }
-                    .accessibilityLabel("Minimize Focus")
-                    .accessibilityHint("Returns to the app while the Focus timer continues")
-            }
-
-            Text("T")
-                .font(.headline.weight(.black))
+            Image(systemName: "chevron.down")
+                .font(.subheadline.weight(.black))
                 .foregroundStyle(TyfeEditorialPalette.onAccent)
-                .frame(width: 36, height: 36)
+                .frame(width: 44, height: 44)
                 .background(TyfeEditorialPalette.focus)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control, style: .continuous))
                 .overlay {
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(TyfeEditorialPalette.onDark, lineWidth: 2)
+                    RoundedRectangle(cornerRadius: TyfeRadius.control, style: .continuous)
+                        .stroke(
+                            TyfeEditorialPalette.onAccent,
+                            lineWidth: TyfeStroke.standard
+                        )
                 }
-                .accessibilityLabel("Profile")
+                .asButton(.press) {
+                    presenter.onMinimizePressed()
+                }
+                .accessibilityLabel("Minimize Focus")
+                .accessibilityHint("Returns to the app while preserving the current session")
         }
+        .frame(minHeight: 44)
     }
 
-    private var activityHeader: some View {
-        HStack(alignment: .bottom, spacing: 12) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("SELECTED ACTIVITY")
-                    .font(.caption2.weight(.black))
-                    .tracking(1.3)
-                    .foregroundStyle(TyfeEditorialPalette.onDark.opacity(0.62))
-
-                Text(delegate.activityTitle)
-                    .font(.title2.weight(.black))
-                    .foregroundStyle(TyfeEditorialPalette.onDark)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            HStack(spacing: 7) {
-                Circle()
-                    .fill(presenter.isPaused ? TyfeEditorialPalette.amber : TyfeEditorialPalette.focus)
-                    .frame(width: 8, height: 8)
-                    .accessibilityHidden(true)
-
-                Text(presenter.statusTitle)
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(TyfeEditorialPalette.onDark)
-            }
-            .padding(.horizontal, 11)
-            .frame(minHeight: 34)
-            .background(TyfeEditorialPalette.onDark.opacity(0.06))
-            .clipShape(Capsule())
-            .overlay {
-                Capsule()
-                    .stroke(TyfeEditorialPalette.onDark.opacity(0.4), lineWidth: 1.5)
-            }
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("Session status")
-            .accessibilityValue(presenter.statusTitle)
+    private var timerProgress: Double {
+        if presenter.isPaused {
+            guard presenter.session.pauseAllowanceSeconds > 0 else { return 0 }
+            return Double(presenter.remainingPauseSeconds) / Double(presenter.session.pauseAllowanceSeconds)
         }
+
+        guard presenter.session.durationSeconds > 0 else { return 0 }
+        return Double(presenter.remainingFocusSeconds) / Double(presenter.session.durationSeconds)
     }
 
-    private var timer: some View {
-        ZStack {
-            Circle()
-                .stroke(TyfeEditorialPalette.onDark.opacity(0.12), lineWidth: 1)
-
-            Circle()
-                .stroke(
-                    presenter.isPaused ? TyfeEditorialPalette.amber : TyfeEditorialPalette.focus,
-                    lineWidth: 2
-                )
-                .padding(8)
-
-            VStack(spacing: 10) {
-                Text(presenter.timerText)
-                    .font(.system(size: 56, weight: .black, design: .monospaced))
-                    .monospacedDigit()
-                    .foregroundStyle(TyfeEditorialPalette.onDark)
-                    .minimumScaleFactor(0.6)
-
-                Text("25-minute Focus Session")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(TyfeEditorialPalette.onDark.opacity(0.62))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-            }
-        }
-        .frame(width: timerDiameter, height: timerDiameter)
-        .frame(maxWidth: .infinity)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Focus Session timer")
-        .accessibilityValue("\(presenter.timerText), \(presenter.statusTitle)")
-    }
-
-    private var allowance: some View {
-        Text(presenter.allowanceText)
-            .font(.footnote)
-            .multilineTextAlignment(.center)
-            .foregroundStyle(TyfeEditorialPalette.onDark.opacity(0.66))
-            .frame(maxWidth: .infinity)
-    }
-
-    private var actions: some View {
-        VStack(spacing: 12) {
-            HStack(spacing: 8) {
-                Image(systemName: presenter.primaryActionSystemImage)
-                    .font(.subheadline.weight(.black))
-                    .accessibilityHidden(true)
-
-                Text(presenter.primaryActionTitle)
-            }
-            .font(.headline.weight(.black))
-            .foregroundStyle(TyfeEditorialPalette.onAccent)
-            .frame(maxWidth: .infinity)
-            .frame(minHeight: 54)
-            .background(TyfeEditorialPalette.focus)
-            .clipShape(RoundedRectangle(cornerRadius: 17, style: .continuous))
-            .shadow(color: TyfeEditorialPalette.onDark.opacity(0.28), radius: 0, x: 3, y: 3)
-            .asButton(.press) {
-                presenter.onPrimaryActionPressed()
-            }
-            .accessibilityLabel(presenter.primaryActionTitle)
-
+    private var focusTimer: some View {
+        TyfeFocusTimerView(
+            session: presenter.session,
+            activityTitle: delegate.activityTitle,
+            timeText: presenter.timerText,
+            progress: timerProgress,
+            supportingText: presenter.allowanceText,
+            statusDescription: presenter.statusDescription,
+            onBegin: presenter.onPrimaryActionPressed,
+            onPause: presenter.onPrimaryActionPressed,
+            onResume: presenter.onPrimaryActionPressed,
+            onAbandon: presenter.onAbandonPressed
+        )
 #if MOCK
+        .overlay(alignment: .bottomTrailing) {
             Text("Mark complete")
-                .font(.subheadline.weight(.bold))
-                .foregroundStyle(TyfeEditorialPalette.onDark.opacity(0.66))
-                .frame(minHeight: 44)
+                .font(TyfeTypography.caption)
+                .foregroundStyle(TyfeEditorialPalette.onDark.opacity(0.58))
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
                 .asButton(.press) {
                     presenter.onMarkCompletePressed()
                 }
                 .accessibilityLabel("Mark complete")
-#endif
-
-            Text("Abandon Session")
-                .font(.subheadline.weight(.bold))
-                .underline()
-                .underline(true, color: TyfeEditorialPalette.onDark.opacity(0.55))
-                .foregroundStyle(TyfeEditorialPalette.onDark.opacity(0.66))
-                .frame(minHeight: 44)
-                .asButton(.press) {
-                    presenter.onAbandonPressed()
-                }
+                .padding(TyfeSpacing.small)
         }
+#endif
     }
 
     private var outcome: some View {
-        TyfeSurfaceView(role: presenter.session.state == .completed ? .celebration : .warning) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
-                Label(
-                    presenter.session.state == .completed ? "Session complete" : "Session ended",
-                    systemImage: presenter.session.state.symbolName
-                )
-                .font(TyfeTypography.displayCompact)
+        TyfeSurfaceView(role: .paper) {
+            VStack(spacing: TyfeSpacing.card) {
+                Image(systemName: presenter.session.state.symbolName)
+                    .font(.system(size: 38, weight: .black))
+                    .foregroundStyle(outcomeAccent)
+                    .frame(width: 76, height: 76)
+                    .background(outcomeAccent.opacity(0.14))
+                    .clipShape(Circle())
+                    .accessibilityHidden(true)
 
-                if let completion = presenter.completion, presenter.session.state == .completed {
-                    Text("You earned +\(completion.rewardCreditsAwarded) Reward Credit.")
-                        .font(TyfeTypography.interfaceStrong)
-                } else {
-                    Text("No Reward Credit earned.")
-                        .font(TyfeTypography.interfaceStrong)
+                VStack(spacing: TyfeSpacing.small) {
+                    Text(presenter.session.state == .completed ? "Session complete" : "Session ended")
+                        .font(TyfeTypography.display)
+                        .multilineTextAlignment(.center)
+
+                    Text(outcomeMessage)
+                        .font(TyfeTypography.interface)
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(TyfeEditorialPalette.muted)
                 }
 
-                if presenter.session.state == .completed {
-                    Text("Claim a Reward")
-                        .font(TyfeTypography.interfaceStrong)
-                        .frame(maxWidth: .infinity)
-                        .frame(minHeight: 48)
-                        .background(TyfeEditorialPalette.saffron)
-                        .foregroundStyle(TyfeEditorialPalette.onAccent)
-                        .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
-                        .asButton(.press) {
-                            presenter.onClaimRewardPressed()
-                        }
-                }
-
-                HStack(spacing: TyfeSpacing.small) {
+                VStack(spacing: TyfeSpacing.small) {
                     if presenter.session.state == .completed {
-                        Text("Start another")
-                            .font(TyfeTypography.interfaceStrong)
-                            .frame(maxWidth: .infinity)
-                            .frame(minHeight: 48)
-                            .background(TyfeEditorialPalette.navy)
-                            .foregroundStyle(TyfeEditorialPalette.onDark)
-                            .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
-                            .asButton(.press) {
-                                presenter.onStartAnotherPressed()
+                        TyfeActionButtonView(
+                            title: "Claim Reward",
+                            systemImage: "gift.fill",
+                            onTap: {
+                                presenter.onClaimRewardPressed {
+                                    selectTab("Rewards")
+                                }
                             }
+                        )
+
+                        TyfeActionButtonView(
+                            title: "Start another",
+                            systemImage: "arrow.clockwise",
+                            role: .secondary,
+                            onTap: presenter.onStartAnotherPressed
+                        )
                     }
 
                     Text("Back to Today")
                         .font(TyfeTypography.interfaceStrong)
-                        .frame(maxWidth: .infinity)
-                        .frame(minHeight: 48)
-                        .background(TyfeEditorialPalette.navy)
-                        .foregroundStyle(TyfeEditorialPalette.onDark)
-                        .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
+                        .foregroundStyle(TyfeEditorialPalette.ink)
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .contentShape(Rectangle())
                         .asButton(.press) {
                             presenter.onBackToTodayPressed()
                         }
+                        .accessibilityLabel("Back to Today")
                 }
             }
+            .frame(maxWidth: .infinity)
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel(presenter.session.state == .completed ? "Focus session complete" : "Focus session abandoned")
+    }
+
+    private var outcomeAccent: Color {
+        presenter.session.state == .completed
+            ? TyfeEditorialPalette.success
+            : TyfeEditorialPalette.error
+    }
+
+    private var outcomeMessage: String {
+        if let completion = presenter.completion, presenter.session.state == .completed {
+            return "You earned +\(completion.rewardCreditsAwarded) Reward Credit."
+        }
+        if presenter.session.state == .completed {
+            return "Your Reward Credit is ready."
+        }
+        return "No Reward Credit earned. You can begin again whenever you are ready."
     }
 
     private func enterFocusChamber() {
@@ -357,27 +282,49 @@ struct FocusView: View {
     }
 }
 
-#Preview("Running") {
-    let container = DevPreview.shared.container()
-    let interactor = CoreInteractor(container: container)
-    let builder = CoreBuilder(interactor: interactor)
-    let delegate = FocusDelegate(activity: .mock, session: .readyMock)
-
-    return RouterView { router in
-        builder.focusView(router: router, delegate: delegate)
-    }
+#Preview("Focus - ready") {
+    focusPreview(session: .readyMock)
 }
 
-#Preview("Running — Dark") {
+#Preview("Focus - running dark") {
+    focusPreview(session: .runningMock)
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Focus - paused") {
+    focusPreview(session: .pausedMock)
+}
+
+#Preview("Focus - complete") {
+    focusPreview(session: .completedMock)
+}
+
+#Preview("Focus - abandoned") {
+    focusPreview(session: .abandonedMock)
+}
+
+#Preview("Focus - large type") {
+    focusPreview(session: .runningMock)
+        .environment(\.dynamicTypeSize, .accessibility2)
+}
+
+#Preview("Focus - reduce motion") {
+    focusPreview(session: .completedMock)
+        .transaction { transaction in
+            transaction.animation = nil
+        }
+}
+
+@MainActor
+private func focusPreview(session: FocusSessionModel) -> some View {
     let container = DevPreview.shared.container()
     let interactor = CoreInteractor(container: container)
     let builder = CoreBuilder(interactor: interactor)
-    let delegate = FocusDelegate(activity: .mock, session: .readyMock)
+    let delegate = FocusDelegate(activity: .mock, session: session)
 
     return RouterView { router in
         builder.focusView(router: router, delegate: delegate)
     }
-    .preferredColorScheme(.dark)
 }
 
 extension CoreBuilder {

@@ -99,6 +99,9 @@ struct TyfeDesignSystemGalleryView: View {
                     session: session,
                     activityTitle: presenter.activity.name,
                     timeText: timeText(for: session.state),
+                    progress: progress(for: session.state),
+                    supportingText: supportingText(for: session),
+                    statusDescription: statusDescription(for: session.state),
                     onBegin: {},
                     onPause: {},
                     onResume: {},
@@ -171,6 +174,35 @@ struct TyfeDesignSystemGalleryView: View {
         case .abandoned: return "08:11"
         }
     }
+
+    private func progress(for state: FocusSessionState) -> Double {
+        switch state {
+        case .ready: return 1
+        case .running: return 0.75
+        case .paused: return 0.91
+        case .completed: return 0
+        case .abandoned: return 0.33
+        }
+    }
+
+    private func supportingText(for session: FocusSessionModel) -> String {
+        switch session.state {
+        case .ready: return "One pause available, up to five minutes"
+        case .running: return "One pause available, phone lock will not pause"
+        case .paused: return "Your Focus timer is held while paused"
+        case .completed, .abandoned: return "No pause available"
+        }
+    }
+
+    private func statusDescription(for state: FocusSessionState) -> String {
+        switch state {
+        case .ready: return "Ready when you are"
+        case .running: return "Stay with this one thing"
+        case .paused: return "Take your pause, then return"
+        case .completed: return "Session complete"
+        case .abandoned: return "Session ended"
+        }
+    }
 }
 
 #Preview("Mock gallery") {
@@ -179,21 +211,21 @@ struct TyfeDesignSystemGalleryView: View {
     }
 }
 
-#Preview("Mock gallery — Dark") {
+#Preview("Mock gallery - Dark") {
     NavigationStack {
         TyfeDesignSystemGalleryView(presenter: TyfeDesignSystemGalleryPresenter())
     }
     .preferredColorScheme(.dark)
 }
 
-#Preview("Mock gallery — Large Dynamic Type") {
+#Preview("Mock gallery - Large Dynamic Type") {
     NavigationStack {
         TyfeDesignSystemGalleryView(presenter: TyfeDesignSystemGalleryPresenter())
     }
     .environment(\.dynamicTypeSize, .accessibility3)
 }
 
-#Preview("Mock gallery — Reduce Motion") {
+#Preview("Mock gallery - Reduce Motion") {
     NavigationStack {
         TyfeDesignSystemGalleryView(presenter: TyfeDesignSystemGalleryPresenter())
     }

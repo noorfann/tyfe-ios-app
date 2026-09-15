@@ -15,9 +15,10 @@ This is the canonical project guidance for Codex and other coding agents working
 - Continue through implementation and focused verification when the request is clear. Ask only when a missing choice would materially change the result or an external action is required.
 - Preserve existing user changes. Review `git status` before editing and keep unrelated changes out of the task.
 - Keep the project runnable after every coherent slice.
-- Use `apply_patch` for source and documentation edits. Use the repository's existing scripts and Xcode tooling for generation, builds, tests, and diagnostics.
+- Use `apply_patch` for source and documentation edits. When runtime tooling is explicitly requested, use the repository's existing scripts and Xcode tooling for generation, builds, tests, and diagnostics.
 - Treat commits, pushes, remote changes, history rewrites, dependency upgrades, and destructive filesystem operations as explicit user actions. The project commit rule requires the user to say `commit` before committing.
 - Do not run builds, unit tests, UI tests, simulator launches, application launches, or other runtime verification unless the user explicitly requests it.
+- Invoke XcodeBuildMCP only when the user explicitly requests XcodeBuildMCP by name. A general implementation or verification request does not authorize using it.
 - Adding or editing test source does not authorize executing tests.
 - When verification is not requested, use read-only/static checks and non-rewriting SwiftLint only; state clearly in the handoff that runtime verification was skipped by policy.
 - Before reporting completion, run only the permitted static command that proves the claim, read its exit status and failures, and report blockers plainly.
@@ -59,7 +60,7 @@ Use `Mock` for local development, previews, and UI tests. Mock code must not ini
 2. Trace the entry point through View, Presenter, Interactor, Manager, service, and persistence layers as applicable.
 3. Implement the smallest complete vertical slice using existing project patterns.
 4. Add or update focused Swift Testing, integration, UI, or device coverage appropriate to the risk.
-5. Run focused verification, then a broader build or test when the change crosses module or configuration boundaries.
+5. When runtime verification is explicitly requested, run focused verification, then a broader build or test when the change crosses module or configuration boundaries. Otherwise, use the permitted static checks.
 6. Summarize changed files, verification evidence, and any material omission or follow-up.
 
 ## On-demand project guidance

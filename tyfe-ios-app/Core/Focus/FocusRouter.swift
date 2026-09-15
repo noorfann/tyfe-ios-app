@@ -1,8 +1,6 @@
 import SwiftUI
 
 @MainActor
-protocol FocusRouter: GlobalRouter {
-    func showRewardsView(delegate: RewardsDelegate)
-}
+protocol FocusRouter: GlobalRouter { }
 
 extension CoreRouter: FocusRouter { }

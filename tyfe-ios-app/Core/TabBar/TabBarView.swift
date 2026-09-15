@@ -1,6 +1,30 @@
 import SwiftUI
 import SwiftfulUI
 
+struct TabSelectionAction: Sendable {
+    private let action: @MainActor @Sendable (String) -> Void
+
+    init(_ action: @escaping @MainActor @Sendable (String) -> Void) {
+        self.action = action
+    }
+
+    @MainActor
+    func callAsFunction(_ tabId: String) {
+        action(tabId)
+    }
+}
+
+private struct TabSelectionActionKey: EnvironmentKey {
+    static let defaultValue = TabSelectionAction { _ in }
+}
+
+extension EnvironmentValues {
+    var selectTab: TabSelectionAction {
+        get { self[TabSelectionActionKey.self] }
+        set { self[TabSelectionActionKey.self] = newValue }
+    }
+}
+
 struct TabBarDelegate {
     let tabs: [TabBarTab]
     let startingTabId: String?
@@ -73,6 +97,16 @@ struct TabBarView: View {
                         .tag(tab.id)
                 }
             }
+            .environment(
+                \.selectTab,
+                TabSelectionAction { tabId in
+                    presenter.onTabSelected(
+                        tabId: tabId,
+                        isSameTabTapped: tabId == presenter.selectedTab,
+                        delegate: delegate
+                    )
+                }
+            )
         }
         .background(TyfeEditorialPalette.canvas.ignoresSafeArea())
         .animation(statusBarAnimation, value: presenter.progressStatusKind)
