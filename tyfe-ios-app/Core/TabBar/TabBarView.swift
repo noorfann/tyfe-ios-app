@@ -15,7 +15,9 @@ struct TabSelectionAction: Sendable {
 }
 
 private struct TabSelectionActionKey: EnvironmentKey {
-    static let defaultValue = TabSelectionAction { _ in }
+    static let defaultValue = TabSelectionAction { _ in
+        assertionFailure("TabSelectionAction must be injected before selecting a tab")
+    }
 }
 
 extension EnvironmentValues {
@@ -56,6 +58,10 @@ struct TabBarView: View {
 
     private var statusBarAnimation: Animation? {
         reduceMotion ? nil : .easeInOut(duration: TyfeMotion.normalDuration)
+    }
+
+    private var tabSelectionAction: TabSelectionAction {
+        presenter.tabSelectionAction(delegate: delegate)
     }
 
     // Custom binding to intercept tab selections
@@ -99,13 +105,7 @@ struct TabBarView: View {
             }
             .environment(
                 \.selectTab,
-                TabSelectionAction { tabId in
-                    presenter.onTabSelected(
-                        tabId: tabId,
-                        isSameTabTapped: tabId == presenter.selectedTab,
-                        delegate: delegate
-                    )
-                }
+                tabSelectionAction
             )
         }
         .background(TyfeEditorialPalette.canvas.ignoresSafeArea())

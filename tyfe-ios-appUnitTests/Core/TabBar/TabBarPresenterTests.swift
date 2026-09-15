@@ -62,6 +62,10 @@ struct TabBarPresenterTests {
         #expect(context.presenter.selectedTab == "Today")
         #expect(context.router.presentedDelegate?.session.focusSessionId == session.focusSessionId)
         #expect(context.router.presentedDelegate?.activity.activityId == session.activityId)
+
+        let tabSelectionAction = try #require(context.router.presentedTabSelectionAction)
+        tabSelectionAction("Rewards")
+        #expect(context.presenter.selectedTab == "Rewards")
         context.presenter.onViewDisappear(delegate: context.delegate)
     }
 
@@ -101,8 +105,10 @@ private struct TestContext {
 @MainActor
 private final class RecordingTabBarRouter: TabBarRouter {
     private(set) var presentedDelegate: FocusDelegate?
+    private(set) var presentedTabSelectionAction: TabSelectionAction?
 
-    func showFocusOverlay(delegate: FocusDelegate) {
+    func showFocusOverlay(delegate: FocusDelegate, tabSelectionAction: TabSelectionAction) {
         presentedDelegate = delegate
+        presentedTabSelectionAction = tabSelectionAction
     }
 }

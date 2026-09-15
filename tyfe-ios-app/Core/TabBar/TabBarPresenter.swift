@@ -116,6 +116,17 @@ class TabBarPresenter {
         selectedTab = tabId
     }
 
+    func tabSelectionAction(delegate: TabBarDelegate) -> TabSelectionAction {
+        TabSelectionAction { [weak self] tabId in
+            guard let self else { return }
+            self.onTabSelected(
+                tabId: tabId,
+                isSameTabTapped: tabId == self.selectedTab,
+                delegate: delegate
+            )
+        }
+    }
+
     func onProgressStatusPressed(delegate: TabBarDelegate) {
         guard let progressStatusKind else { return }
 
@@ -132,7 +143,10 @@ class TabBarPresenter {
                 event: Event.focusStatusPressed(session: focusSession, delegate: delegate)
             )
             selectedTab = todayTab.id
-            router.showFocusOverlay(delegate: FocusDelegate(activity: activity, session: focusSession))
+            router.showFocusOverlay(
+                delegate: FocusDelegate(activity: activity, session: focusSession),
+                tabSelectionAction: tabSelectionAction(delegate: delegate)
+            )
         }
     }
 

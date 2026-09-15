@@ -276,5 +276,38 @@ final class TyfeappUITests: XCTestCase {
         XCTAssertTrue(app.tabBars.buttons["Rewards"].isSelected)
         XCTAssertFalse(app.staticTexts["FOCUS CHAMBER"].exists)
     }
+
+    @MainActor
+    func testClaimRewardWorksAfterReopeningMinimizedFocus() throws {
+        let app = XCUIApplication()
+        app.launchArguments.append(contentsOf: ["UI_TESTING", "SIGNED_IN"])
+        app.launchArguments.append("FOCUS_PROGRESS_FLOW")
+        app.launch()
+
+        XCTAssertTrue(app.buttons["Start"].firstMatch.waitForExistence(timeout: 10))
+        app.buttons["Start"].firstMatch.tap()
+
+        XCTAssertTrue(app.buttons["Begin Focus"].waitForExistence(timeout: 5))
+        app.buttons["Begin Focus"].tap()
+        let alert = app.alerts["Start Focus Session?"]
+        XCTAssertTrue(alert.buttons["Start Focus"].waitForExistence(timeout: 5))
+        alert.buttons["Start Focus"].tap()
+
+        XCTAssertTrue(app.buttons["Minimize Focus"].waitForExistence(timeout: 5))
+        app.buttons["Minimize Focus"].tap()
+
+        let focusStatus = app.buttons["focus-in-progress-status"]
+        XCTAssertTrue(focusStatus.waitForExistence(timeout: 5))
+        focusStatus.tap()
+
+        XCTAssertTrue(app.buttons["Mark complete"].waitForExistence(timeout: 5))
+        app.buttons["Mark complete"].tap()
+        XCTAssertTrue(app.buttons["Claim Reward"].waitForExistence(timeout: 5))
+        app.buttons["Claim Reward"].tap()
+
+        XCTAssertTrue(app.staticTexts["Rewards"].firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.tabBars.buttons["Rewards"].isSelected)
+        XCTAssertFalse(app.staticTexts["FOCUS CHAMBER"].exists)
+    }
 #endif
 }
