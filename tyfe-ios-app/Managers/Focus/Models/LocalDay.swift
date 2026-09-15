@@ -18,9 +18,14 @@ struct LocalDay: Codable, Hashable, Sendable, Identifiable {
     }
 
     var startDate: Date {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: timeZoneIdentifier) ?? .current
+        let calendar = localCalendar
         return calendar.date(from: DateComponents(year: year, month: month, day: day)) ?? .distantPast
+    }
+
+    func adding(days: Int) -> Self {
+        let calendar = localCalendar
+        let date = calendar.date(byAdding: .day, value: days, to: startDate) ?? startDate
+        return Self(containing: date, calendar: calendar)
     }
 
     init(
@@ -42,5 +47,11 @@ struct LocalDay: Codable, Hashable, Sendable, Identifiable {
             day: calendar.component(.day, from: date),
             timeZoneIdentifier: calendar.timeZone.identifier
         )
+    }
+
+    private var localCalendar: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: timeZoneIdentifier) ?? .current
+        return calendar
     }
 }

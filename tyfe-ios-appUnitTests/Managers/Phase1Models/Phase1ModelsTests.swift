@@ -33,6 +33,25 @@ struct Phase1ModelsTests {
         #expect(firstDay.startDate < secondDay.startDate)
     }
 
+    @Test func localDayOffsetsByCalendarDayAcrossDaylightSavingTime() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(identifier: "America/Los_Angeles"))
+        let dayBeforeDST = LocalDay(
+            year: 2026,
+            month: 3,
+            day: 7,
+            timeZoneIdentifier: calendar.timeZone.identifier
+        )
+
+        let dayAfterDST = dayBeforeDST.adding(days: 2)
+
+        #expect(dayAfterDST.year == 2026)
+        #expect(dayAfterDST.month == 3)
+        #expect(dayAfterDST.day == 9)
+        #expect(dayAfterDST.timeZoneIdentifier == calendar.timeZone.identifier)
+        #expect(dayAfterDST.startDate.timeIntervalSince(dayBeforeDST.startDate) == 47 * 60 * 60)
+    }
+
     @Test func focusFixtureUsesFixedDurationAndStableIdentity() throws {
         let session = FocusSessionModel.mock
         #expect(session.id == session.focusSessionId)

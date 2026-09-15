@@ -89,6 +89,82 @@ struct TodayManagerTests {
         #expect(today.dailyPlan?.intendedSessionCount == 2)
         #expect(repository.snapshot.dailyPlans.count == 2)
         #expect(focus.dailyPlan(for: firstDay)?.intendedSessionCount == 1)
+        #expect(today.earliestRecordedLocalDay == firstDay)
+    }
+
+    @Test func historyReadsPlansAndCompletionsForRequestedDays() throws {
+        let calendar = utcCalendar()
+        let currentDay = LocalDay(year: 2026, month: 9, day: 15, timeZoneIdentifier: calendar.timeZone.identifier)
+        let planDay = currentDay.adding(days: -2)
+        let sessionOnlyDay = currentDay.adding(days: -4)
+        let activity = ActivityModel.mock
+        let plan = historyPlan(on: planDay, activityId: activity.activityId)
+        let plannedSession = completedSession(
+            focusSessionId: "focus-session-history-planned",
+            localDay: planDay,
+            activityId: activity.activityId,
+            dailyPlanId: plan.dailyPlanId
+        )
+        let sessionWithoutPlan = completedSession(
+            focusSessionId: "focus-session-history-only",
+            localDay: sessionOnlyDay,
+            activityId: activity.activityId,
+            isBonusSession: true
+        )
+        let repository = MockLocalAppRepository(snapshot: LocalAppSnapshot(
+            activities: [activity],
+            dailyPlans: [plan],
+            focusSessions: [plannedSession, sessionWithoutPlan],
+            nextActivityNumber: 2,
+            nextSessionNumber: 3
+        ))
+        let clock = TestFocusClock(now: currentDay.startDate.addingTimeInterval(43_200))
+        let manager = TodayManager(repository: repository, clock: clock, calendar: calendar)
+
+        #expect(manager.currentLocalDay == currentDay)
+        #expect(manager.earliestRecordedLocalDay == sessionOnlyDay)
+        #expect(manager.dailyPlan(for: planDay) == plan)
+        #expect(manager.completedSessionCount(on: planDay) == 1)
+        #expect(manager.completedSessionCount(for: activity.activityId, on: planDay) == 1)
+        #expect(manager.dailyPlan(for: currentDay.adding(days: -1)) == nil)
+        #expect(manager.completedSessionCount(on: sessionOnlyDay) == 1)
+    }
+
+    private func historyPlan(on localDay: LocalDay, activityId: String) -> DailyPlanModel {
+        DailyPlanModel(
+            dailyPlanId: "daily-plan-history",
+            localDate: localDay.startDate,
+            localDay: localDay,
+            intendedSessionCount: 2,
+            originalIntendedSessionCount: 2,
+            activityIds: [activityId],
+            planItems: [
+                DailyPlanItemModel(
+                    planItemId: "plan-item-history",
+                    activityId: activityId,
+                    plannedSessionCount: 2
+                )
+            ]
+        )
+    }
+
+    private func completedSession(
+        focusSessionId: String,
+        localDay: LocalDay,
+        activityId: String,
+        dailyPlanId: String? = nil,
+        isBonusSession: Bool = false
+    ) -> FocusSessionModel {
+        FocusSessionModel(
+            focusSessionId: focusSessionId,
+            activityId: activityId,
+            state: .completed,
+            startedAt: localDay.startDate.addingTimeInterval(3_600),
+            localDay: localDay,
+            dailyPlanIdAtStart: dailyPlanId,
+            completedAt: localDay.startDate.addingTimeInterval(5_100),
+            isBonusSession: isBonusSession
+        )
     }
 
     @Test func acceptingTimedPlanSchedulesItsLocalReminders() {

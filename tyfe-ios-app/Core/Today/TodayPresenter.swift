@@ -14,6 +14,9 @@ final class TodayPresenter {
     private(set) var completedSessionCounts: [String: Int] = [:]
     private(set) var rewardCredits = 0
     private(set) var activeFocusSession: FocusSessionModel?
+    private(set) var currentLocalDay: LocalDay
+    private(set) var selectedLocalDay: LocalDay
+    private(set) var earliestRecordedLocalDay: LocalDay?
     var colorScheme: ColorScheme = .light
 
     var selectedPlanItemId: String?
@@ -25,7 +28,37 @@ final class TodayPresenter {
     init(interactor: TodayInteractor, router: TodayRouter) {
         self.interactor = interactor
         self.router = router
+        let currentLocalDay = interactor.phase1CurrentLocalDay
+        self.currentLocalDay = currentLocalDay
+        self.selectedLocalDay = currentLocalDay
+        self.earliestRecordedLocalDay = interactor.phase1EarliestRecordedLocalDay
         self.colorScheme = interactor.colorScheme
+    }
+
+    var isViewingToday: Bool {
+        selectedLocalDay == currentLocalDay
+    }
+
+    var canViewPreviousDay: Bool {
+        guard let earliestRecordedLocalDay else { return false }
+        return selectedLocalDay.adding(days: -1).startDate >= earliestRecordedLocalDay.startDate
+    }
+
+    var canViewNextDay: Bool {
+        selectedLocalDay.startDate < currentLocalDay.startDate
+    }
+
+    var selectedDayTitle: String {
+        if isViewingToday { return "Today" }
+        var format = Date.FormatStyle.dateTime.weekday(.wide)
+        format.timeZone = selectedTimeZone
+        return selectedLocalDay.startDate.formatted(format)
+    }
+
+    var selectedDayDateLabel: String {
+        var format = Date.FormatStyle.dateTime.month(.wide).day().year()
+        format.timeZone = selectedTimeZone
+        return selectedLocalDay.startDate.formatted(format)
     }
 
     var isDarkAppearance: Bool {
@@ -59,7 +92,7 @@ final class TodayPresenter {
     }
 
     var isRewardInProgress: Bool {
-        interactor.isRewardInProgress
+        isViewingToday && interactor.isRewardInProgress
     }
 
     var nextPlanItem: DailyPlanItemModel? {
@@ -93,6 +126,11 @@ final class TodayPresenter {
     }
 
     func onViewAppear(delegate: TodayDelegate) {
+        let latestLocalDay = interactor.phase1CurrentLocalDay
+        if selectedLocalDay == currentLocalDay {
+            selectedLocalDay = latestLocalDay
+        }
+        currentLocalDay = latestLocalDay
         reload()
         interactor.trackScreenEvent(event: Event.onAppear(delegate: delegate))
     }
@@ -102,16 +140,19 @@ final class TodayPresenter {
     }
 
     func onCreatePlanPressed() {
+        guard isViewingToday else { return }
         presentAddActivityFlow(sessionCount: 1)
         interactor.trackEvent(event: Event.createPlan)
     }
 
     func onAddActivityPressed() {
+        guard isViewingToday else { return }
         presentAddActivityFlow(sessionCount: 1)
         interactor.trackEvent(event: Event.addActivity)
     }
 
     func onEditPlanPressed() {
+        guard isViewingToday else { return }
         presentAddActivityFlow(sessionCount: 1)
         interactor.trackEvent(event: Event.editPlan)
     }
@@ -121,6 +162,7 @@ final class TodayPresenter {
         category: ActivityCategory,
         sessionCount: Int
     ) {
+        guard isViewingToday else { return }
         guard let activity = interactor.createPhase1Activity(
             name: name,
             category: category,
@@ -151,6 +193,7 @@ final class TodayPresenter {
     }
 
     func increment(_ item: DailyPlanItemModel) {
+        guard isViewingToday else { return }
         _ = interactor.updatePhase1DailyPlanItemCount(
             activityId: item.activityId,
             sessionCount: item.plannedSessionCount + 1
@@ -159,6 +202,7 @@ final class TodayPresenter {
     }
 
     func decrement(_ item: DailyPlanItemModel) {
+        guard isViewingToday else { return }
         guard canDecrement(item) else { return }
         _ = interactor.updatePhase1DailyPlanItemCount(
             activityId: item.activityId,
@@ -168,6 +212,7 @@ final class TodayPresenter {
     }
 
     func remove(_ item: DailyPlanItemModel) {
+        guard isViewingToday else { return }
         guard completedCount(for: item) == 0 else { return }
         _ = interactor.removePhase1ActivityFromDailyPlan(activityId: item.activityId)
         reload()
@@ -187,6 +232,7 @@ final class TodayPresenter {
     }
 
     func onStartFocusPressed(for item: DailyPlanItemModel) {
+        guard isViewingToday else { return }
         guard !isRewardInProgress else { return }
 
         if let activeFocusSession,
@@ -207,6 +253,23 @@ final class TodayPresenter {
         router.showFocusView(delegate: FocusDelegate(activity: activity, session: session))
     }
 
+    func onPreviousDayPressed() {
+        guard canViewPreviousDay else { return }
+        selectedLocalDay = selectedLocalDay.adding(days: -1)
+        isAddActivitySheetPresented = false
+        dismissDeckSwipeCoachmark()
+        reload()
+        interactor.trackEvent(event: Event.viewPreviousDay)
+    }
+
+    func onNextDayPressed() {
+        guard canViewNextDay else { return }
+        let nextDay = selectedLocalDay.adding(days: 1)
+        selectedLocalDay = nextDay.startDate > currentLocalDay.startDate ? currentLocalDay : nextDay
+        reload()
+        interactor.trackEvent(event: Event.viewNextDay)
+    }
+
     func onDevSettingsPressed() {
         #if MOCK || DEV
         router.showDevSettingsView()
@@ -220,12 +283,13 @@ final class TodayPresenter {
 
     private func reload() {
         activities = interactor.phase1Activities
-        dailyPlan = interactor.phase1DailyPlan
+        earliestRecordedLocalDay = interactor.phase1EarliestRecordedLocalDay
+        dailyPlan = interactor.phase1DailyPlan(for: selectedLocalDay)
         planItems = dailyPlan?.planItems ?? []
-        completedSessionCount = interactor.phase1CompletedSessionCount
-        completedSessionCounts = interactor.phase1CompletedSessionCounts
+        completedSessionCount = interactor.phase1CompletedSessionCount(on: selectedLocalDay)
+        completedSessionCounts = interactor.phase1CompletedSessionCounts(on: selectedLocalDay)
         rewardCredits = interactor.phase1RewardCredits
-        activeFocusSession = interactor.activeFocusSession
+        activeFocusSession = isViewingToday ? interactor.activeFocusSession : nil
 
         if let selectedPlanItemId,
            planItems.contains(where: { $0.id == selectedPlanItemId }) {
@@ -247,6 +311,10 @@ final class TodayPresenter {
         let nextIndex = (currentIndex + offset + planItems.count) % planItems.count
         self.selectedPlanItemId = planItems[nextIndex].id
     }
+
+    private var selectedTimeZone: TimeZone {
+        TimeZone(identifier: selectedLocalDay.timeZoneIdentifier) ?? .current
+    }
 }
 
 extension TodayPresenter {
@@ -260,6 +328,8 @@ extension TodayPresenter {
         case startFocus
         case toggleAppearance
         case deckSwipeCoachmarkShown
+        case viewPreviousDay
+        case viewNextDay
 
         var eventName: String {
             switch self {
@@ -271,6 +341,8 @@ extension TodayPresenter {
             case .startFocus: return "Today_StartFocus"
             case .toggleAppearance: return "Today_ToggleAppearance"
             case .deckSwipeCoachmarkShown: return "Today_DeckSwipeCoachmark_Shown"
+            case .viewPreviousDay: return "Today_ViewPreviousDay"
+            case .viewNextDay: return "Today_ViewNextDay"
             }
         }
 
@@ -278,7 +350,8 @@ extension TodayPresenter {
             switch self {
             case .onAppear(delegate: let delegate), .onDisappear(delegate: let delegate):
                 return delegate.eventParameters
-            case .createPlan, .addActivity, .editPlan, .startFocus, .toggleAppearance, .deckSwipeCoachmarkShown:
+            case .createPlan, .addActivity, .editPlan, .startFocus, .toggleAppearance,
+                 .deckSwipeCoachmarkShown, .viewPreviousDay, .viewNextDay:
                 return nil
             }
         }

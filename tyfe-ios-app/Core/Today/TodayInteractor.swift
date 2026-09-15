@@ -6,6 +6,8 @@ protocol TodayInteractor: GlobalInteractor {
     var isRewardInProgress: Bool { get }
     var phase1Activities: [ActivityModel] { get }
     var phase1DailyPlan: DailyPlanModel? { get }
+    var phase1CurrentLocalDay: LocalDay { get }
+    var phase1EarliestRecordedLocalDay: LocalDay? { get }
     var phase1CompletedSessionCount: Int { get }
     var phase1CompletedSessionCounts: [String: Int] { get }
     var phase1RewardCredits: Int { get }
@@ -14,6 +16,10 @@ protocol TodayInteractor: GlobalInteractor {
 
     func toggleColorScheme()
     func markDeckSwipeCoachmarkSeen()
+
+    func phase1DailyPlan(for localDay: LocalDay) -> DailyPlanModel?
+    func phase1CompletedSessionCount(on localDay: LocalDay) -> Int
+    func phase1CompletedSessionCounts(on localDay: LocalDay) -> [String: Int]
 
     @discardableResult
     func createPhase1Activity(

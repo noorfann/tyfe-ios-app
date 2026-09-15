@@ -46,6 +46,12 @@ final class TodayManager {
         dailyPlan(for: currentLocalDay)
     }
 
+    var earliestRecordedLocalDay: LocalDay? {
+        let recordedDays = repository.snapshot.dailyPlans.map(\.localDay)
+            + repository.snapshot.focusSessions.map(\.localDay)
+        return recordedDays.min { $0.startDate < $1.startDate }
+    }
+
     var completedSessionCount: Int {
         completedSessionCount(on: currentLocalDay)
     }

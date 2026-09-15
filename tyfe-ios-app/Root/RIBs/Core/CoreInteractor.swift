@@ -324,6 +324,14 @@ struct CoreInteractor: GlobalInteractor {
         todayManager.dailyPlan
     }
 
+    var phase1CurrentLocalDay: LocalDay {
+        todayManager.currentLocalDay
+    }
+
+    var phase1EarliestRecordedLocalDay: LocalDay? {
+        todayManager.earliestRecordedLocalDay
+    }
+
     var phase1CompletedSessionCount: Int {
         todayManager.completedSessionCount
     }
@@ -332,6 +340,21 @@ struct CoreInteractor: GlobalInteractor {
         guard let dailyPlan = todayManager.dailyPlan else { return [:] }
         return Dictionary(uniqueKeysWithValues: dailyPlan.planItems.map { item in
             (item.activityId, todayManager.completedSessionCount(for: item.activityId))
+        })
+    }
+
+    func phase1DailyPlan(for localDay: LocalDay) -> DailyPlanModel? {
+        todayManager.dailyPlan(for: localDay)
+    }
+
+    func phase1CompletedSessionCount(on localDay: LocalDay) -> Int {
+        todayManager.completedSessionCount(on: localDay)
+    }
+
+    func phase1CompletedSessionCounts(on localDay: LocalDay) -> [String: Int] {
+        guard let dailyPlan = todayManager.dailyPlan(for: localDay) else { return [:] }
+        return Dictionary(uniqueKeysWithValues: dailyPlan.planItems.map { item in
+            (item.activityId, todayManager.completedSessionCount(for: item.activityId, on: localDay))
         })
     }
 

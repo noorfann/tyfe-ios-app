@@ -24,10 +24,20 @@ struct TodayView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: TyfeSpacing.section) {
                     header
+                    TodayDateNavigatorView(
+                        title: presenter.selectedDayTitle,
+                        dateLabel: presenter.selectedDayDateLabel,
+                        canViewPreviousDay: presenter.canViewPreviousDay,
+                        canViewNextDay: presenter.canViewNextDay,
+                        onPreviousDay: presenter.onPreviousDayPressed,
+                        onNextDay: presenter.onNextDayPressed
+                    )
                     if presenter.hasPlan {
                         plannedContent
-                    } else {
+                    } else if presenter.isViewingToday {
                         emptyContent
+                    } else {
+                        TodayHistoricalEmptyView(completedSessionCount: presenter.completedSessionCount)
                     }
                 }
                 .padding(.horizontal, TyfeSpacing.control)
@@ -36,7 +46,9 @@ struct TodayView: View {
             }
             .scrollIndicators(.hidden)
 
-            floatingAddButton
+            if presenter.isViewingToday {
+                floatingAddButton
+            }
             devSettingsButton
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
         }
@@ -135,29 +147,28 @@ struct TodayView: View {
     private var plannedContent: some View {
         VStack(alignment: .leading, spacing: TyfeSpacing.section) {
             VStack(alignment: .leading, spacing: TyfeSpacing.small) {
-                Text(presenter.greeting)
+                Text(presenter.isViewingToday ? presenter.greeting : "Day overview")
                     .font(TyfeTypography.displayCompact)
                     .tracking(-0.8)
 
-                Text("Choose what to focus on next.")
+                Text(presenter.isViewingToday ? "Choose what to focus on next." : "Your recorded plan for this day.")
                     .font(TyfeTypography.interface)
                     .foregroundStyle(TyfeEditorialPalette.muted)
             }
 
             if presenter.dailyPlan != nil {
-                HStack(spacing: TyfeSpacing.control) {
-                    TyfeMetricCardView(
-                        title: "Credits",
-                        value: String(presenter.rewardCredits),
-                        systemImage: "creditcard.rewards",
-                        accent: TyfeEditorialPalette.saffron
-                    )
-                    TyfeMetricCardView(
-                        title: "Sessions",
-                        value: presenter.planProgressLabel,
-                        systemImage: "list.bullet.rectangle",
-                        accent: TyfeEditorialPalette.teal
-                    )
+                if presenter.isViewingToday {
+                    HStack(spacing: TyfeSpacing.control) {
+                        TyfeMetricCardView(
+                            title: "Credits",
+                            value: String(presenter.rewardCredits),
+                            systemImage: "creditcard.rewards",
+                            accent: TyfeEditorialPalette.saffron
+                        )
+                        sessionsMetric
+                    }
+                } else {
+                    sessionsMetric
                 }
             }
 
@@ -168,7 +179,9 @@ struct TodayView: View {
                     HStack(spacing: TyfeSpacing.small) {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundStyle(TyfeEditorialPalette.success)
-                        Text("Today’s planned sessions are complete.")
+                        Text(presenter.isViewingToday
+                             ? "Today’s planned sessions are complete."
+                             : "Planned sessions were completed.")
                             .font(TyfeTypography.interfaceStrong)
                     }
                 }
@@ -178,7 +191,7 @@ struct TodayView: View {
 
     private var planDeck: some View {
         VStack(alignment: .leading, spacing: TyfeSpacing.small) {
-            Text("TODAY’S ACTIVITIES")
+            Text(presenter.isViewingToday ? "TODAY’S ACTIVITIES" : "ACTIVITIES")
                 .font(TyfeTypography.eyebrow)
                 .tracking(1.2)
                 .foregroundStyle(TyfeEditorialPalette.muted)
@@ -189,8 +202,9 @@ struct TodayView: View {
                     activities: presenter.activities,
                     completedSessionCounts: presenter.completedSessionCounts,
                     selectedPlanItemId: presenter.selectedPlanItemId,
-                    nextPlanItemId: presenter.nextPlanItem?.id,
+                    nextPlanItemId: presenter.isViewingToday ? presenter.nextPlanItem?.id : nil,
                     isRewardInProgress: presenter.isRewardInProgress,
+                    isReadOnly: !presenter.isViewingToday,
                     canDecrement: { presenter.canDecrement($0) },
                     onStart: { presenter.onStartFocusPressed(for: $0) },
                     onIncrement: { presenter.increment($0) },
@@ -200,7 +214,7 @@ struct TodayView: View {
                     onPrevious: presenter.selectPreviousPlanItem
                 )
 
-                if presenter.isDeckSwipeCoachmarkPresented {
+                if presenter.isViewingToday && presenter.isDeckSwipeCoachmarkPresented {
                     deckSwipeCoachmark
                 }
             }
@@ -252,6 +266,15 @@ struct TodayView: View {
             .padding(.bottom, TyfeSpacing.control)
     }
 
+    private var sessionsMetric: some View {
+        TyfeMetricCardView(
+            title: "Sessions",
+            value: presenter.planProgressLabel,
+            systemImage: "list.bullet.rectangle",
+            accent: TyfeEditorialPalette.teal
+        )
+    }
+
     private var devSettingsButton: some View {
         #if DEV || MOCK
         Text("DEV")
@@ -284,6 +307,7 @@ struct TodayActivityDeckView: View {
     let selectedPlanItemId: String?
     let nextPlanItemId: String?
     let isRewardInProgress: Bool
+    let isReadOnly: Bool
     let canDecrement: (DailyPlanItemModel) -> Bool
     let onStart: (DailyPlanItemModel) -> Void
     let onIncrement: (DailyPlanItemModel) -> Void
@@ -294,6 +318,7 @@ struct TodayActivityDeckView: View {
 
     @State private var dragOffset: CGFloat = 0
     @ScaledMetric(relativeTo: .body) private var deckHeight: CGFloat = 284
+    @ScaledMetric(relativeTo: .body) private var readOnlyDeckHeight: CGFloat = 196
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var deckAnimation: Animation? {
@@ -330,11 +355,11 @@ struct TodayActivityDeckView: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .frame(height: deckHeight)
+            .frame(height: isReadOnly ? readOnlyDeckHeight : deckHeight)
             .contentShape(Rectangle())
             .gesture(deckGesture)
             .accessibilityElement(children: .contain)
-            .accessibilityLabel("Today activities")
+            .accessibilityLabel(isReadOnly ? "Historical activities" : "Today activities")
             .accessibilityValue("Activity \(selectedIndex + 1) of \(planItems.count)")
             .accessibilityHint("Swipe left or right to switch activities.")
             .accessibilityAdjustableAction { direction in
@@ -360,6 +385,7 @@ struct TodayActivityDeckView: View {
             completedCount: completedCount,
             isNext: nextPlanItemId == card.item.id,
             isRewardInProgress: isRewardInProgress,
+            isReadOnly: isReadOnly,
             canDecrement: canDecrement(card.item),
             onStart: { onStart(card.item) },
             onIncrement: { onIncrement(card.item) },
@@ -424,6 +450,7 @@ struct TodayPlanCardView: View {
     let completedCount: Int
     let isNext: Bool
     let isRewardInProgress: Bool
+    let isReadOnly: Bool
     let canDecrement: Bool
     let onStart: () -> Void
     let onIncrement: () -> Void
@@ -472,42 +499,44 @@ struct TodayPlanCardView: View {
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
 
-                HStack(spacing: TyfeSpacing.small) {
-                    stepperButton(
-                        systemImage: "minus",
-                        label: "Fewer " + activity.name + " sessions",
-                        isEnabled: canDecrement,
-                        action: onDecrement
-                    )
+                if !isReadOnly {
+                    HStack(spacing: TyfeSpacing.small) {
+                        stepperButton(
+                            systemImage: "minus",
+                            label: "Fewer " + activity.name + " sessions",
+                            isEnabled: canDecrement,
+                            action: onDecrement
+                        )
 
-                    Text("Plan count")
-                        .font(TyfeTypography.caption)
-                        .foregroundStyle(TyfeEditorialPalette.muted)
-                        .frame(maxWidth: .infinity)
+                        Text("Plan count")
+                            .font(TyfeTypography.caption)
+                            .foregroundStyle(TyfeEditorialPalette.muted)
+                            .frame(maxWidth: .infinity)
 
-                    stepperButton(
-                        systemImage: "plus",
-                        label: "More " + activity.name + " sessions",
-                        isEnabled: true,
-                        action: onIncrement
-                    )
+                        stepperButton(
+                            systemImage: "plus",
+                            label: "More " + activity.name + " sessions",
+                            isEnabled: true,
+                            action: onIncrement
+                        )
 
-                    if completedCount == 0 {
-                        Image(systemName: "trash")
-                            .font(.subheadline.weight(.bold))
-                            .foregroundStyle(TyfeEditorialPalette.error)
-                            .frame(width: 44, height: 44)
-                            .asButton(.press, action: onRemove)
-                            .accessibilityLabel("Remove " + activity.name + " from Today")
+                        if completedCount == 0 {
+                            Image(systemName: "trash")
+                                .font(.subheadline.weight(.bold))
+                                .foregroundStyle(TyfeEditorialPalette.error)
+                                .frame(width: 44, height: 44)
+                                .asButton(.press, action: onRemove)
+                                .accessibilityLabel("Remove " + activity.name + " from Today")
+                        }
                     }
-                }
 
-                TyfeActionButtonView(
-                    title: startButtonTitle,
-                    systemImage: startButtonSystemImage,
-                    isEnabled: !isComplete && !isRewardInProgress,
-                    onTap: onStart
-                )
+                    TyfeActionButtonView(
+                        title: startButtonTitle,
+                        systemImage: startButtonSystemImage,
+                        isEnabled: !isComplete && !isRewardInProgress,
+                        onTap: onStart
+                    )
+                }
             }
         }
         .accessibilityElement(children: .contain)
