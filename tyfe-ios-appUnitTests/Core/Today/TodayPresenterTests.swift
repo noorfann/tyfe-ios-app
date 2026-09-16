@@ -35,6 +35,23 @@ struct TodayPresenterTests {
         #expect(router.didShowStreak)
         #expect(TodayPresenter.Event.openStreak.eventName == "Today_Streak_Open")
     }
+
+    @Test func streakCountReadsLiveManagerState() async throws {
+        let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
+        let streakManager = try #require(
+            dependencies.container.resolve(
+                StreakManager.self,
+                key: Dependencies.streakConfiguration.streakKey
+            )
+        )
+        try await streakManager.logIn(userId: "today-streak-test-user")
+        let interactor = CoreInteractor(container: dependencies.container)
+        let presenter = TodayPresenter(interactor: interactor, router: RecordingTodayRouter())
+
+        #expect(presenter.currentStreakCount == 0)
+        try await interactor.recordFocusCompletionForStreak(.completedMock)
+        #expect(presenter.currentStreakCount == 1)
+    }
 }
 
 @MainActor

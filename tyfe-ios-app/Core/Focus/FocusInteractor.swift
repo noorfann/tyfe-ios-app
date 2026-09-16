@@ -24,10 +24,42 @@ extension CoreInteractor: FocusInteractor {
     func refreshFocusSession(focusSessionId: String) throws -> FocusSessionRefresh {
         let refresh = try focusManager.refreshFocusSession(focusSessionId: focusSessionId)
         if refresh.completion != nil {
+            scheduleStreakRecording(for: refresh.session)
             scheduleSharedProgressSync(for: refresh.session.localDay)
             Task { await updateSocialFocusStatus(.available) }
         }
         return refresh
+    }
+
+    func recordFocusCompletionForStreak(_ session: FocusSessionModel) async throws {
+        guard session.state == .completed else { return }
+
+        let existingEvents = try await getAllStreakEvents()
+        let focusSessionId = GamificationDictionaryValue.string(session.focusSessionId)
+        guard !existingEvents.contains(where: {
+            $0.metadata["focus_session_id"] == focusSessionId
+        }) else { return }
+
+        try await addStreakEvent(metadata: [
+            "focus_session_id": focusSessionId,
+            "source": .string("focus_session")
+        ])
+    }
+
+    private func scheduleStreakRecording(for session: FocusSessionModel) {
+        Task {
+            do {
+                try await recordFocusCompletionForStreak(session)
+            } catch {
+                var parameters = error.eventParameters
+                parameters["focus_session_id"] = session.focusSessionId
+                trackEvent(
+                    eventName: "Focus_StreakRecording_Fail",
+                    parameters: parameters,
+                    type: .severe
+                )
+            }
+        }
     }
 
     func beginFocusSession(focusSessionId: String) throws -> FocusSessionModel {

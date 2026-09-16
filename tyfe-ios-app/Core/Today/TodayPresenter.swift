@@ -13,7 +13,6 @@ final class TodayPresenter {
     private(set) var completedSessionCount = 0
     private(set) var completedSessionCounts: [String: Int] = [:]
     private(set) var rewardCredits = 0
-    private(set) var currentStreakCount = 0
     private(set) var activeFocusSession: FocusSessionModel?
     private(set) var currentLocalDay: LocalDay
     private(set) var selectedLocalDay: LocalDay
@@ -68,6 +67,10 @@ final class TodayPresenter {
 
     static func streakCount(from data: CurrentStreakData) -> Int {
         data.currentStreak ?? 0
+    }
+
+    var currentStreakCount: Int {
+        Self.streakCount(from: interactor.currentStreakData)
     }
 
     func onToggleAppearancePressed() {
@@ -299,7 +302,6 @@ final class TodayPresenter {
         completedSessionCount = interactor.phase1CompletedSessionCount(on: selectedLocalDay)
         completedSessionCounts = interactor.phase1CompletedSessionCounts(on: selectedLocalDay)
         rewardCredits = interactor.phase1RewardCredits
-        currentStreakCount = Self.streakCount(from: interactor.currentStreakData)
         activeFocusSession = interactor.activeFocusSession
 
         if let selectedPlanItemId,
