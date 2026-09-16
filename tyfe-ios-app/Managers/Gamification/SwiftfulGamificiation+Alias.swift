@@ -16,8 +16,6 @@ typealias StreakEvent = SwiftfulGamification.StreakEvent
 typealias CurrentStreakData = SwiftfulGamification.CurrentStreakData
 typealias StreakFreeze = SwiftfulGamification.StreakFreeze
 
-typealias ProdStreakServices = SwiftfulGamification.MockStreakServices
-
 // Progress
 
 typealias ProgressManager = SwiftfulGamification.ProgressManager

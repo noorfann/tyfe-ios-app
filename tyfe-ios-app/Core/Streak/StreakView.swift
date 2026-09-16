@@ -24,6 +24,7 @@ struct StreakView: View {
             VStack(alignment: .leading, spacing: TyfeSpacing.section) {
                 hero
                 metrics
+                freezeGuidance
                 activitySummary
                 StreakMonthCalendarView(recentEvents: data.recentEvents ?? [])
             }
@@ -88,6 +89,28 @@ struct StreakView: View {
                 accent: TyfeEditorialPalette.teal
             )
         }
+    }
+
+    private var freezeGuidance: some View {
+        TyfeSurfaceView(role: .paper) {
+            HStack(alignment: .top, spacing: TyfeSpacing.small) {
+                Image(systemName: "snowflake")
+                    .foregroundStyle(TyfeEditorialPalette.teal)
+                    .accessibilityHidden(true)
+
+                VStack(alignment: .leading, spacing: TyfeSpacing.unit) {
+                    Text("STREAK FREEZES")
+                        .font(TyfeTypography.eyebrow)
+                        .tracking(1.1)
+                        .foregroundStyle(TyfeEditorialPalette.muted)
+                    Text(presenter.freezeGuidance)
+                        .font(TyfeTypography.interface)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("streak-freeze-guidance")
     }
 
     @ViewBuilder
