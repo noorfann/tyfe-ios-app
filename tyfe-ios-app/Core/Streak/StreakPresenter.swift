@@ -11,6 +11,10 @@ final class StreakPresenter {
         interactor.currentStreakData
     }
 
+    var freezeGuidance: String {
+        StreakFreezePolicy.guidance
+    }
+
     init(interactor: StreakInteractor, router: StreakRouter) {
         self.interactor = interactor
         self.router = router
