@@ -6,9 +6,8 @@ struct TyfeSurfaceView<Content: View>: View {
 
     private var strokeColor: Color {
         switch role {
-        case .focusChamber: return TyfeEditorialPalette.onDark
         case .disabled: return TyfeEditorialPalette.disabledInk
-        default: return TyfeEditorialPalette.ink
+        default: return TyfeEditorialPalette.border
         }
     }
 

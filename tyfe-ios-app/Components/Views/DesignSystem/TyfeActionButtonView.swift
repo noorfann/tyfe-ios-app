@@ -62,7 +62,7 @@ struct TyfeActionButtonView: View {
         .clipShape(Capsule())
         .overlay {
             Capsule()
-                .stroke(TyfeEditorialPalette.ink, lineWidth: TyfeStroke.standard)
+                .stroke(TyfeEditorialPalette.controlBorder, lineWidth: TyfeStroke.standard)
         }
         .contentShape(Capsule())
         .asButton(.press) {

@@ -306,7 +306,7 @@ struct TodayView: View {
             .clipShape(RoundedRectangle(cornerRadius: 10))
             .overlay {
                 RoundedRectangle(cornerRadius: 10)
-                    .stroke(TyfeEditorialPalette.onDark, lineWidth: TyfeStroke.hairline)
+                    .stroke(TyfeEditorialPalette.controlBorder, lineWidth: TyfeStroke.hairline)
             }
             .asButton(.press) {
                 presenter.onDevSettingsPressed()
@@ -593,7 +593,7 @@ struct TodayPlanCardView: View {
             .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
             .overlay {
                 RoundedRectangle(cornerRadius: TyfeRadius.control)
-                    .stroke(TyfeEditorialPalette.ink, lineWidth: TyfeStroke.hairline)
+                    .stroke(TyfeEditorialPalette.controlBorder, lineWidth: TyfeStroke.hairline)
             }
             .asButton(.press) {
                 guard isEnabled else { return }

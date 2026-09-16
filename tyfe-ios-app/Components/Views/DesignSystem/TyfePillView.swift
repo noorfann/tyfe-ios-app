@@ -62,7 +62,7 @@ struct TyfePillView: View {
         .clipShape(Capsule())
         .overlay {
             Capsule()
-                .stroke(TyfeEditorialPalette.ink, lineWidth: TyfeStroke.hairline)
+                .stroke(TyfeEditorialPalette.border, lineWidth: TyfeStroke.hairline)
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text(label))

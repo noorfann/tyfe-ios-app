@@ -41,7 +41,7 @@ struct TyfeCoachmarkView: View {
         .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.card))
         .overlay {
             RoundedRectangle(cornerRadius: TyfeRadius.card)
-                .stroke(TyfeEditorialPalette.onDark, lineWidth: TyfeStroke.standard)
+                .stroke(TyfeEditorialPalette.border, lineWidth: TyfeStroke.standard)
         }
         .shadow(
             color: TyfeEditorialPalette.shadow.opacity(TyfeShadow.opacity),

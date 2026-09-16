@@ -167,7 +167,7 @@ struct DailyPlanView: View {
             .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
             .overlay {
                 RoundedRectangle(cornerRadius: TyfeRadius.control)
-                    .stroke(TyfeEditorialPalette.ink, lineWidth: TyfeStroke.hairline)
+                    .stroke(TyfeEditorialPalette.controlBorder, lineWidth: TyfeStroke.hairline)
             }
             .opacity(isEnabled ? 1 : 0.72)
             .asButton(.press) {

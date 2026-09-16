@@ -87,7 +87,7 @@ struct HomeView: View {
                 .fill(TyfeEditorialPalette.paper)
                 .overlay {
                     RoundedRectangle(cornerRadius: 28, style: .continuous)
-                        .stroke(TyfeEditorialPalette.ink, lineWidth: 2)
+                        .stroke(TyfeEditorialPalette.border, lineWidth: 2)
                 }
                 .shadow(color: TyfeEditorialPalette.shadow, radius: 0, x: 5, y: 5)
 
@@ -180,7 +180,7 @@ struct HomeView: View {
                     .frame(width: 14, height: 14)
                     .overlay {
                         RoundedRectangle(cornerRadius: 3, style: .continuous)
-                            .stroke(TyfeEditorialPalette.ink, lineWidth: 1.5)
+                            .stroke(TyfeEditorialPalette.border, lineWidth: 1.5)
                     }
             }
         }
@@ -189,7 +189,7 @@ struct HomeView: View {
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(TyfeEditorialPalette.ink, lineWidth: 2)
+                .stroke(TyfeEditorialPalette.border, lineWidth: 2)
         }
         .rotationEffect(.degrees(7))
     }
@@ -242,7 +242,7 @@ struct HomeView: View {
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(TyfeEditorialPalette.ink, lineWidth: 2)
+                .stroke(TyfeEditorialPalette.border, lineWidth: 2)
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Study Circle, 2 of 3 shared progress, 1 focusing")

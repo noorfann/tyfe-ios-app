@@ -23,7 +23,7 @@ struct TyfeTextFieldView: View {
         .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
         .overlay {
             RoundedRectangle(cornerRadius: TyfeRadius.control)
-                .stroke(TyfeEditorialPalette.ink, lineWidth: TyfeStroke.hairline)
+                .stroke(TyfeEditorialPalette.controlBorder, lineWidth: TyfeStroke.hairline)
         }
     }
 }
