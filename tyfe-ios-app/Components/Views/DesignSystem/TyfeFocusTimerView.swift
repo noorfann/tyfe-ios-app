@@ -3,6 +3,7 @@ import SwiftfulUI
 
 struct TyfeFocusTimerView: View {
     let session: FocusSessionModel
+    let daypart: FocusDaypart
     let activityTitle: String
     let timeText: String
     let progress: Double
@@ -19,6 +20,7 @@ struct TyfeFocusTimerView: View {
 
     init(
         session: FocusSessionModel,
+        daypart: FocusDaypart,
         activityTitle: String,
         timeText: String,
         progress: Double = 1,
@@ -30,6 +32,7 @@ struct TyfeFocusTimerView: View {
         onAbandon: @escaping () -> Void
     ) {
         self.session = session
+        self.daypart = daypart
         self.activityTitle = activityTitle
         self.timeText = timeText
         self.progress = min(max(progress, 0), 1)
@@ -47,7 +50,7 @@ struct TyfeFocusTimerView: View {
     }
 
     private var timerAccent: Color {
-        session.state == .paused ? TyfeEditorialPalette.saffron : TyfeEditorialPalette.focus
+        daypart.visualStyle.accentFill
     }
 
     private var progressAnimation: Animation? {
@@ -55,7 +58,12 @@ struct TyfeFocusTimerView: View {
     }
 
     var body: some View {
-        TyfeSurfaceView(role: .focusChamber) {
+        TyfeSurfaceView(
+            role: .focusChamber,
+            fill: daypart.visualStyle.cardFill,
+            foreground: daypart.visualStyle.primaryForeground,
+            strokeColor: daypart.visualStyle.cardBorder
+        ) {
             VStack(spacing: TyfeSpacing.card) {
                 sessionHeading
                 timerDial
@@ -64,6 +72,7 @@ struct TyfeFocusTimerView: View {
             }
             .frame(maxWidth: .infinity)
         }
+        .environment(\.colorScheme, .dark)
     }
 
     private var sessionHeading: some View {
@@ -79,7 +88,7 @@ struct TyfeFocusTimerView: View {
             Text(statusDescription)
                 .font(TyfeTypography.caption)
                 .multilineTextAlignment(.center)
-                .foregroundStyle(TyfeEditorialPalette.onDark.opacity(0.72))
+                .foregroundStyle(daypart.visualStyle.secondaryForeground)
         }
         .frame(maxWidth: .infinity)
     }
@@ -87,11 +96,11 @@ struct TyfeFocusTimerView: View {
     private var timerDial: some View {
         ZStack {
             Circle()
-                .fill(TyfeEditorialPalette.onDark.opacity(0.035))
+                .fill(daypart.visualStyle.primaryForeground.opacity(0.035))
 
             Circle()
                 .stroke(
-                    TyfeEditorialPalette.onDark.opacity(0.12),
+                    daypart.visualStyle.primaryForeground.opacity(0.12),
                     style: StrokeStyle(lineWidth: 10)
                 )
 
@@ -106,7 +115,7 @@ struct TyfeFocusTimerView: View {
 
             Circle()
                 .stroke(
-                    TyfeEditorialPalette.onDark.opacity(0.18),
+                    daypart.visualStyle.primaryForeground.opacity(0.18),
                     style: StrokeStyle(lineWidth: TyfeStroke.hairline)
                 )
                 .padding(18)
@@ -115,13 +124,13 @@ struct TyfeFocusTimerView: View {
                 Text(timeText)
                     .font(.system(size: 54, weight: .black, design: .monospaced))
                     .monospacedDigit()
-                    .foregroundStyle(TyfeEditorialPalette.onDark)
+                    .foregroundStyle(daypart.visualStyle.primaryForeground)
                     .minimumScaleFactor(0.62)
 
                 Text(timerCaption)
                     .font(TyfeTypography.caption)
                     .tracking(1.1)
-                    .foregroundStyle(TyfeEditorialPalette.onDark.opacity(0.58))
+                    .foregroundStyle(daypart.visualStyle.secondaryForeground)
             }
             .padding(TyfeSpacing.card)
         }
@@ -141,7 +150,7 @@ struct TyfeFocusTimerView: View {
         Label(supportingText, systemImage: pauseSymbol)
             .font(TyfeTypography.caption)
             .multilineTextAlignment(.center)
-            .foregroundStyle(TyfeEditorialPalette.onDark.opacity(0.72))
+            .foregroundStyle(daypart.visualStyle.secondaryForeground)
             .frame(maxWidth: .infinity)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Text("Pause allowance"))
@@ -177,21 +186,38 @@ struct TyfeFocusTimerView: View {
     private var primaryAction: some View {
         switch session.state {
         case .ready:
-            TyfeActionButtonView(title: "Begin Focus", systemImage: "play.fill", onTap: onBegin)
+            themedPrimaryButton(title: "Begin Focus", systemImage: "play.fill", onTap: onBegin)
         case .running:
-            TyfeActionButtonView(
+            themedPrimaryButton(
                 title: "Pause once",
                 systemImage: "pause.fill",
                 isEnabled: !session.pauseUsed,
                 onTap: onPause
             )
         case .paused:
-            TyfeActionButtonView(title: "Resume Focus", systemImage: "play.fill", onTap: onResume)
+            themedPrimaryButton(title: "Resume Focus", systemImage: "play.fill", onTap: onResume)
         case .completed:
             TyfePillView(label: "Session complete", systemImage: "checkmark.circle.fill", tone: .accent)
         case .abandoned:
             TyfePillView(label: "Session ended", systemImage: "stop.circle.fill", tone: .error)
         }
+    }
+
+    private func themedPrimaryButton(
+        title: String,
+        systemImage: String,
+        isEnabled: Bool = true,
+        onTap: @escaping () -> Void
+    ) -> some View {
+        TyfeActionButtonView(
+            title: title,
+            systemImage: systemImage,
+            isEnabled: isEnabled,
+            fill: daypart.visualStyle.accentFill,
+            foreground: daypart.visualStyle.accentForeground,
+            borderColor: daypart.visualStyle.accentForeground,
+            onTap: onTap
+        )
     }
 
     private static func defaultSupportingText(for session: FocusSessionModel) -> String {
@@ -226,6 +252,7 @@ struct TyfeFocusTimerView: View {
 #Preview("Focus timer - ready") {
     TyfeFocusTimerView(
         session: .readyMock,
+        daypart: .morning,
         activityTitle: "Study Swift",
         timeText: "25:00",
         progress: 1,
@@ -241,6 +268,7 @@ struct TyfeFocusTimerView: View {
 #Preview("Focus timer - paused") {
     TyfeFocusTimerView(
         session: .pausedMock,
+        daypart: .afternoon,
         activityTitle: "Study Swift",
         timeText: "04:32",
         progress: 0.91,
@@ -256,6 +284,7 @@ struct TyfeFocusTimerView: View {
 #Preview("Focus timer - large type") {
     TyfeFocusTimerView(
         session: .runningMock,
+        daypart: .night,
         activityTitle: "Study Swift",
         timeText: "18:42",
         progress: 0.75,
@@ -272,6 +301,7 @@ struct TyfeFocusTimerView: View {
 #Preview("Focus timer - reduce motion") {
     TyfeFocusTimerView(
         session: .runningMock,
+        daypart: .night,
         activityTitle: "Study Swift",
         timeText: "18:42",
         progress: 0.75,

@@ -97,6 +97,7 @@ struct TyfeDesignSystemGalleryView: View {
             ForEach(presenter.focusSessions) { session in
                 TyfeFocusTimerView(
                     session: session,
+                    daypart: .night,
                     activityTitle: presenter.activity.name,
                     timeText: timeText(for: session.state),
                     progress: progress(for: session.state),

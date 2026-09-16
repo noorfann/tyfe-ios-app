@@ -61,6 +61,7 @@ struct DesignSystemTests {
         )
         let timer = TyfeFocusTimerView(
             session: .pausedMock,
+            daypart: .afternoon,
             activityTitle: "Study Swift",
             timeText: "04:32",
             progress: 0.91,

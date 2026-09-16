@@ -2,9 +2,24 @@ import SwiftUI
 
 struct TyfeSurfaceView<Content: View>: View {
     let role: TyfeSurfaceRole
+    private let fillOverride: Color?
+    private let foregroundOverride: Color?
+    private let strokeColorOverride: Color?
     private let content: Content
 
-    private var strokeColor: Color {
+    private var resolvedFill: Color {
+        fillOverride ?? role.fill
+    }
+
+    private var resolvedForeground: Color {
+        foregroundOverride ?? role.foreground
+    }
+
+    private var resolvedStrokeColor: Color {
+        if let strokeColorOverride {
+            return strokeColorOverride
+        }
+
         switch role {
         case .disabled: return TyfeEditorialPalette.disabledInk
         default: return TyfeEditorialPalette.border
@@ -13,9 +28,15 @@ struct TyfeSurfaceView<Content: View>: View {
 
     init(
         role: TyfeSurfaceRole = .paper,
+        fill: Color? = nil,
+        foreground: Color? = nil,
+        strokeColor: Color? = nil,
         @ViewBuilder content: () -> Content
     ) {
         self.role = role
+        self.fillOverride = fill
+        self.foregroundOverride = foreground
+        self.strokeColorOverride = strokeColor
         self.content = content()
     }
 
@@ -23,13 +44,13 @@ struct TyfeSurfaceView<Content: View>: View {
         content
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(TyfeSpacing.card)
-            .foregroundStyle(role.foreground)
-            .background(role.fill)
+            .foregroundStyle(resolvedForeground)
+            .background(resolvedFill)
             .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.card))
             .overlay {
                 RoundedRectangle(cornerRadius: TyfeRadius.card)
                     .stroke(
-                        strokeColor,
+                        resolvedStrokeColor,
                         lineWidth: TyfeStroke.standard
                     )
             }

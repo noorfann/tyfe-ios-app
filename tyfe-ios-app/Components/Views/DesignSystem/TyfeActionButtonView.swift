@@ -28,6 +28,9 @@ struct TyfeActionButtonView: View {
     let systemImage: String?
     let role: TyfeActionButtonRole
     let isEnabled: Bool
+    private let fillOverride: Color?
+    private let foregroundOverride: Color?
+    private let borderColorOverride: Color?
     let onTap: () -> Void
 
     init(
@@ -35,13 +38,32 @@ struct TyfeActionButtonView: View {
         systemImage: String? = nil,
         role: TyfeActionButtonRole = .primary,
         isEnabled: Bool = true,
+        fill: Color? = nil,
+        foreground: Color? = nil,
+        borderColor: Color? = nil,
         onTap: @escaping () -> Void
     ) {
         self.title = title
         self.systemImage = systemImage
         self.role = role
         self.isEnabled = isEnabled
+        self.fillOverride = fill
+        self.foregroundOverride = foreground
+        self.borderColorOverride = borderColor
         self.onTap = onTap
+    }
+
+    private var resolvedFill: Color {
+        isEnabled ? fillOverride ?? role.fill : TyfeEditorialPalette.disabledFill
+    }
+
+    private var resolvedForeground: Color {
+        isEnabled ? foregroundOverride ?? role.foreground : TyfeEditorialPalette.disabledInk
+    }
+
+    private var resolvedBorderColor: Color {
+        guard isEnabled else { return TyfeEditorialPalette.controlBorder }
+        return borderColorOverride ?? TyfeEditorialPalette.controlBorder
     }
 
     var body: some View {
@@ -57,12 +79,12 @@ struct TyfeActionButtonView: View {
         }
         .frame(maxWidth: .infinity, minHeight: 44)
         .padding(.horizontal, TyfeSpacing.control)
-        .foregroundStyle(isEnabled ? role.foreground : TyfeEditorialPalette.disabledInk)
-        .background(isEnabled ? role.fill : TyfeEditorialPalette.disabledFill)
+        .foregroundStyle(resolvedForeground)
+        .background(resolvedFill)
         .clipShape(Capsule())
         .overlay {
             Capsule()
-                .stroke(TyfeEditorialPalette.controlBorder, lineWidth: TyfeStroke.standard)
+                .stroke(resolvedBorderColor, lineWidth: TyfeStroke.standard)
         }
         .contentShape(Capsule())
         .asButton(.press) {

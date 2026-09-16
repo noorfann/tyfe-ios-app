@@ -37,6 +37,7 @@ struct FocusView: View {
     let delegate: FocusDelegate
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.focusDaypartPreviewOverride) private var previewDaypart
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.selectTab) private var selectTab
     @State private var showWarmSurface = true
@@ -50,10 +51,9 @@ struct FocusView: View {
 
     var body: some View {
         ZStack {
-            TyfeEditorialPalette.navy
-                .ignoresSafeArea()
+            daypartBackground
 
-            chamberContent
+            chamberContent(daypart: displayedDaypart)
                 .opacity(showWarmSurface ? 0 : 1)
                 .scaleEffect(showWarmSurface ? 0.985 : 1)
                 .animation(chamberAnimation, value: showWarmSurface)
@@ -95,19 +95,35 @@ struct FocusView: View {
         }
     }
 
-    private var chamberContent: some View {
+    private var displayedDaypart: FocusDaypart {
+        previewDaypart ?? presenter.daypart
+    }
+
+    private var daypartBackground: some View {
+        ZStack {
+            ForEach(FocusDaypart.allCases, id: \.self) { daypart in
+                if daypart == displayedDaypart {
+                    FocusDaypartBackground(daypart: daypart)
+                        .transition(.opacity)
+                }
+            }
+        }
+        .animation(reduceMotion ? nil : chamberAnimation, value: displayedDaypart)
+    }
+
+    private func chamberContent(daypart: FocusDaypart) -> some View {
         ScrollView {
             VStack(spacing: TyfeSpacing.card) {
-                focusTopBar
+                focusTopBar(daypart: daypart)
 
                 if presenter.session.state == .completed || presenter.session.state == .abandoned {
-                    outcome
+                    outcome(daypart: daypart)
                         .transition(.asymmetric(
                             insertion: .scale(scale: 0.96).combined(with: .opacity),
                             removal: .opacity
                         ))
                 } else {
-                    focusTimer
+                    focusTimer(daypart: daypart)
                         .transition(.opacity)
                 }
             }
@@ -119,31 +135,31 @@ struct FocusView: View {
         }
         .scrollIndicators(.hidden)
         .animation(reduceMotion ? nil : TyfeMotion.normalAnimation, value: presenter.session.state)
+        .animation(reduceMotion ? nil : chamberAnimation, value: daypart)
     }
 
-    private var focusTopBar: some View {
+    private func focusTopBar(daypart: FocusDaypart) -> some View {
         HStack(spacing: 12) {
-            Image(systemName: "moon.stars.fill")
+            Image(systemName: daypart.symbolName)
                 .font(.headline)
-                .foregroundStyle(TyfeEditorialPalette.focus)
+                .foregroundStyle(daypart.symbolColor)
                 .accessibilityHidden(true)
 
-            Text("FOCUS CHAMBER")
-                .font(TyfeTypography.eyebrow)
-                .tracking(1.4)
-                .foregroundStyle(TyfeEditorialPalette.onDark.opacity(0.72))
+            Text(daypart.greeting)
+                .font(TyfeTypography.interfaceStrong)
+                .foregroundStyle(daypart.foreground)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             Image(systemName: "chevron.down")
                 .font(.subheadline.weight(.black))
-                .foregroundStyle(TyfeEditorialPalette.onAccent)
+                .foregroundStyle(daypart.visualStyle.accentForeground)
                 .frame(width: 44, height: 44)
-                .background(TyfeEditorialPalette.focus)
+                .background(daypart.visualStyle.accentFill)
                 .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control, style: .continuous))
                 .overlay {
                     RoundedRectangle(cornerRadius: TyfeRadius.control, style: .continuous)
                         .stroke(
-                            TyfeEditorialPalette.onAccent,
+                            daypart.visualStyle.accentForeground,
                             lineWidth: TyfeStroke.standard
                         )
                 }
@@ -166,9 +182,10 @@ struct FocusView: View {
         return Double(presenter.remainingFocusSeconds) / Double(presenter.session.durationSeconds)
     }
 
-    private var focusTimer: some View {
+    private func focusTimer(daypart: FocusDaypart) -> some View {
         TyfeFocusTimerView(
             session: presenter.session,
+            daypart: daypart,
             activityTitle: delegate.activityTitle,
             timeText: presenter.timerText,
             progress: timerProgress,
@@ -183,7 +200,7 @@ struct FocusView: View {
         .overlay(alignment: .bottomTrailing) {
             Text("Mark complete")
                 .font(TyfeTypography.caption)
-                .foregroundStyle(TyfeEditorialPalette.onDark.opacity(0.58))
+                .foregroundStyle(daypart.visualStyle.secondaryForeground)
                 .frame(minWidth: 44, minHeight: 44)
                 .contentShape(Rectangle())
                 .asButton(.press) {
@@ -195,63 +212,87 @@ struct FocusView: View {
 #endif
     }
 
-    private var outcome: some View {
-        TyfeSurfaceView(role: .paper) {
+    private func outcome(daypart: FocusDaypart) -> some View {
+        let style = daypart.visualStyle
+
+        return TyfeSurfaceView(
+            role: .paper,
+            fill: style.cardFill,
+            foreground: style.primaryForeground,
+            strokeColor: style.cardBorder
+        ) {
             VStack(spacing: TyfeSpacing.card) {
-                Image(systemName: presenter.session.state.symbolName)
-                    .font(.system(size: 38, weight: .black))
-                    .foregroundStyle(outcomeAccent)
-                    .frame(width: 76, height: 76)
-                    .background(outcomeAccent.opacity(0.14))
-                    .clipShape(Circle())
-                    .accessibilityHidden(true)
-
-                VStack(spacing: TyfeSpacing.small) {
-                    Text(presenter.session.state == .completed ? "Session complete" : "Session ended")
-                        .font(TyfeTypography.display)
-                        .multilineTextAlignment(.center)
-
-                    Text(outcomeMessage)
-                        .font(TyfeTypography.interface)
-                        .multilineTextAlignment(.center)
-                        .foregroundStyle(TyfeEditorialPalette.muted)
-                }
-
-                VStack(spacing: TyfeSpacing.small) {
-                    if presenter.session.state == .completed {
-                        TyfeActionButtonView(
-                            title: "Claim Reward",
-                            systemImage: "gift.fill",
-                            onTap: {
-                                presenter.onClaimRewardPressed {
-                                    selectTab("Rewards")
-                                }
-                            }
-                        )
-
-                        TyfeActionButtonView(
-                            title: "Start another",
-                            systemImage: "arrow.clockwise",
-                            role: .secondary,
-                            onTap: presenter.onStartAnotherPressed
-                        )
-                    }
-
-                    Text("Back to Today")
-                        .font(TyfeTypography.interfaceStrong)
-                        .foregroundStyle(TyfeEditorialPalette.ink)
-                        .frame(maxWidth: .infinity, minHeight: 44)
-                        .contentShape(Rectangle())
-                        .asButton(.press) {
-                            presenter.onBackToTodayPressed()
-                        }
-                        .accessibilityLabel("Back to Today")
-                }
+                outcomeIcon
+                outcomeCopy(style: style)
+                outcomeActions(style: style)
             }
             .frame(maxWidth: .infinity)
         }
+        .environment(\.colorScheme, .dark)
         .accessibilityElement(children: .contain)
         .accessibilityLabel(presenter.session.state == .completed ? "Focus session complete" : "Focus session abandoned")
+    }
+
+    private var outcomeIcon: some View {
+        Image(systemName: presenter.session.state.symbolName)
+            .font(.system(size: 38, weight: .black))
+            .foregroundStyle(outcomeAccent)
+            .frame(width: 76, height: 76)
+            .background(outcomeAccent.opacity(0.14))
+            .clipShape(Circle())
+            .accessibilityHidden(true)
+    }
+
+    private func outcomeCopy(style: FocusDaypartVisualStyle) -> some View {
+        VStack(spacing: TyfeSpacing.small) {
+            Text(presenter.session.state == .completed ? "Session complete" : "Session ended")
+                .font(TyfeTypography.display)
+                .multilineTextAlignment(.center)
+
+            Text(outcomeMessage)
+                .font(TyfeTypography.interface)
+                .multilineTextAlignment(.center)
+                .foregroundStyle(style.secondaryForeground)
+        }
+    }
+
+    private func outcomeActions(style: FocusDaypartVisualStyle) -> some View {
+        VStack(spacing: TyfeSpacing.small) {
+            if presenter.session.state == .completed {
+                TyfeActionButtonView(
+                    title: "Claim Reward",
+                    systemImage: "gift.fill",
+                    fill: style.accentFill,
+                    foreground: style.accentForeground,
+                    borderColor: style.accentForeground,
+                    onTap: {
+                        presenter.onClaimRewardPressed {
+                            selectTab("Rewards")
+                        }
+                    }
+                )
+
+                TyfeActionButtonView(
+                    title: "Start another",
+                    systemImage: "arrow.clockwise",
+                    role: .secondary,
+                    fill: style.accentFill.opacity(0.12),
+                    foreground: style.primaryForeground,
+                    borderColor: style.cardBorder,
+                    onTap: presenter.onStartAnotherPressed
+                )
+            }
+
+            Text("Back to Today")
+                .font(TyfeTypography.interfaceStrong)
+                .foregroundStyle(style.primaryForeground)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .contentShape(Rectangle())
+                .asButton(.press) {
+                    presenter.onBackToTodayPressed()
+                }
+                .accessibilityLabel("Back to Today")
+        }
     }
 
     private var outcomeAccent: Color {
@@ -295,12 +336,14 @@ struct FocusView: View {
     focusPreview(session: .pausedMock)
 }
 
-#Preview("Focus - complete") {
+#Preview("Focus - complete morning") {
     focusPreview(session: .completedMock)
+        .environment(\.focusDaypartPreviewOverride, .morning)
 }
 
-#Preview("Focus - abandoned") {
+#Preview("Focus - abandoned afternoon") {
     focusPreview(session: .abandonedMock)
+        .environment(\.focusDaypartPreviewOverride, .afternoon)
 }
 
 #Preview("Focus - large type") {
@@ -313,6 +356,42 @@ struct FocusView: View {
         .transaction { transaction in
             transaction.animation = nil
         }
+}
+
+#Preview("Focus - morning light") {
+    focusPreview(session: .runningMock)
+        .environment(\.focusDaypartPreviewOverride, .morning)
+        .preferredColorScheme(.light)
+}
+
+#Preview("Focus - afternoon light") {
+    focusPreview(session: .runningMock)
+        .environment(\.focusDaypartPreviewOverride, .afternoon)
+        .preferredColorScheme(.light)
+}
+
+#Preview("Focus - night light") {
+    focusPreview(session: .runningMock)
+        .environment(\.focusDaypartPreviewOverride, .night)
+        .preferredColorScheme(.light)
+}
+
+#Preview("Focus - morning dark") {
+    focusPreview(session: .runningMock)
+        .environment(\.focusDaypartPreviewOverride, .morning)
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Focus - afternoon dark") {
+    focusPreview(session: .runningMock)
+        .environment(\.focusDaypartPreviewOverride, .afternoon)
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Focus - night dark") {
+    focusPreview(session: .runningMock)
+        .environment(\.focusDaypartPreviewOverride, .night)
+        .preferredColorScheme(.dark)
 }
 
 @MainActor

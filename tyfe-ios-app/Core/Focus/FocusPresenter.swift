@@ -11,7 +11,9 @@ final class FocusPresenter {
     private(set) var remainingFocusSeconds: Int
     private(set) var remainingPauseSeconds: Int
     private(set) var completion: FocusCompletionResult?
+    private(set) var daypart: FocusDaypart
     private var tickerTask: Task<Void, Never>?
+    private var daypartTask: Task<Void, Never>?
 
     init(interactor: FocusInteractor, router: FocusRouter, session: FocusSessionModel) {
         self.interactor = interactor
@@ -19,6 +21,7 @@ final class FocusPresenter {
         self.session = session
         self.remainingFocusSeconds = session.durationSeconds
         self.remainingPauseSeconds = session.pauseRemainingSeconds
+        self.daypart = FocusDaypart(date: Date())
     }
 
     var isPaused: Bool {
@@ -79,10 +82,12 @@ final class FocusPresenter {
         interactor.setFocusScreenVisible(true)
         refresh()
         startTicker()
+        startDaypartUpdates()
     }
 
     func onViewDisappear(delegate: FocusDelegate) {
         stopTicker()
+        stopDaypartUpdates()
         interactor.setFocusScreenVisible(false)
         interactor.trackEvent(event: Event.onDisappear(delegate: delegate))
     }
@@ -146,6 +151,7 @@ final class FocusPresenter {
 
     func onSceneBecameActive() {
         refresh()
+        startDaypartUpdates()
         if session.state == .running || session.state == .paused {
             startTicker()
         }
@@ -226,6 +232,30 @@ final class FocusPresenter {
     private func stopTicker() {
         tickerTask?.cancel()
         tickerTask = nil
+    }
+
+    private func startDaypartUpdates() {
+        stopDaypartUpdates()
+        updateDaypart()
+        daypartTask = Task { [weak self] in
+            while !Task.isCancelled {
+                let now = Date()
+                let nextMinute = FocusDaypart.nextMinuteBoundary(after: now)
+                let delay = max(nextMinute.timeIntervalSince(now), 0.1)
+                try? await Task.sleep(for: .seconds(delay))
+                guard !Task.isCancelled else { return }
+                self?.updateDaypart()
+            }
+        }
+    }
+
+    private func stopDaypartUpdates() {
+        daypartTask?.cancel()
+        daypartTask = nil
+    }
+
+    private func updateDaypart() {
+        daypart = FocusDaypart(date: Date())
     }
 
     private func showPersistenceAlert() {

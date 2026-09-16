@@ -18,7 +18,7 @@ This is the canonical project guidance for Codex and other coding agents working
 - Use `apply_patch` for source and documentation edits. When runtime tooling is explicitly requested, use the repository's existing scripts and Xcode tooling for generation, builds, tests, and diagnostics.
 - Treat commits, pushes, remote changes, history rewrites, dependency upgrades, and destructive filesystem operations as explicit user actions. The project commit rule requires the user to say `commit` before committing.
 - Do not run builds, unit tests, UI tests, simulator launches, application launches, or other runtime verification unless the user explicitly requests it.
-- Invoke XcodeBuildMCP only when the user explicitly requests XcodeBuildMCP by name. A general implementation or verification request does not authorize using it.
+- Do not invoke XcodeBuildMCP unless the user explicitly asks for XcodeBuildMCP by name. General implementation, build, test, verification, or Xcode-related requests do not authorize using it.
 - Adding or editing test source does not authorize executing tests.
 - When verification is not requested, use read-only/static checks and non-rewriting SwiftLint only; state clearly in the handoff that runtime verification was skipped by policy.
 - Before reporting completion, run only the permitted static command that proves the claim, read its exit status and failures, and report blockers plainly.
