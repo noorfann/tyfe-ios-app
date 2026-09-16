@@ -7,6 +7,7 @@ final class RewardManager {
 
     private let repository: LocalAppRepository
     private let clock: FocusClock
+    private let calendar: Calendar
     private let notificationScheduler: LocalTimerNotificationScheduling?
 
     private(set) var stateRevision = 0
@@ -14,10 +15,12 @@ final class RewardManager {
     init(
         repository: LocalAppRepository = MockLocalAppRepository(),
         clock: FocusClock = SystemFocusClock(),
+        calendar: Calendar = .autoupdatingCurrent,
         notificationScheduler: LocalTimerNotificationScheduling? = nil
     ) {
         self.repository = repository
         self.clock = clock
+        self.calendar = calendar
         self.notificationScheduler = notificationScheduler
     }
 
@@ -40,6 +43,30 @@ final class RewardManager {
 
     var rewardCredits: Int {
         observableSnapshot.creditLedger.balance
+    }
+
+    var currentLocalDay: LocalDay {
+        LocalDay(containing: clock.now, calendar: calendar)
+    }
+
+    @discardableResult
+    func synchronizeCreditDay() -> Bool {
+        let localDay = currentLocalDay
+        let ledger = repository.snapshot.creditLedger
+        let resetKey = RewardCreditLedger.dayResetKey(for: localDay)
+        guard !ledger.entries.contains(where: { $0.idempotencyKey == resetKey }),
+              ledger.priorDayBalance(for: localDay) != 0 else {
+            return false
+        }
+        do {
+            try repository.transaction { snapshot in
+                snapshot.creditLedger.startDay(localDay, now: clock.now)
+            }
+        } catch {
+            return false
+        }
+        stateRevision += 1
+        return true
     }
 
     var activeRewardClaim: RewardClaimModel? {
@@ -88,6 +115,7 @@ final class RewardManager {
         rewardId: String,
         durationTier: RewardDurationTier
     ) throws -> RewardClaimModel {
+        synchronizeCreditDay()
         let snapshot = repository.snapshot
         guard let reward = rewards.first(where: { $0.rewardId == rewardId }) else {
             throw RewardManagerError.rewardNotFound

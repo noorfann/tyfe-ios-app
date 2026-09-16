@@ -89,6 +89,33 @@ struct FocusManagerTests {
         #expect(today.completedSessionCount(on: today.currentLocalDay) == 0)
     }
 
+    @Test func completionAfterMidnightResetsTheDayBeforeAwardingCredit() throws {
+        let clock = TestFocusClock(now: Date(timeIntervalSince1970: 1_756_943_400))
+        let calendar = utcCalendar()
+        var snapshot = LocalAppSnapshot.mock
+        snapshot.creditLedger = .openingBalance(
+            amount: 2,
+            recordedAt: Date(timeIntervalSince1970: 1_756_942_800)
+        )
+        let repository = MockLocalAppRepository(snapshot: snapshot)
+        let today = TodayManager(repository: repository, clock: clock, calendar: calendar)
+        let manager = FocusManager(repository: repository, clock: clock, calendar: calendar)
+        let activityId = ActivityModel.mock.activityId
+        _ = today.addActivityToDailyPlan(activityId: activityId, sessionCount: 1)
+        let session = try #require(manager.startFocusSession(activityId: activityId))
+        _ = try manager.beginFocusSession(focusSessionId: session.focusSessionId)
+
+        clock.advance(by: TimeInterval(session.durationSeconds))
+        let refresh = try manager.refreshFocusSession(focusSessionId: session.focusSessionId)
+
+        #expect(refresh.session.state == .completed)
+        #expect(refresh.completion?.rewardCreditsAwarded == 1)
+        #expect(refresh.completion?.rewardCreditBalance == 1)
+        #expect(repository.snapshot.creditLedger.entries.contains {
+            $0.source == .dayReset && $0.amount == -2
+        })
+    }
+
     @Test func reducingPlanWhileRunningFinalizesExcessCompletionAsBonus() throws {
         let clock = TestFocusClock()
         let calendar = utcCalendar()

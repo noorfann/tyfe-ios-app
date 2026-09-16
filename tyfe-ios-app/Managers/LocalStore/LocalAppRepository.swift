@@ -50,7 +50,7 @@ struct LocalAppSnapshot: Codable, Hashable {
 
     static var rewardFlowMock: Self {
         var snapshot = Self.mock
-        snapshot.creditLedger = .openingBalance(amount: 1)
+        snapshot.creditLedger = .openingBalance(amount: 1, recordedAt: Date())
         return snapshot
     }
 

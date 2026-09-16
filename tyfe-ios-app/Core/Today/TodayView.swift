@@ -337,7 +337,7 @@ struct TodayActivityDeckView: View {
     let onPrevious: () -> Void
 
     @State private var dragOffset: CGFloat = 0
-    @ScaledMetric(relativeTo: .body) private var deckHeight: CGFloat = 284
+    @ScaledMetric(relativeTo: .body) private var deckHeight: CGFloat = 248
     @ScaledMetric(relativeTo: .body) private var readOnlyDeckHeight: CGFloat = 196
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -510,16 +510,10 @@ struct TodayPlanCardView: View {
                     }
                 }
 
-                HStack(alignment: .firstTextBaseline, spacing: TyfeSpacing.small) {
-                    Text("\(completedCount) of \(item.plannedSessionCount) sessions")
+                if isReadOnly {
+                    Text(progressLabel)
                         .font(TyfeTypography.interfaceStrong)
-                    Text("· \(item.plannedSessionCount * FocusSessionModel.durationMinutes) min focus")
-                        .font(TyfeTypography.caption)
-                        .foregroundStyle(isComplete ? TyfeEditorialPalette.disabledInk : TyfeEditorialPalette.muted)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                }
-
-                if !isReadOnly {
+                } else {
                     HStack(spacing: TyfeSpacing.small) {
                         stepperButton(
                             systemImage: "minus",
@@ -528,9 +522,10 @@ struct TodayPlanCardView: View {
                             action: onDecrement
                         )
 
-                        Text("Plan count")
-                            .font(TyfeTypography.caption)
-                            .foregroundStyle(TyfeEditorialPalette.muted)
+                        Text(progressLabel)
+                            .font(TyfeTypography.interfaceStrong)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
                             .frame(maxWidth: .infinity)
 
                         stepperButton(
@@ -573,8 +568,12 @@ struct TodayPlanCardView: View {
         return isRewardInProgress ? "clock.fill" : "play.fill"
     }
 
+    private var progressLabel: String {
+        "\(completedCount) of \(item.plannedSessionCount) sessions"
+    }
+
     private var accessibilityLabel: String {
-        let progress = "\(activity.name), \(completedCount) of \(item.plannedSessionCount) sessions"
+        let progress = "\(activity.name), \(progressLabel)"
         guard isRewardInProgress && !isComplete else { return progress }
         return progress + ". Focus unavailable while Reward is in progress."
     }

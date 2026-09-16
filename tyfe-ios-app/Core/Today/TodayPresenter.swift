@@ -295,6 +295,7 @@ final class TodayPresenter {
     }
 
     private func reload() {
+        interactor.synchronizeRewardCreditDay()
         activities = interactor.phase1Activities
         earliestRecordedLocalDay = interactor.phase1EarliestRecordedLocalDay
         dailyPlan = interactor.phase1DailyPlan(for: selectedLocalDay)

@@ -17,6 +17,7 @@ protocol TodayInteractor: GlobalInteractor {
 
     func toggleColorScheme()
     func markDeckSwipeCoachmarkSeen()
+    func synchronizeRewardCreditDay()
 
     func phase1DailyPlan(for localDay: LocalDay) -> DailyPlanModel?
     func phase1CompletedSessionCount(on localDay: LocalDay) -> Int

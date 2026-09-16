@@ -149,6 +149,7 @@ final class RewardsPresenter {
     }
 
     private func refresh() {
+        interactor.synchronizeRewardCreditDay()
         do {
             let refreshed = try interactor.refreshRewardClaim()
 

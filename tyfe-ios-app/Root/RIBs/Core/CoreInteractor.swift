@@ -488,6 +488,10 @@ struct CoreInteractor: GlobalInteractor {
         rewardManager.rewardCredits
     }
 
+    func synchronizeRewardCreditDay() {
+        rewardManager.synchronizeCreditDay()
+    }
+
     var activeRewardClaim: RewardClaimModel? {
         rewardManager.activeRewardClaim
     }

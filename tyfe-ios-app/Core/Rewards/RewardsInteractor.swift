@@ -22,6 +22,8 @@ protocol RewardsInteractor: GlobalInteractor {
 
     @discardableResult
     func refreshRewardClaim() throws -> RewardClaimModel?
+
+    func synchronizeRewardCreditDay()
 }
 
 extension CoreInteractor: RewardsInteractor { }

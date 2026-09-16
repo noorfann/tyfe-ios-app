@@ -8,8 +8,14 @@ struct RewardManagerTests {
 
     private static var seededSnapshot: LocalAppSnapshot {
         var snapshot = LocalAppSnapshot.mock
-        snapshot.creditLedger = .openingBalance(amount: 2)
+        snapshot.creditLedger = .openingBalance(amount: 2, recordedAt: TestFocusClock().now)
         return snapshot
+    }
+
+    private func utcCalendar() -> Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .current
+        return calendar
     }
 
     private func makeManager(
@@ -20,6 +26,7 @@ struct RewardManagerTests {
         RewardManager(
             repository: repository ?? MockLocalAppRepository(snapshot: Self.seededSnapshot),
             clock: clock ?? TestFocusClock(),
+            calendar: utcCalendar(),
             notificationScheduler: scheduler
         )
     }
@@ -283,6 +290,105 @@ struct RewardManagerTests {
         _ = try manager.refreshRewardClaim()
 
         #expect(scheduler.cancelledRewardClaimIds == [claim.rewardClaimId])
+    }
+
+    @Test func synchronizeCreditDayClearsThePreviousDayBalanceOnce() throws {
+        var snapshot = LocalAppSnapshot.mock
+        snapshot.creditLedger = .openingBalance(
+            amount: 2,
+            recordedAt: Date(timeIntervalSince1970: 1_756_857_600)
+        )
+        let repository = MockLocalAppRepository(snapshot: snapshot)
+        let manager = makeManager(repository: repository)
+
+        #expect(manager.synchronizeCreditDay())
+        #expect(manager.rewardCredits == 0)
+        #expect(repository.snapshot.creditLedger.entries.contains {
+            $0.source == .dayReset && $0.amount == -2
+        })
+
+        #expect(manager.synchronizeCreditDay() == false)
+        #expect(repository.snapshot.creditLedger.entries.count == 2)
+    }
+
+    @Test func claimCreatedDuringTheDaySurvivesTheNextDayReset() throws {
+        let clock = TestFocusClock()
+        let manager = makeManager(clock: clock)
+        let claim = try manager.createRewardClaim(
+            rewardId: "reward-starter-social",
+            durationTier: .fifteenMinutes
+        )
+
+        clock.advance(by: 86_400)
+        #expect(manager.synchronizeCreditDay())
+        #expect(manager.rewardCredits == 0)
+
+        let active = try manager.startRewardClaim(rewardClaimId: claim.rewardClaimId)
+
+        #expect(active.state == .active)
+        #expect(manager.activeRewardClaim?.rewardClaimId == claim.rewardClaimId)
+    }
+
+    @Test func claimCannotSpendThePreviousDayBalance() {
+        var snapshot = LocalAppSnapshot.mock
+        snapshot.creditLedger = .openingBalance(
+            amount: 2,
+            recordedAt: Date(timeIntervalSince1970: 1_756_857_600)
+        )
+        let repository = MockLocalAppRepository(snapshot: snapshot)
+        let manager = makeManager(repository: repository)
+
+        #expect(throws: RewardManagerError.insufficientCredits) {
+            try manager.createRewardClaim(
+                rewardId: "reward-starter-social",
+                durationTier: .fifteenMinutes
+            )
+        }
+
+        #expect(manager.rewardCredits == 0)
+        #expect(manager.rewardClaims.isEmpty)
+        #expect(repository.snapshot.creditLedger.entries.contains {
+            $0.source == .dayReset && $0.amount == -2
+        })
+    }
+
+    @Test func claimOnANewDaySpendsOnlyTheNewDayCredits() throws {
+        var snapshot = LocalAppSnapshot.mock
+        snapshot.creditLedger = RewardCreditLedger(entries: [
+            creditEntry(id: "previous-day", amount: 2, recordedAt: 1_756_857_600),
+            creditEntry(id: "today", amount: 1, recordedAt: 1_756_944_000)
+        ])
+        let repository = MockLocalAppRepository(snapshot: snapshot)
+        let manager = makeManager(repository: repository)
+
+        let claim = try manager.createRewardClaim(
+            rewardId: "reward-starter-social",
+            durationTier: .fifteenMinutes
+        )
+
+        #expect(claim.state == .ready)
+        #expect(manager.rewardCredits == 0)
+        #expect(repository.snapshot.creditLedger.entries.contains {
+            $0.source == .dayReset && $0.amount == -2
+        })
+        #expect(repository.snapshot.creditLedger.entries.contains {
+            $0.source == .rewardClaim && $0.amount == -1
+        })
+    }
+
+    private func creditEntry(
+        id: String,
+        amount: Int,
+        recordedAt timestamp: TimeInterval
+    ) -> RewardCreditLedgerEntry {
+        RewardCreditLedgerEntry(
+            ledgerEntryId: id,
+            source: .openingBalance,
+            sourceId: "",
+            amount: amount,
+            recordedAt: Date(timeIntervalSince1970: timestamp),
+            idempotencyKey: id
+        )
     }
 }
 

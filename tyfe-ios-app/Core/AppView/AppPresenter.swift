@@ -54,6 +54,7 @@ class AppPresenter {
             return
         }
         interactor.discardPendingReceivedCheers()
+        interactor.synchronizeRewardCreditDay()
         isApplicationActive = true
     }
 

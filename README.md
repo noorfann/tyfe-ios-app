@@ -27,7 +27,7 @@ Create lightweight Activities and set a Daily Plan — the number of Focus Sessi
 Every session runs for exactly 25 minutes against one Activity. The timer keeps running when the app is backgrounded or the phone is locked, and you get a single explicit pause of up to five minutes. There is no manual completion.
 
 **Earn only by finishing**
-A Focus Session awards exactly 1 Reward Credit, and only when the timer naturally completes. Abandoned sessions earn nothing, and duplicate completions can't inflate your balance. Credits are personal, non-monetary, non-transferable, and never go negative.
+A Focus Session awards exactly 1 Reward Credit, and only when the timer naturally completes. Abandoned sessions earn nothing, and duplicate completions can't inflate your balance. Credits are personal, non-monetary, non-transferable, never go negative, and reset to zero at the start of each local day.
 
 **Spend credits on bounded downtime**
 Redeem starter or custom Rewards from fixed duration tiers — 1 credit / 15 min, 2 credits / 30 min, 4 credits / 60 min. Only one Reward Claim can be active at a time, and its timer ends on schedule. Unused time doesn't silently extend or refund.

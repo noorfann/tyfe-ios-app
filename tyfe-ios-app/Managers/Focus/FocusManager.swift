@@ -352,6 +352,7 @@ final class FocusManager {
 
             snapshot.focusSessions[index] = completedSession
 
+            snapshot.creditLedger.startDay(currentLocalDay, now: clock.now)
             try snapshot.creditLedger.apply(
                 RewardCreditLedgerEntry(
                     ledgerEntryId: "credit-" + session.focusSessionId,
