@@ -14,7 +14,7 @@ struct Dependencies {
     let container: DependencyContainer
 
     // swiftlint:disable:next function_body_length
-    init(config: BuildConfiguration) {
+    init(config: BuildConfiguration, snapshotOverride: LocalAppSnapshot? = nil) {
         let authManager: AuthManager
         let userManager: UserManager
         let abTestManager: ABTestManager
@@ -132,7 +132,9 @@ struct Dependencies {
         switch config {
         case .mock:
             let snapshot: LocalAppSnapshot
-            if ProcessInfo.processInfo.arguments.contains("HOME_FLOW")
+            if let snapshotOverride {
+                snapshot = snapshotOverride
+            } else if ProcessInfo.processInfo.arguments.contains("HOME_FLOW")
                 || ProcessInfo.processInfo.arguments.contains("FOCUS_PROGRESS_FLOW") {
                 snapshot = LocalAppSnapshot.homeFlowMock
             } else if ProcessInfo.processInfo.arguments.contains("REWARD_FLOW") {
@@ -208,8 +210,14 @@ class DevPreview {
     static let shared = DevPreview()
     private let dependencies: Dependencies
 
-    func container() -> DependencyContainer {
-        dependencies.container
+    func container(snapshotOverride: LocalAppSnapshot? = nil) -> DependencyContainer {
+        if let snapshotOverride {
+            return Dependencies(
+                config: .mock(isSignedIn: true, addLogging: false),
+                snapshotOverride: snapshotOverride
+            ).container
+        }
+        return dependencies.container
     }
 
     init(isSignedIn: Bool = true) {

@@ -2,6 +2,7 @@ import SwiftUI
 
 enum FocusDaypart: CaseIterable, Hashable, Sendable {
     case morning
+    case midday
     case afternoon
     case night
 
@@ -9,7 +10,9 @@ enum FocusDaypart: CaseIterable, Hashable, Sendable {
         switch calendar.component(.hour, from: date) {
         case 6..<12:
             self = .morning
-        case 12..<18:
+        case 12..<15:
+            self = .midday
+        case 15..<18:
             self = .afternoon
         default:
             self = .night
@@ -19,7 +22,7 @@ enum FocusDaypart: CaseIterable, Hashable, Sendable {
     var symbolName: String {
         switch self {
         case .morning: return "sun.max.fill"
-        case .afternoon: return "cloud.sun.fill"
+        case .midday, .afternoon: return "cloud.sun.fill"
         case .night: return "moon.stars.fill"
         }
     }
@@ -27,7 +30,7 @@ enum FocusDaypart: CaseIterable, Hashable, Sendable {
     var greeting: String {
         switch self {
         case .morning: return "Good Morning"
-        case .afternoon: return "Good Afternoon"
+        case .midday, .afternoon: return "Good Afternoon"
         case .night: return "Good Evening"
         }
     }
@@ -40,25 +43,31 @@ enum FocusDaypart: CaseIterable, Hashable, Sendable {
         visualStyle.accentFill
     }
 
+    var usesVerticalWhiteFade: Bool {
+        self == .morning || self == .midday
+    }
+
     var visualStyle: FocusDaypartVisualStyle {
         switch self {
-        case .morning:
+        case .morning, .midday:
             FocusDaypartVisualStyle(
                 cardFill: Color(hex: "173F62"),
                 cardBorder: Color(hex: "72B7D9"),
                 primaryForeground: Color(hex: "F7F7F2"),
                 secondaryForeground: Color(hex: "C7D9E5"),
                 accentFill: Color(hex: "FFE49A"),
-                accentForeground: Color(hex: "1E201C")
+                accentForeground: Color(hex: "1E201C"),
+                backgroundForeground: Color(hex: "1E201C")
             )
         case .afternoon:
             FocusDaypartVisualStyle(
-                cardFill: Color(hex: "5B3027"),
-                cardBorder: Color(hex: "E0A454"),
-                primaryForeground: Color(hex: "F7F7F2"),
-                secondaryForeground: Color(hex: "E7CEC6"),
-                accentFill: Color(hex: "FFE1A3"),
-                accentForeground: Color(hex: "1E201C")
+                cardFill: Color(hex: "4D3A4D"),
+                cardBorder: Color(hex: "C99B83"),
+                primaryForeground: Color(hex: "FFF0D8"),
+                secondaryForeground: Color(hex: "E9C8BE"),
+                accentFill: Color(hex: "F4C98B"),
+                accentForeground: Color(hex: "443342"),
+                backgroundForeground: Color(hex: "3E2B35")
             )
         case .night:
             FocusDaypartVisualStyle(
@@ -67,7 +76,8 @@ enum FocusDaypart: CaseIterable, Hashable, Sendable {
                 primaryForeground: Color(hex: "F7F7F2"),
                 secondaryForeground: Color(hex: "C8D1E8"),
                 accentFill: Color(hex: "DCE7FF"),
-                accentForeground: Color(hex: "1E201C")
+                accentForeground: Color(hex: "1E201C"),
+                backgroundForeground: Color(hex: "F7F7F2")
             )
         }
     }
@@ -81,25 +91,28 @@ enum FocusDaypart: CaseIterable, Hashable, Sendable {
             ?? date.addingTimeInterval(60)
     }
 
-    fileprivate var palette: FocusDaypartPalette {
+    var palette: FocusDaypartPalette {
         switch self {
-        case .morning:
+        case .morning, .midday:
             FocusDaypartPalette(
-                base: Color(hex: "245A8D"),
-                highlight: Color(hex: "72B7D9"),
-                depth: Color(hex: "287D9C")
+                base: Color(hex: "5EA9D0"),
+                highlight: Color(hex: "A8DDF0"),
+                depth: Color(hex: "62A8C8"),
+                horizon: Color(hex: "72B7D9")
             )
         case .afternoon:
             FocusDaypartPalette(
-                base: Color(hex: "8D452C"),
-                highlight: Color(hex: "E0A454"),
-                depth: Color(hex: "A95745")
+                base: Color(hex: "B7AAA1"),
+                highlight: Color(hex: "FF981F"),
+                depth: Color(hex: "292239"),
+                horizon: Color(hex: "D84432")
             )
         case .night:
             FocusDaypartPalette(
-                base: Color(hex: "0C1738"),
-                highlight: Color(hex: "31558C"),
-                depth: Color(hex: "26345F")
+                base: Color(hex: "292239"),
+                highlight: Color(hex: "8491C2"),
+                depth: Color(hex: "0B1026"),
+                horizon: Color(hex: "3A416D")
             )
         }
     }
@@ -112,6 +125,7 @@ struct FocusDaypartVisualStyle {
     let secondaryForeground: Color
     let accentFill: Color
     let accentForeground: Color
+    let backgroundForeground: Color
 }
 
 struct FocusDaypartBackground: View {
@@ -119,37 +133,75 @@ struct FocusDaypartBackground: View {
 
     var body: some View {
         let palette = daypart.palette
+        let highlightCenter = daypart == .afternoon
+            ? UnitPoint(x: 0.82, y: 0.58)
+            : UnitPoint(x: 0.84, y: 0.16)
 
-        ZStack {
+        if daypart.usesVerticalWhiteFade {
             LinearGradient(
-                colors: [palette.base, palette.depth],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
+                colors: [palette.base, .white],
+                startPoint: .top,
+                endPoint: .bottom
             )
+            .ignoresSafeArea()
+            .accessibilityHidden(true)
+        } else {
+            ZStack {
+                if daypart == .afternoon {
+                    LinearGradient(
+                        stops: [
+                            .init(color: palette.base, location: 0),
+                            .init(color: palette.highlight, location: 0.46),
+                            .init(color: palette.horizon, location: 0.76),
+                            .init(color: palette.depth, location: 1)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                } else if daypart == .night {
+                    LinearGradient(
+                        stops: [
+                            .init(color: palette.base, location: 0),
+                            .init(color: palette.horizon, location: 0.42),
+                            .init(color: Color(hex: "192343"), location: 0.72),
+                            .init(color: palette.depth, location: 1)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                } else {
+                    LinearGradient(
+                        colors: [palette.base, palette.depth],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                }
 
-            RadialGradient(
-                colors: [palette.highlight.opacity(0.82), .clear],
-                center: UnitPoint(x: 0.84, y: 0.16),
-                startRadius: 8,
-                endRadius: 430
-            )
+                RadialGradient(
+                    colors: [palette.highlight.opacity(0.82), .clear],
+                    center: highlightCenter,
+                    startRadius: 8,
+                    endRadius: 430
+                )
 
-            RadialGradient(
-                colors: [palette.depth.opacity(0.72), .clear],
-                center: UnitPoint(x: 0.06, y: 0.92),
-                startRadius: 12,
-                endRadius: 520
-            )
+                RadialGradient(
+                    colors: [palette.depth.opacity(0.72), .clear],
+                    center: UnitPoint(x: 0.06, y: 0.92),
+                    startRadius: 12,
+                    endRadius: 520
+                )
+            }
+            .ignoresSafeArea()
+            .accessibilityHidden(true)
         }
-        .ignoresSafeArea()
-        .accessibilityHidden(true)
     }
 }
 
-private struct FocusDaypartPalette {
+struct FocusDaypartPalette {
     let base: Color
     let highlight: Color
     let depth: Color
+    let horizon: Color
 }
 
 private struct FocusDaypartPreviewKey: EnvironmentKey {
@@ -165,6 +217,10 @@ extension EnvironmentValues {
 
 #Preview("Focus background - morning") {
     FocusDaypartBackground(daypart: .morning)
+}
+
+#Preview("Focus background - midday") {
+    FocusDaypartBackground(daypart: .midday)
 }
 
 #Preview("Focus background - afternoon") {

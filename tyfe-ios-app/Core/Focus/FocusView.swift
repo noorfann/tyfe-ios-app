@@ -147,7 +147,7 @@ struct FocusView: View {
 
             Text(daypart.greeting)
                 .font(TyfeTypography.interfaceStrong)
-                .foregroundStyle(daypart.foreground)
+                .foregroundStyle(daypart.visualStyle.backgroundForeground)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             Image(systemName: "chevron.down")
@@ -327,9 +327,8 @@ struct FocusView: View {
     focusPreview(session: .readyMock)
 }
 
-#Preview("Focus - running dark") {
+#Preview("Focus - running") {
     focusPreview(session: .runningMock)
-        .preferredColorScheme(.dark)
 }
 
 #Preview("Focus - paused") {
@@ -358,45 +357,32 @@ struct FocusView: View {
         }
 }
 
-#Preview("Focus - morning light") {
+#Preview("Focus - morning") {
     focusPreview(session: .runningMock)
         .environment(\.focusDaypartPreviewOverride, .morning)
-        .preferredColorScheme(.light)
 }
 
-#Preview("Focus - afternoon light") {
+#Preview("Focus - midday") {
+    focusPreview(session: .runningMock)
+        .environment(\.focusDaypartPreviewOverride, .midday)
+}
+
+#Preview("Focus - afternoon") {
     focusPreview(session: .runningMock)
         .environment(\.focusDaypartPreviewOverride, .afternoon)
-        .preferredColorScheme(.light)
 }
 
-#Preview("Focus - night light") {
+#Preview("Focus - night") {
     focusPreview(session: .runningMock)
         .environment(\.focusDaypartPreviewOverride, .night)
-        .preferredColorScheme(.light)
-}
-
-#Preview("Focus - morning dark") {
-    focusPreview(session: .runningMock)
-        .environment(\.focusDaypartPreviewOverride, .morning)
-        .preferredColorScheme(.dark)
-}
-
-#Preview("Focus - afternoon dark") {
-    focusPreview(session: .runningMock)
-        .environment(\.focusDaypartPreviewOverride, .afternoon)
-        .preferredColorScheme(.dark)
-}
-
-#Preview("Focus - night dark") {
-    focusPreview(session: .runningMock)
-        .environment(\.focusDaypartPreviewOverride, .night)
-        .preferredColorScheme(.dark)
 }
 
 @MainActor
 private func focusPreview(session: FocusSessionModel) -> some View {
-    let container = DevPreview.shared.container()
+    var snapshot = LocalAppSnapshot.mock
+    snapshot.focusSessions = [session]
+
+    let container = DevPreview.shared.container(snapshotOverride: snapshot)
     let interactor = CoreInteractor(container: container)
     let builder = CoreBuilder(interactor: interactor)
     let delegate = FocusDelegate(activity: .mock, session: session)

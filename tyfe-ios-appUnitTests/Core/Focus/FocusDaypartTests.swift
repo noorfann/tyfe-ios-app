@@ -17,6 +17,10 @@ struct FocusDaypartTests {
         let cardFill: String
         let cardBorder: String
         let accentFill: String
+        let backgroundForeground: String
+        let backgroundBase: String
+        let backgroundHighlight: String
+        let backgroundDepth: String
     }
 
     private var utcCalendar: Calendar {
@@ -29,7 +33,9 @@ struct FocusDaypartTests {
         BoundaryCase(hour: 5, minute: 59, expected: .night),
         BoundaryCase(hour: 6, minute: 0, expected: .morning),
         BoundaryCase(hour: 11, minute: 59, expected: .morning),
-        BoundaryCase(hour: 12, minute: 0, expected: .afternoon),
+        BoundaryCase(hour: 12, minute: 0, expected: .midday),
+        BoundaryCase(hour: 14, minute: 59, expected: .midday),
+        BoundaryCase(hour: 15, minute: 0, expected: .afternoon),
         BoundaryCase(hour: 17, minute: 59, expected: .afternoon),
         BoundaryCase(hour: 18, minute: 0, expected: .night),
         BoundaryCase(hour: 23, minute: 59, expected: .night),
@@ -62,8 +68,17 @@ struct FocusDaypartTests {
 
     @Test func exposesDaypartGreetings() {
         #expect(FocusDaypart.morning.greeting == "Good Morning")
+        #expect(FocusDaypart.midday.greeting == "Good Afternoon")
         #expect(FocusDaypart.afternoon.greeting == "Good Afternoon")
         #expect(FocusDaypart.night.greeting == "Good Evening")
+        #expect(FocusDaypart.midday.symbolName == "cloud.sun.fill")
+    }
+
+    @Test func daytimeUsesVerticalWhiteFadeWhileNightKeepsLayeredBackground() {
+        #expect(FocusDaypart.morning.usesVerticalWhiteFade)
+        #expect(FocusDaypart.midday.usesVerticalWhiteFade)
+        #expect(FocusDaypart.afternoon.usesVerticalWhiteFade)
+        #expect(!FocusDaypart.night.usesVerticalWhiteFade)
     }
 
     @Test(arguments: [
@@ -71,19 +86,41 @@ struct FocusDaypartTests {
             daypart: .morning,
             cardFill: "173F62",
             cardBorder: "72B7D9",
-            accentFill: "FFE49A"
+            accentFill: "FFE49A",
+            backgroundForeground: "1E201C",
+            backgroundBase: "5EA9D0",
+            backgroundHighlight: "A8DDF0",
+            backgroundDepth: "62A8C8"
+        ),
+        VisualStyleCase(
+            daypart: .midday,
+            cardFill: "173F62",
+            cardBorder: "72B7D9",
+            accentFill: "FFE49A",
+            backgroundForeground: "1E201C",
+            backgroundBase: "5EA9D0",
+            backgroundHighlight: "A8DDF0",
+            backgroundDepth: "62A8C8"
         ),
         VisualStyleCase(
             daypart: .afternoon,
             cardFill: "5B3027",
             cardBorder: "E0A454",
-            accentFill: "FFE1A3"
+            accentFill: "FFE1A3",
+            backgroundForeground: "F7F7F2",
+            backgroundBase: "8D452C",
+            backgroundHighlight: "E0A454",
+            backgroundDepth: "A95745"
         ),
         VisualStyleCase(
             daypart: .night,
             cardFill: "111A36",
             cardBorder: "6F86B6",
-            accentFill: "DCE7FF"
+            accentFill: "DCE7FF",
+            backgroundForeground: "F7F7F2",
+            backgroundBase: "0C1738",
+            backgroundHighlight: "31558C",
+            backgroundDepth: "26345F"
         )
     ])
     func exposesExpectedVisualTokens(testCase: VisualStyleCase) {
@@ -92,6 +129,10 @@ struct FocusDaypartTests {
         #expect(hex(style.cardFill) == testCase.cardFill)
         #expect(hex(style.cardBorder) == testCase.cardBorder)
         #expect(hex(style.accentFill) == testCase.accentFill)
+        #expect(hex(style.backgroundForeground) == testCase.backgroundForeground)
+        #expect(hex(testCase.daypart.palette.base) == testCase.backgroundBase)
+        #expect(hex(testCase.daypart.palette.highlight) == testCase.backgroundHighlight)
+        #expect(hex(testCase.daypart.palette.depth) == testCase.backgroundDepth)
     }
 
     @Test(arguments: FocusDaypart.allCases)
@@ -102,6 +143,11 @@ struct FocusDaypartTests {
         #expect(contrastRatio(style.secondaryForeground, style.cardFill) >= 4.5)
         #expect(contrastRatio(style.accentForeground, style.accentFill) >= 4.5)
         #expect(contrastRatio(style.cardBorder, style.cardFill) >= 3)
+        if daypart == .morning || daypart == .midday {
+            #expect(contrastRatio(style.backgroundForeground, daypart.palette.base) >= 4.5)
+            #expect(contrastRatio(style.backgroundForeground, daypart.palette.highlight) >= 4.5)
+            #expect(contrastRatio(style.backgroundForeground, daypart.palette.depth) >= 4.5)
+        }
     }
 
     private func date(

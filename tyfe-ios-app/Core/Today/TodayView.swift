@@ -72,14 +72,10 @@ struct TodayView: View {
     private var header: some View {
         HStack(spacing: TyfeSpacing.small) {
             Text("tyfe")
-                .font(TyfeTypography.displayCompact)
-                .tracking(-1.2)
+                .font(TyfeTypography.display)
+                .tracking(-1.6)
                 .foregroundStyle(TyfeEditorialPalette.ink)
                 .frame(maxWidth: .infinity, alignment: .leading)
-
-            Text("Today")
-                .font(TyfeTypography.interfaceStrong)
-                .foregroundStyle(TyfeEditorialPalette.muted)
 
             Image(systemName: presenter.isDarkAppearance ? "moon.stars.fill" : "sun.max.fill")
                 .font(.subheadline.weight(.black))
