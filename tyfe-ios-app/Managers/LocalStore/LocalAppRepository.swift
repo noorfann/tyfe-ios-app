@@ -31,71 +31,6 @@ struct LocalAppSnapshot: Codable, Hashable {
         case nextRewardClaimNumber
     }
 
-    private struct PersistedFocusSession: Decodable {
-        let focusSessionId: String
-        let activityId: String
-        let state: String
-        let startedAt: Date
-        let localDay: LocalDay?
-        let dailyPlanIdAtStart: String?
-        let pausedAt: Date?
-        let completedAt: Date?
-        let focusEndsAt: Date?
-        let restState: FocusRestState?
-        let restEndsAt: Date?
-        let isBonusSession: Bool?
-
-        private enum CodingKeys: String, CodingKey {
-            case focusSessionId
-            case activityId
-            case state
-            case startedAt
-            case localDay = "local_day"
-            case dailyPlanIdAtStart = "daily_plan_id_at_start"
-            case pausedAt
-            case completedAt
-            case focusEndsAt
-            case restState
-            case restEndsAt
-            case isBonusSession
-        }
-
-        func migrated(at now: Date) throws -> FocusSessionModel {
-            let migratedState: FocusSessionState
-            let migratedFocusEndsAt: Date?
-
-            if state == "paused" {
-                let originalEnd = focusEndsAt
-                    ?? startedAt.addingTimeInterval(TimeInterval(FocusSessionModel.durationMinutes * 60))
-                let pauseDate = pausedAt ?? startedAt
-                let remainingSeconds = max(originalEnd.timeIntervalSince(pauseDate), 0)
-                migratedState = .running
-                migratedFocusEndsAt = now.addingTimeInterval(remainingSeconds)
-            } else if let state = FocusSessionState(rawValue: state) {
-                migratedState = state
-                migratedFocusEndsAt = focusEndsAt
-            } else {
-                throw DecodingError.dataCorrupted(
-                    .init(codingPath: [], debugDescription: "Unknown focus session state: \(state)")
-                )
-            }
-
-            return FocusSessionModel(
-                focusSessionId: focusSessionId,
-                activityId: activityId,
-                state: migratedState,
-                startedAt: startedAt,
-                localDay: localDay,
-                dailyPlanIdAtStart: dailyPlanIdAtStart,
-                completedAt: completedAt,
-                focusEndsAt: migratedFocusEndsAt,
-                restState: restState ?? .unavailable,
-                restEndsAt: restEndsAt,
-                isBonusSession: isBonusSession ?? false
-            )
-        }
-    }
-
     var dailyPlan: DailyPlanModel? {
         get { dailyPlans.last }
         set { dailyPlans = newValue.map { [$0] } ?? [] }
@@ -302,5 +237,70 @@ final class LocalFileRepository: LocalAppRepository {
             throw FocusManagerError.persistenceFailed
         }
         snapshot = nextSnapshot
+    }
+}
+
+private struct PersistedFocusSession: Decodable {
+    let focusSessionId: String
+    let activityId: String
+    let state: String
+    let startedAt: Date
+    let localDay: LocalDay?
+    let dailyPlanIdAtStart: String?
+    let pausedAt: Date?
+    let completedAt: Date?
+    let focusEndsAt: Date?
+    let restState: FocusRestState?
+    let restEndsAt: Date?
+    let isBonusSession: Bool?
+
+    private enum CodingKeys: String, CodingKey {
+        case focusSessionId
+        case activityId
+        case state
+        case startedAt
+        case localDay = "local_day"
+        case dailyPlanIdAtStart = "daily_plan_id_at_start"
+        case pausedAt
+        case completedAt
+        case focusEndsAt
+        case restState
+        case restEndsAt
+        case isBonusSession
+    }
+
+    func migrated(at now: Date) throws -> FocusSessionModel {
+        let migratedState: FocusSessionState
+        let migratedFocusEndsAt: Date?
+
+        if state == "paused" {
+            let originalEnd = focusEndsAt
+                ?? startedAt.addingTimeInterval(TimeInterval(FocusSessionModel.durationMinutes * 60))
+            let pauseDate = pausedAt ?? startedAt
+            let remainingSeconds = max(originalEnd.timeIntervalSince(pauseDate), 0)
+            migratedState = .running
+            migratedFocusEndsAt = now.addingTimeInterval(remainingSeconds)
+        } else if let state = FocusSessionState(rawValue: state) {
+            migratedState = state
+            migratedFocusEndsAt = focusEndsAt
+        } else {
+            throw DecodingError.dataCorrupted(
+                .init(codingPath: [], debugDescription: "Unknown focus session state: \(state)")
+            )
+        }
+
+        return FocusSessionModel(
+            focusSessionId: focusSessionId,
+            activityId: activityId,
+            state: migratedState,
+            startedAt: startedAt,
+            localDay: localDay,
+            dailyPlanIdAtStart: dailyPlanIdAtStart,
+            completedAt: completedAt,
+            focusEndsAt: migratedFocusEndsAt,
+            restState: restState ?? .unavailable,
+            restEndsAt: restEndsAt,
+            isBonusSession: isBonusSession ?? false
+        )
     }
 }

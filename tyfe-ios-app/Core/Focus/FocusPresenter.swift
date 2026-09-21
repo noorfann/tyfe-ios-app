@@ -147,7 +147,7 @@ final class FocusPresenter {
     func onStartAnotherPressed() {
         do {
             if session.state == .completed,
-               (session.restState == .pending || session.restState == .active) {
+               session.restState == .pending || session.restState == .active {
                 session = try interactor.skipFocusRest(focusSessionId: session.focusSessionId)
                 interactor.trackEvent(event: Event.onRestSkipped)
             }

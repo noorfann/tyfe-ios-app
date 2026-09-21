@@ -220,24 +220,7 @@ struct FocusView: View {
             strokeColor: style.cardBorder
         ) {
             VStack(spacing: TyfeSpacing.card) {
-                Image(systemName: "hourglass")
-                    .font(.system(size: 38, weight: .black))
-                    .foregroundStyle(style.accentForeground)
-                    .frame(width: 76, height: 76)
-                    .background(style.accentFill.opacity(0.14))
-                    .clipShape(Circle())
-                    .accessibilityHidden(true)
-
-                VStack(spacing: TyfeSpacing.small) {
-                    Text("Take a 5-minute rest")
-                        .font(TyfeTypography.display)
-                        .multilineTextAlignment(.center)
-
-                    Text("Let your mind reset before your next Focus Session.")
-                        .font(TyfeTypography.interface)
-                        .multilineTextAlignment(.center)
-                        .foregroundStyle(style.secondaryForeground)
-                }
+                restTimerHeader(style: style)
 
                 Text(presenter.restTimerText)
                     .font(.system(size: 54, weight: .black, design: .monospaced))
@@ -270,6 +253,29 @@ struct FocusView: View {
         .environment(\.colorScheme, .dark)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Five-minute Focus rest")
+    }
+
+    private func restTimerHeader(style: FocusDaypartVisualStyle) -> some View {
+        VStack(spacing: TyfeSpacing.card) {
+            Image(systemName: "hourglass")
+                .font(.system(size: 38, weight: .black))
+                .foregroundStyle(style.accentForeground)
+                .frame(width: 76, height: 76)
+                .background(style.accentFill.opacity(0.14))
+                .clipShape(Circle())
+                .accessibilityHidden(true)
+
+            VStack(spacing: TyfeSpacing.small) {
+                Text("Take a 5-minute rest")
+                    .font(TyfeTypography.display)
+                    .multilineTextAlignment(.center)
+
+                Text("Let your mind reset before your next Focus Session.")
+                    .font(TyfeTypography.interface)
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(style.secondaryForeground)
+            }
+        }
     }
 
     private func outcome(daypart: FocusDaypart) -> some View {
