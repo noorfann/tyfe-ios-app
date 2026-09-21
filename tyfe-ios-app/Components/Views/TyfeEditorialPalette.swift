@@ -36,6 +36,12 @@ enum TyfeEditorialPalette {
     // labels stay a fixed dark ink for contrast.
     static let onAccent = Color(hex: "1E201C")
 
+    // Constant dark board behind the streak fire. It stays dark in both
+    // appearances so the animated flame keeps contrast instead of inverting
+    // to a light surface the way the adaptive tokens do.
+    static let board = Color(hex: "1E201C")
+    static let onBoard = Color(hex: "F4F1EA")
+
     // Semantic feedback colors keep state legible without making color the only cue.
     static let success = Color(dynamicLight: "2E7D4F", dark: "6FCE92")
     static let warning = Color(dynamicLight: "A66305", dark: "E5B25A")

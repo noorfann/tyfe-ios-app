@@ -51,6 +51,7 @@ enum TyfeSurfaceRole: CaseIterable {
     case focusChamber
     case celebration
     case warning
+    case streakBoard
 
     var fill: Color {
         switch self {
@@ -60,6 +61,7 @@ enum TyfeSurfaceRole: CaseIterable {
         case .focusChamber: return TyfeEditorialPalette.charcoal
         case .celebration: return TyfeEditorialPalette.focus
         case .warning: return TyfeEditorialPalette.saffron
+        case .streakBoard: return TyfeEditorialPalette.board
         }
     }
 
@@ -68,6 +70,7 @@ enum TyfeSurfaceRole: CaseIterable {
         case .focusChamber: return TyfeEditorialPalette.onDark
         case .disabled: return TyfeEditorialPalette.disabledInk
         case .celebration, .warning: return TyfeEditorialPalette.onAccent
+        case .streakBoard: return TyfeEditorialPalette.onBoard
         default: return TyfeEditorialPalette.ink
         }
     }

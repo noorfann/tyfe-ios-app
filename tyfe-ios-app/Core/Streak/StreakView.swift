@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftfulUI
 
 struct StreakDelegate {
     var eventParameters: [String: Any]? { nil }
@@ -8,6 +7,9 @@ struct StreakDelegate {
 struct StreakView: View {
 
     @State private var presenter: StreakPresenter
+    @State private var showCelebration = false
+    @State private var celebrationTrigger = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let delegate: StreakDelegate
 
     init(presenter: StreakPresenter, delegate: StreakDelegate) {
@@ -22,10 +24,25 @@ struct StreakView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: TyfeSpacing.section) {
-                hero
-                metrics
-                freezeGuidance
-                activitySummary
+                TyfeStreakHeroView(
+                    streakCount: presenter.currentStreak,
+                    state: presenter.heroState
+                )
+
+                TyfeStreakStatsView(
+                    longestStreak: presenter.longestStreak,
+                    totalStreakDays: presenter.totalStreakDays,
+                    bestChaseText: presenter.bestChaseText,
+                    lastActiveText: presenter.lastActiveText
+                )
+
+                TyfeStreakFreezeBankView(
+                    progress: presenter.freezeProgress,
+                    guidance: presenter.freezeGuidance
+                )
+
+                TyfeStreakWeekTrailView(days: presenter.recentDays)
+
                 StreakMonthCalendarView(recentEvents: data.recentEvents ?? [])
             }
             .padding(.horizontal, TyfeSpacing.control)
@@ -34,114 +51,30 @@ struct StreakView: View {
         .scrollIndicators(.hidden)
         .background(TyfeEditorialPalette.canvas.ignoresSafeArea())
         .foregroundStyle(TyfeEditorialPalette.ink)
+        .overlay {
+            if showCelebration && !reduceMotion {
+                FocusConfettiView()
+                    .transition(.opacity)
+                    .allowsHitTesting(false)
+            }
+        }
+        .sensoryFeedback(.success, trigger: celebrationTrigger)
         .navigationTitle("Streak")
         .navigationBarTitleDisplayMode(.inline)
         .accessibilityIdentifier("streak-detail-screen")
         .onAppear {
             presenter.onViewAppear(delegate: delegate)
+            startCelebrationIfNeeded()
         }
         .onDisappear {
             presenter.onViewDisappear(delegate: delegate)
         }
     }
 
-    private var hero: some View {
-        TyfeSurfaceView(role: .warning) {
-            VStack(spacing: TyfeSpacing.small) {
-                Image(systemName: "flame.fill")
-                    .font(.system(size: 42, weight: .black))
-                    .accessibilityHidden(true)
-
-                Text(String(data.currentStreak ?? 0))
-                    .font(.system(size: 64, weight: .black, design: .serif))
-                    .monospacedDigit()
-
-                Text("DAY STREAK")
-                    .font(TyfeTypography.eyebrow)
-                    .tracking(1.4)
-
-                Text(streakMessage)
-                    .font(TyfeTypography.interface)
-                    .multilineTextAlignment(.center)
-            }
-            .frame(maxWidth: .infinity)
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Current streak")
-        .accessibilityValue("\(data.currentStreak ?? 0) days")
-    }
-
-    private var metrics: some View {
-        HStack(spacing: TyfeSpacing.control) {
-            TyfeMetricCardView(
-                title: "Longest",
-                value: String(data.longestStreak ?? 0),
-                detail: "days",
-                systemImage: "trophy.fill",
-                accent: TyfeEditorialPalette.saffron
-            )
-
-            TyfeMetricCardView(
-                title: "Freezes",
-                value: String(data.freezesAvailableCount ?? 0),
-                detail: "available",
-                systemImage: "snowflake",
-                accent: TyfeEditorialPalette.teal
-            )
-        }
-    }
-
-    private var freezeGuidance: some View {
-        TyfeSurfaceView(role: .paper) {
-            HStack(alignment: .top, spacing: TyfeSpacing.small) {
-                Image(systemName: "snowflake")
-                    .foregroundStyle(TyfeEditorialPalette.teal)
-                    .accessibilityHidden(true)
-
-                VStack(alignment: .leading, spacing: TyfeSpacing.unit) {
-                    Text("STREAK FREEZES")
-                        .font(TyfeTypography.eyebrow)
-                        .tracking(1.1)
-                        .foregroundStyle(TyfeEditorialPalette.muted)
-                    Text(presenter.freezeGuidance)
-                        .font(TyfeTypography.interface)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityIdentifier("streak-freeze-guidance")
-    }
-
-    @ViewBuilder
-    private var activitySummary: some View {
-        if let dateLastEvent = data.dateLastEvent {
-            TyfeSurfaceView(role: .paper) {
-                HStack(spacing: TyfeSpacing.small) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(TyfeEditorialPalette.success)
-                        .accessibilityHidden(true)
-
-                    VStack(alignment: .leading, spacing: TyfeSpacing.unit) {
-                        Text("LAST STREAK ACTIVITY")
-                            .font(TyfeTypography.eyebrow)
-                            .tracking(1.1)
-                            .foregroundStyle(TyfeEditorialPalette.muted)
-                        Text(dateLastEvent.formatted(date: .abbreviated, time: .omitted))
-                            .font(TyfeTypography.interfaceStrong)
-                    }
-                }
-            }
-            .accessibilityElement(children: .combine)
-        }
-    }
-
-    private var streakMessage: String {
-        switch data.currentStreak ?? 0 {
-        case 0: return "Complete a focus session to begin your streak."
-        case 1: return "Your streak has started. Keep making room for focus."
-        default: return "Keep showing up, one focused day at a time."
-        }
+    private func startCelebrationIfNeeded() {
+        guard presenter.isMilestone else { return }
+        celebrationTrigger += 1
+        showCelebration = true
     }
 }
 
@@ -174,8 +107,9 @@ struct StreakMonthCalendarView: View {
     var body: some View {
         TyfeSurfaceView(role: .paper) {
             VStack(alignment: .leading, spacing: TyfeSpacing.control) {
-                Text("ACTIVITY CALENDAR")
+                Text("Activity")
                     .font(TyfeTypography.eyebrow)
+                    .textCase(.uppercase)
                     .tracking(1.2)
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
