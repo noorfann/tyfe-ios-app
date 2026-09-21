@@ -17,7 +17,7 @@ struct RewardsInteractorTests {
         let interactor = makeInteractor()
 
         let reward = try #require(
-            interactor.createCustomReward(name: "  Practice guitar  ", durationTier: .thirtyMinutes)
+            interactor.createCustomReward(name: "  Practice guitar  ", durationTier: .tenMinutes)
         )
 
         #expect(reward.name == "Practice guitar")
@@ -30,7 +30,7 @@ struct RewardsInteractorTests {
         #expect(throws: RewardManagerError.insufficientCredits) {
             try interactor.createRewardClaim(
                 rewardId: "reward-starter-social",
-                durationTier: .fifteenMinutes
+                durationTier: .tenMinutes
             )
         }
         #expect(interactor.rewardCredits == 0)
@@ -47,7 +47,7 @@ struct RewardsInteractorTests {
         )
         let claim = try interactor.createRewardClaim(
             rewardId: "reward-starter-social",
-            durationTier: .fifteenMinutes
+            durationTier: .tenMinutes
         )
         _ = try interactor.startRewardClaim(rewardClaimId: claim.rewardClaimId)
 
@@ -72,7 +72,7 @@ struct RewardsInteractorTests {
         #expect(throws: RewardManagerError.focusSessionInProgress) {
             try interactor.createRewardClaim(
                 rewardId: "reward-starter-social",
-                durationTier: .fifteenMinutes
+                durationTier: .tenMinutes
             )
         }
     }
@@ -88,18 +88,13 @@ struct RewardsInteractorTests {
         #expect(!interactor.hasLiveFocusSession)
         let claim = try interactor.createRewardClaim(
             rewardId: "reward-starter-social",
-            durationTier: .fifteenMinutes
+            durationTier: .tenMinutes
         )
         let focusSession = try #require(
             interactor.focusManager.startFocusSession(activityId: ActivityModel.mock.activityId)
         )
         _ = try interactor.focusManager.beginFocusSession(focusSessionId: focusSession.focusSessionId)
 
-        #expect(throws: RewardManagerError.focusSessionInProgress) {
-            try interactor.startRewardClaim(rewardClaimId: claim.rewardClaimId)
-        }
-
-        _ = try interactor.focusManager.pauseFocusSession(focusSessionId: focusSession.focusSessionId)
         #expect(throws: RewardManagerError.focusSessionInProgress) {
             try interactor.startRewardClaim(rewardClaimId: claim.rewardClaimId)
         }

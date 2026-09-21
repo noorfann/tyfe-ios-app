@@ -47,7 +47,7 @@ struct OnboardingContentTests {
         #expect(pages[0].title == "Focus a little.\nRest a lot.")
         #expect(pages[0].body == "Make a simple plan, focus on one thing, then enjoy your break.")
         #expect(pages[1].title == "25 minutes of focus\ngets you real downtime.")
-        #expect(pages[1].pills == ["1 credit per session", "15, 30, or 60 min", "Credits never expire"])
+        #expect(pages[1].pills == ["1 credit per session", "1 credit = 10 min"])
         #expect(pages[2].eyebrow == "WHAT'S INCLUDED")
         #expect(pages[2].title == "Everything you need\nto keep going.")
         #expect(pages[2].pills == ["Daily Plan", "Rewards", "Private Circles", "Works offline"])

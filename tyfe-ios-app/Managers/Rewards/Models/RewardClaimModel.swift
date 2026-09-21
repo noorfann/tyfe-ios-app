@@ -68,7 +68,7 @@ struct RewardClaimModel: Identifiable, Codable, Hashable {
             state: .active,
             createdAt: start,
             startsAt: start,
-            endsAt: start.addingTimeInterval(15 * 60)
+            endsAt: start.addingTimeInterval(TimeInterval(RewardDurationTier.tenMinutes.durationMinutes * 60))
         )
     }
 }

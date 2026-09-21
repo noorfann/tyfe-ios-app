@@ -30,7 +30,7 @@ Every session runs for exactly 25 minutes against one Activity. The timer keeps 
 A Focus Session awards exactly 1 Reward Credit, and only when the timer naturally completes. Abandoned sessions earn nothing, and duplicate completions can't inflate your balance. Credits are personal, non-monetary, non-transferable, never go negative, and reset to zero at the start of each local day.
 
 **Spend credits on bounded downtime**
-Redeem starter or custom Rewards from fixed duration tiers — 1 credit / 15 min, 2 credits / 30 min, 4 credits / 60 min. Only one Reward Claim can be active at a time, and its timer ends on schedule. Unused time doesn't silently extend or refund.
+Redeem starter or custom Rewards at one fixed rate — 1 credit / 10 min. Only one Reward Claim can be active at a time, and its timer ends on schedule. Unused time doesn't silently extend or refund.
 
 **Stay accountable in private Circles**
 Create or join invite-only Circles to share limited progress and send preset Cheers. Members see today's planned and completed totals, completion percentage, and a coarse Focus Status — never Activity names, notes, credits, rewards, or full history. There are no feeds, rankings, chat, or missed-plan alerts.
@@ -47,7 +47,7 @@ A warm, game-board visual language with Dynamic Type, VoiceOver labels, Reduce M
 |---|---|
 | <img src="docs/screenshots/1.%20Create%20today%20activities.png" width="260" alt="Today screen with credits, sessions, and today's activities"> | <img src="docs/screenshots/2.%20Start%20focusing.png" width="260" alt="Focus Chamber showing a running 25-minute session"> |
 | **Plan today's activities** | **Start focusing** |
-| <img src="docs/screenshots/3.%20Earn%20credit.png" width="260" alt="Session complete screen earning 1 Reward Credit"> | <img src="docs/screenshots/4.%20Claim%20rewards.png" width="260" alt="Rewards screen with credit balance and fixed duration tiers"> |
+| <img src="docs/screenshots/3.%20Earn%20credit.png" width="260" alt="Session complete screen earning 1 Reward Credit"> | <img src="docs/screenshots/4.%20Claim%20rewards.png" width="260" alt="Rewards screen with credit balance and one fixed reward rate"> |
 | **Earn a Reward Credit** | **Claim a Reward** |
 | <img src="docs/screenshots/5.%20Enjoy%20rewards.png" width="260" alt="Rewards screen showing a reward in progress with a countdown"> | <img src="docs/screenshots/6.%20Join%20Circles.png" width="260" alt="Circles screen with members, focus status, and Cheer actions"> |
 | **Enjoy bounded downtime** | **Join a Circle** |

@@ -5,8 +5,6 @@ struct RewardsCreateRewardSheet: View {
     let onSave: (_ name: String, _ tier: RewardDurationTier) -> Void
 
     @State private var rewardName = ""
-    @State private var selectedTier: RewardDurationTier = .fifteenMinutes
-
     private var canSave: Bool {
         !rewardName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
@@ -14,7 +12,7 @@ struct RewardsCreateRewardSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: TyfeSpacing.section) {
             nameForm
-            tierPicker
+            tierSummary
             TyfeActionButtonView(
                 title: "Save Reward",
                 systemImage: "checkmark",
@@ -37,33 +35,23 @@ struct RewardsCreateRewardSheet: View {
         }
     }
 
-    private var tierPicker: some View {
+    private var tierSummary: some View {
         TyfeSurfaceView(role: .paper) {
             VStack(alignment: .leading, spacing: TyfeSpacing.control) {
-                Text("DURATION TIER")
+                Text("REWARD RATE")
                     .font(TyfeTypography.eyebrow)
                     .tracking(1.1)
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
-                Picker("Duration tier", selection: $selectedTier) {
-                    ForEach(RewardDurationTier.allCases, id: \.self) { tier in
-                        Text("\(tier.durationMinutes) min · \(creditLabel(for: tier))")
-                            .tag(tier)
-                    }
-                }
-                .pickerStyle(.inline)
-                .labelsHidden()
+                Text("1 Credit = 10 minutes")
+                    .font(TyfeTypography.interfaceStrong)
             }
         }
     }
 
-    private func creditLabel(for tier: RewardDurationTier) -> String {
-        tier.creditCost == 1 ? "1 Credit" : "\(tier.creditCost) Credits"
-    }
-
     private func save() {
         guard canSave else { return }
-        onSave(rewardName, selectedTier)
+        onSave(rewardName, .tenMinutes)
     }
 }
 

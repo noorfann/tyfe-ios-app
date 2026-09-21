@@ -58,11 +58,11 @@ enum OnboardingContent {
             id: "focus",
             eyebrow: "FOCUS & REWARDS",
             title: "25 minutes of focus\ngets you real downtime.",
-            body: "Finish a 25-minute Focus Session to earn 1 Reward Credit. Use your credits for 15, 30, or 60 minutes of downtime.",
+            body: "Finish a 25-minute Focus Session to earn 1 Reward Credit. Each credit unlocks 10 minutes of downtime.",
             symbolName: "timer",
             accent: TyfeEditorialPalette.focus,
             art: .focus,
-            pills: ["1 credit per session", "15, 30, or 60 min", "Credits never expire"]
+            pills: ["1 credit per session", "1 credit = 10 min"]
         ),
         OnboardingPage(
             id: "everything",

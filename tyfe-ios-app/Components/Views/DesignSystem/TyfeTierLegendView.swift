@@ -11,7 +11,7 @@ struct TyfeTierLegendView: View {
     var body: some View {
         TyfeSurfaceView(role: .paper) {
             VStack(alignment: .leading, spacing: TyfeSpacing.small) {
-                Text("FIXED DURATION TIERS")
+                Text("REWARD RATE")
                     .font(TyfeTypography.eyebrow)
                     .tracking(1.1)
                     .foregroundStyle(TyfeEditorialPalette.muted)
@@ -47,7 +47,7 @@ struct TyfeTierLegendView: View {
             .frame(minHeight: minContentHeight)
         }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Fixed duration tiers")
+        .accessibilityLabel("Reward rate")
     }
 
     private func creditLabel(for tier: RewardDurationTier) -> String {

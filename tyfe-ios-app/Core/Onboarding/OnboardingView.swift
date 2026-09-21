@@ -201,7 +201,7 @@ struct OnboardingView: View {
                     .font(TyfeTypography.timer)
                     .monospacedDigit()
                     .foregroundStyle(TyfeEditorialPalette.onDark)
-                Text("Study Swift · Pause once · up to 5 min")
+                Text("Study Swift · 25 minutes · 5-minute rest")
                     .font(TyfeTypography.caption)
                     .foregroundStyle(TyfeEditorialPalette.onDark.opacity(0.82))
             }
