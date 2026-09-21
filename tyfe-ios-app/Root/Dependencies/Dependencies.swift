@@ -13,7 +13,7 @@ import SwiftfulDataManagers
 struct Dependencies {
     let container: DependencyContainer
 
-    // swiftlint:disable:next function_body_length
+    // swiftlint:disable:next function_body_length cyclomatic_complexity
     init(config: BuildConfiguration, snapshotOverride: LocalAppSnapshot? = nil) {
         let authManager: AuthManager
         let userManager: UserManager
@@ -22,6 +22,7 @@ struct Dependencies {
         let appState: AppState
         let logManager: LogManager
         let pushManager: PushManager
+        let liveActivityScheduler: FocusLiveActivityScheduling
         let hapticManager: HapticManager
         let soundEffectManager: SoundEffectManager
         let streakManager: StreakManager
@@ -121,12 +122,14 @@ struct Dependencies {
                 service: MockLocalNotificationService(),
                 logManager: logManager
             )
+            liveActivityScheduler = MockFocusLiveActivityScheduler()
         case .dev, .prod:
             pushManager = PushManager(
                 service: SystemLocalNotificationService(),
                 logManager: logManager,
                 userDefaults: .standard
             )
+            liveActivityScheduler = SystemFocusLiveActivityScheduler()
         }
         soundEffectManager = SoundEffectManager(logger: logManager)
         switch config {
@@ -153,7 +156,8 @@ struct Dependencies {
         )
         focusManager = FocusManager(
             repository: repository,
-            notificationScheduler: pushManager
+            notificationScheduler: pushManager,
+            liveActivityScheduler: liveActivityScheduler
         )
         rewardManager = RewardManager(
             repository: repository,

@@ -9,6 +9,7 @@ final class FocusManager {
     private let clock: FocusClock
     private let calendar: Calendar
     private let notificationScheduler: LocalTimerNotificationScheduling?
+    private let liveActivityScheduler: FocusLiveActivityScheduling?
 
     private(set) var stateRevision = 0
 
@@ -16,12 +17,14 @@ final class FocusManager {
         repository: LocalAppRepository = MockLocalAppRepository(),
         clock: FocusClock = SystemFocusClock(),
         calendar: Calendar = .autoupdatingCurrent,
-        notificationScheduler: LocalTimerNotificationScheduling? = nil
+        notificationScheduler: LocalTimerNotificationScheduling? = nil,
+        liveActivityScheduler: FocusLiveActivityScheduling? = nil
     ) {
         self.repository = repository
         self.clock = clock
         self.calendar = calendar
         self.notificationScheduler = notificationScheduler
+        self.liveActivityScheduler = liveActivityScheduler
 
         if let activeFocusSession {
             if activeFocusSession.state == .running {
@@ -30,6 +33,7 @@ final class FocusManager {
                 notificationScheduler?.scheduleFocusRestCompletion(for: activeFocusSession)
             }
         }
+        reconcileLiveActivity()
     }
 
     var activities: [ActivityModel] {
@@ -60,6 +64,18 @@ final class FocusManager {
         focusSessions.last { session in
             session.state == .ready || session.state == .running || session.isResting
         }
+    }
+
+    func reconcileLiveActivity() {
+        guard let session = activeFocusSession,
+              session.state == .running,
+              let focusEndsAt = session.focusEndsAt,
+              clock.now < focusEndsAt else {
+            liveActivityScheduler?.reconcile(activeSession: nil)
+            return
+        }
+
+        liveActivityScheduler?.reconcile(activeSession: session)
     }
 
     var currentLocalDay: LocalDay {
@@ -180,6 +196,7 @@ final class FocusManager {
         )
         try replace(runningSession)
         notificationScheduler?.scheduleFocusCompletion(for: runningSession)
+        liveActivityScheduler?.start(for: runningSession)
         return runningSession
     }
 
@@ -191,6 +208,7 @@ final class FocusManager {
             session = session.updated(state: .running, focusEndsAt: focusEndsAt)
             try replace(session)
             notificationScheduler?.scheduleFocusCompletion(for: session)
+            liveActivityScheduler?.start(for: session)
         }
 
         if session.state == .running,
@@ -286,6 +304,7 @@ final class FocusManager {
         let abandonedSession = session.updated(state: .abandoned)
         try replace(abandonedSession)
         notificationScheduler?.cancelFocusCompletion(focusSessionId: abandonedSession.focusSessionId)
+        liveActivityScheduler?.end(for: abandonedSession, reason: .abandoned)
         return abandonedSession
     }
 
@@ -385,6 +404,7 @@ final class FocusManager {
         }
         stateRevision += 1
         notificationScheduler?.cancelFocusCompletion(focusSessionId: completedSession.focusSessionId)
+        liveActivityScheduler?.end(for: completedSession, reason: .completed)
         return completedSession
     }
 
