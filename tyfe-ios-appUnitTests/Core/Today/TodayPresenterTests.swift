@@ -165,6 +165,7 @@ struct TodayPresenterTests {
     @Test func selectedActivityReplacesAnUnstartedReadySession() throws {
         let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
         let manager = try #require(dependencies.container.resolve(TodayManager.self))
+        let focusManager = try #require(dependencies.container.resolve(FocusManager.self))
         let secondActivity = try #require(
             manager.createActivity(name: "Write report", category: .work, colorToken: "slateBlue")
         )
@@ -182,7 +183,7 @@ struct TodayPresenterTests {
         let presenter = TodayPresenter(interactor: interactor, router: router)
         presenter.onViewAppear(delegate: TodayDelegate())
         presenter.onStartFocusPressed()
-        let firstSession = try #require(manager.focusSessions.first)
+        let firstSession = try #require(focusManager.focusSessions.first)
 
         presenter.onViewAppear(delegate: TodayDelegate())
         presenter.selectNextPlanItem()
@@ -191,16 +192,17 @@ struct TodayPresenterTests {
         let delegate = try #require(router.presentedFocusDelegate)
         #expect(delegate.activity.activityId == secondActivity.activityId)
         #expect(delegate.session.activityId == secondActivity.activityId)
-        #expect(manager.focusSessions.count == 2)
+        #expect(focusManager.focusSessions.count == 2)
         #expect(
-            manager.focusSessions.first { $0.focusSessionId == firstSession.focusSessionId }?.state == .abandoned
+            focusManager.focusSessions.first { $0.focusSessionId == firstSession.focusSessionId }?.state == .abandoned
         )
-        #expect(manager.activeFocusSession?.activityId == secondActivity.activityId)
+        #expect(focusManager.activeFocusSession?.activityId == secondActivity.activityId)
     }
 
     @Test func runningFocusSessionRemainsAuthoritativeForAnotherSelection() throws {
         let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
         let manager = try #require(dependencies.container.resolve(TodayManager.self))
+        let focusManager = try #require(dependencies.container.resolve(FocusManager.self))
         let secondActivity = try #require(
             manager.createActivity(name: "Write report", category: .work, colorToken: "slateBlue")
         )
@@ -218,8 +220,8 @@ struct TodayPresenterTests {
         let presenter = TodayPresenter(interactor: interactor, router: router)
         presenter.onViewAppear(delegate: TodayDelegate())
         presenter.onStartFocusPressed()
-        let firstSession = try #require(manager.focusSessions.first)
-        _ = try manager.beginFocusSession(focusSessionId: firstSession.focusSessionId)
+        let firstSession = try #require(focusManager.focusSessions.first)
+        _ = try focusManager.beginFocusSession(focusSessionId: firstSession.focusSessionId)
 
         presenter.onViewAppear(delegate: TodayDelegate())
         presenter.selectNextPlanItem()
@@ -228,7 +230,7 @@ struct TodayPresenterTests {
         let delegate = try #require(router.presentedFocusDelegate)
         #expect(delegate.activity.activityId == ActivityModel.mock.activityId)
         #expect(delegate.session.focusSessionId == firstSession.focusSessionId)
-        #expect(manager.focusSessions.count == 1)
+        #expect(focusManager.focusSessions.count == 1)
     }
 }
 
@@ -248,7 +250,5 @@ private final class RecordingTodayRouter: TodayRouter {
         didShowStreak = true
     }
 
-    #if MOCK || DEV
     func showDevSettingsView() { }
-    #endif
 }
