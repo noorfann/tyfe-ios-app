@@ -21,9 +21,12 @@ final class TodayPresenter {
 
     var selectedPlanItemId: String?
     var isAddActivitySheetPresented = false
+    var isActivityDetailSheetPresented = false
     private(set) var isDeckSwipeCoachmarkPresented = false
     private var pendingDeckCoachmark = false
     private(set) var addActivitySessionCount = 1
+    private(set) var editingActivity: ActivityModel?
+    private(set) var editingPlanItem: DailyPlanItemModel?
 
     init(interactor: TodayInteractor, router: TodayRouter) {
         self.interactor = interactor
@@ -129,10 +132,6 @@ final class TodayPresenter {
         max(item.plannedSessionCount - completedCount(for: item), 0)
     }
 
-    func canDecrement(_ item: DailyPlanItemModel) -> Bool {
-        item.plannedSessionCount > completedCount(for: item)
-    }
-
     func onViewAppear(delegate: TodayDelegate) {
         let latestLocalDay = interactor.phase1CurrentLocalDay
         if selectedLocalDay == currentLocalDay {
@@ -205,35 +204,63 @@ final class TodayPresenter {
         interactor.markDeckSwipeCoachmarkSeen()
     }
 
-    func increment(_ item: DailyPlanItemModel) {
+    func onEditActivityPressed(_ item: DailyPlanItemModel) {
         guard isViewingToday else { return }
-        _ = interactor.updatePhase1DailyPlanItemCount(
-            activityId: item.activityId,
-            sessionCount: item.plannedSessionCount + 1
-        )
-        reload()
+        guard let activity = activity(for: item) else { return }
+        selectedPlanItemId = item.id
+        editingActivity = activity
+        editingPlanItem = item
+        isActivityDetailSheetPresented = true
+        interactor.trackEvent(event: Event.openActivityDetail)
     }
 
-    func decrement(_ item: DailyPlanItemModel) {
+    func saveActivityEdits(
+        name: String,
+        category: ActivityCategory?,
+        sessionCount: Int
+    ) {
         guard isViewingToday else { return }
-        guard canDecrement(item) else { return }
+        guard let activity = editingActivity,
+              let item = editingPlanItem,
+              activity.activityId == item.activityId else { return }
+        guard interactor.updatePhase1Activity(
+            activityId: activity.activityId,
+            name: name,
+            category: category
+        ) != nil else { return }
+
+        let minimumSessionCount = max(completedCount(for: item), 1)
         _ = interactor.updatePhase1DailyPlanItemCount(
             activityId: item.activityId,
-            sessionCount: item.plannedSessionCount - 1
+            sessionCount: max(sessionCount, minimumSessionCount)
         )
+        dismissActivityDetailSheet()
         reload()
+        interactor.trackEvent(event: Event.saveActivityDetail)
     }
 
-    func remove(_ item: DailyPlanItemModel) {
+    func removeEditingActivityFromToday() {
         guard isViewingToday else { return }
+        guard let item = editingPlanItem else { return }
         guard completedCount(for: item) == 0 else { return }
         _ = interactor.removePhase1ActivityFromDailyPlan(activityId: item.activityId)
+        dismissActivityDetailSheet()
         reload()
+        interactor.trackEvent(event: Event.removeActivityFromToday)
+    }
+
+    func onActivityDetailSheetDismissed() {
+        guard !isActivityDetailSheetPresented else { return }
+        editingActivity = nil
+        editingPlanItem = nil
     }
 
     func onStartFocusPressed() {
-        guard let nextPlanItem else { return }
-        onStartFocusPressed(for: nextPlanItem)
+        guard let selectedPlanItemId,
+              let selectedPlanItem = planItems.first(where: { $0.id == selectedPlanItemId }) else {
+            return
+        }
+        onStartFocusPressed(for: selectedPlanItem)
     }
 
     func selectNextPlanItem() {
@@ -248,20 +275,34 @@ final class TodayPresenter {
         guard isViewingToday else { return }
         guard !isRewardInProgress else { return }
 
-        if let activeFocusSession,
-           let activity = activities.first(where: { $0.activityId == activeFocusSession.activityId }) {
-            selectedPlanItemId = item.id
-            interactor.trackEvent(event: Event.startFocus)
-            router.showFocusView(delegate: FocusDelegate(activity: activity, session: activeFocusSession))
-            return
+        selectedPlanItemId = item.id
+        guard let activity = activity(for: item) else { return }
+
+        if let activeFocusSession = interactor.activeFocusSession {
+            if activeFocusSession.state == .ready,
+               activeFocusSession.activityId != activity.activityId {
+                guard interactor.abandonPhase1FocusSession(
+                    focusSessionId: activeFocusSession.focusSessionId
+                ) != nil else {
+                    return
+                }
+            } else if let activeActivity = activities.first(where: {
+                $0.activityId == activeFocusSession.activityId
+            }) {
+                self.activeFocusSession = activeFocusSession
+                interactor.trackEvent(event: Event.startFocus)
+                router.showFocusView(
+                    delegate: FocusDelegate(activity: activeActivity, session: activeFocusSession)
+                )
+                return
+            }
         }
 
         guard remainingSessionCount(for: item) > 0,
-              let activity = activity(for: item),
               let session = interactor.startPhase1FocusSession(activityId: activity.activityId) else {
             return
         }
-        selectedPlanItemId = item.id
+        activeFocusSession = session
         interactor.trackEvent(event: Event.startFocus)
         router.showFocusView(delegate: FocusDelegate(activity: activity, session: session))
     }
@@ -292,6 +333,12 @@ final class TodayPresenter {
     private func presentAddActivityFlow(sessionCount: Int) {
         addActivitySessionCount = sessionCount
         isAddActivitySheetPresented = true
+    }
+
+    private func dismissActivityDetailSheet() {
+        isActivityDetailSheetPresented = false
+        editingActivity = nil
+        editingPlanItem = nil
     }
 
     private func reload() {
@@ -339,6 +386,9 @@ extension TodayPresenter {
         case createPlan
         case addActivity
         case editPlan
+        case openActivityDetail
+        case saveActivityDetail
+        case removeActivityFromToday
         case startFocus
         case toggleAppearance
         case openStreak
@@ -353,6 +403,9 @@ extension TodayPresenter {
             case .createPlan: return "Today_CreatePlan"
             case .addActivity: return "Today_AddActivity"
             case .editPlan: return "Today_EditPlan"
+            case .openActivityDetail: return "Today_ActivityDetail_Open"
+            case .saveActivityDetail: return "Today_ActivityDetail_Save"
+            case .removeActivityFromToday: return "Today_Activity_Remove"
             case .startFocus: return "Today_StartFocus"
             case .toggleAppearance: return "Today_ToggleAppearance"
             case .openStreak: return "Today_Streak_Open"
@@ -366,7 +419,8 @@ extension TodayPresenter {
             switch self {
             case .onAppear(delegate: let delegate), .onDisappear(delegate: let delegate):
                 return delegate.eventParameters
-            case .createPlan, .addActivity, .editPlan, .startFocus, .toggleAppearance, .openStreak,
+            case .createPlan, .addActivity, .editPlan, .openActivityDetail, .saveActivityDetail,
+                    .removeActivityFromToday, .startFocus, .toggleAppearance, .openStreak,
                     .deckSwipeCoachmarkShown, .viewPreviousDay, .viewNextDay:
                 return nil
             }

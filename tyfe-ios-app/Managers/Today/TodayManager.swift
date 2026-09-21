@@ -97,6 +97,43 @@ final class TodayManager {
         return createdActivity
     }
 
+    @discardableResult
+    func updateActivity(
+        activityId: String,
+        name: String,
+        category: ActivityCategory?
+    ) -> ActivityModel? {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty,
+              let existingActivity = activities.first(where: { $0.activityId == activityId }) else {
+            return nil
+        }
+
+        let updatedActivity = ActivityModel(
+            activityId: existingActivity.activityId,
+            name: trimmedName,
+            category: category,
+            iconToken: iconToken(for: category),
+            colorToken: existingActivity.colorToken,
+            isArchived: existingActivity.isArchived,
+            createdAt: existingActivity.createdAt
+        )
+
+        var didUpdate = false
+        do {
+            try repository.transaction { snapshot in
+                guard let index = snapshot.activities.firstIndex(where: { $0.activityId == activityId }) else {
+                    return
+                }
+                snapshot.activities[index] = updatedActivity
+                didUpdate = true
+            }
+        } catch {
+            return nil
+        }
+        return didUpdate ? updatedActivity : nil
+    }
+
     func markDeckSwipeCoachmarkSeen() {
         hasSeenDeckSwipeCoachmark = true
         userDefaults?.set(true, forKey: Self.deckSwipeCoachmarkKey)

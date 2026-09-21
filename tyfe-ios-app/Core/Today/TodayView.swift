@@ -57,6 +57,21 @@ struct TodayView: View {
                 onSave: presenter.saveActivity
             )
         }
+        .tyfeBottomSheet(
+            isPresented: $presenter.isActivityDetailSheetPresented,
+            title: "Activity Details"
+        ) {
+            if let activity = presenter.editingActivity,
+               let item = presenter.editingPlanItem {
+                TodayActivityDetailSheet(
+                    activity: activity,
+                    initialSessionCount: item.plannedSessionCount,
+                    completedSessionCount: presenter.completedCount(for: item),
+                    onSave: presenter.saveActivityEdits,
+                    onRemove: presenter.removeEditingActivityFromToday
+                )
+            }
+        }
         .onAppear {
             presenter.onViewAppear(delegate: delegate)
         }
@@ -66,6 +81,10 @@ struct TodayView: View {
         .onChange(of: presenter.isAddActivitySheetPresented) { _, isPresented in
             guard !isPresented else { return }
             presenter.onAddActivitySheetDismissed()
+        }
+        .onChange(of: presenter.isActivityDetailSheetPresented) { _, isPresented in
+            guard !isPresented else { return }
+            presenter.onActivityDetailSheetDismissed()
         }
     }
 
@@ -221,11 +240,8 @@ struct TodayView: View {
                     nextPlanItemId: presenter.isViewingToday ? presenter.nextPlanItem?.id : nil,
                     isRewardInProgress: presenter.isRewardInProgress,
                     isReadOnly: !presenter.isViewingToday,
-                    canDecrement: { presenter.canDecrement($0) },
-                    onStart: { presenter.onStartFocusPressed(for: $0) },
-                    onIncrement: { presenter.increment($0) },
-                    onDecrement: { presenter.decrement($0) },
-                    onRemove: { presenter.remove($0) },
+                    onStart: { _ in presenter.onStartFocusPressed() },
+                    onEdit: { presenter.onEditActivityPressed($0) },
                     onNext: presenter.selectNextPlanItem,
                     onPrevious: presenter.selectPreviousPlanItem
                 )
@@ -324,11 +340,8 @@ struct TodayActivityDeckView: View {
     let nextPlanItemId: String?
     let isRewardInProgress: Bool
     let isReadOnly: Bool
-    let canDecrement: (DailyPlanItemModel) -> Bool
     let onStart: (DailyPlanItemModel) -> Void
-    let onIncrement: (DailyPlanItemModel) -> Void
-    let onDecrement: (DailyPlanItemModel) -> Void
-    let onRemove: (DailyPlanItemModel) -> Void
+    let onEdit: (DailyPlanItemModel) -> Void
     let onNext: () -> Void
     let onPrevious: () -> Void
 
@@ -373,7 +386,7 @@ struct TodayActivityDeckView: View {
             .frame(maxWidth: .infinity)
             .frame(height: isReadOnly ? readOnlyDeckHeight : deckHeight)
             .contentShape(Rectangle())
-            .gesture(deckGesture)
+            .highPriorityGesture(deckGesture)
             .accessibilityElement(children: .contain)
             .accessibilityLabel(isReadOnly ? "Historical activities" : "Today activities")
             .accessibilityValue("Activity \(selectedIndex + 1) of \(planItems.count)")
@@ -402,11 +415,8 @@ struct TodayActivityDeckView: View {
             isNext: nextPlanItemId == card.item.id,
             isRewardInProgress: isRewardInProgress,
             isReadOnly: isReadOnly,
-            canDecrement: canDecrement(card.item),
             onStart: { onStart(card.item) },
-            onIncrement: { onIncrement(card.item) },
-            onDecrement: { onDecrement(card.item) },
-            onRemove: { onRemove(card.item) }
+            onEdit: { onEdit(card.item) }
         )
         .scaleEffect(1 - (CGFloat(depth) * 0.035))
         .offset(
@@ -467,11 +477,8 @@ struct TodayPlanCardView: View {
     let isNext: Bool
     let isRewardInProgress: Bool
     let isReadOnly: Bool
-    let canDecrement: Bool
     let onStart: () -> Void
-    let onIncrement: () -> Void
-    let onDecrement: () -> Void
-    let onRemove: () -> Void
+    let onEdit: () -> Void
 
     private var isComplete: Bool {
         completedCount >= item.plannedSessionCount
@@ -511,34 +518,29 @@ struct TodayPlanCardView: View {
                         .font(TyfeTypography.interfaceStrong)
                 } else {
                     HStack(spacing: TyfeSpacing.small) {
-                        stepperButton(
-                            systemImage: "minus",
-                            label: "Fewer " + activity.name + " sessions",
-                            isEnabled: canDecrement,
-                            action: onDecrement
-                        )
-
                         Text(progressLabel)
                             .font(TyfeTypography.interfaceStrong)
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
-                            .frame(maxWidth: .infinity)
+                            .frame(maxWidth: .infinity, alignment: .leading)
 
-                        stepperButton(
-                            systemImage: "plus",
-                            label: "More " + activity.name + " sessions",
-                            isEnabled: true,
-                            action: onIncrement
-                        )
-
-                        if completedCount == 0 {
-                            Image(systemName: "trash")
-                                .font(.subheadline.weight(.bold))
-                                .foregroundStyle(TyfeEditorialPalette.error)
-                                .frame(width: 44, height: 44)
-                                .asButton(.press, action: onRemove)
-                                .accessibilityLabel("Remove " + activity.name + " from Today")
-                        }
+                        Label("Edit", systemImage: "pencil")
+                            .font(TyfeTypography.interfaceStrong)
+                            .foregroundStyle(TyfeEditorialPalette.ink)
+                            .padding(.horizontal, TyfeSpacing.control)
+                            .frame(minHeight: 44)
+                            .background(TyfeEditorialPalette.canvas)
+                            .clipShape(Capsule())
+                            .overlay {
+                                Capsule()
+                                    .stroke(
+                                        TyfeEditorialPalette.controlBorder,
+                                        lineWidth: TyfeStroke.hairline
+                                    )
+                            }
+                            .contentShape(Capsule())
+                            .asButton(.press, action: onEdit)
+                            .accessibilityLabel("Edit " + activity.name)
                     }
 
                     TyfeActionButtonView(
@@ -574,29 +576,6 @@ struct TodayPlanCardView: View {
         return progress + ". Focus unavailable while Reward is in progress."
     }
 
-    private func stepperButton(
-        systemImage: String,
-        label: String,
-        isEnabled: Bool,
-        action: @escaping () -> Void
-    ) -> some View {
-        Image(systemName: systemImage)
-            .font(.subheadline.weight(.black))
-            .foregroundStyle(isEnabled ? TyfeEditorialPalette.ink : TyfeEditorialPalette.disabledInk)
-            .frame(width: 44, height: 44)
-            .background(isEnabled ? TyfeEditorialPalette.canvas : TyfeEditorialPalette.disabledFill)
-            .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
-            .overlay {
-                RoundedRectangle(cornerRadius: TyfeRadius.control)
-                    .stroke(TyfeEditorialPalette.controlBorder, lineWidth: TyfeStroke.hairline)
-            }
-            .asButton(.press) {
-                guard isEnabled else { return }
-                action()
-            }
-            .disabled(!isEnabled)
-            .accessibilityLabel(label)
-    }
 }
 
 #Preview("Today — empty") {

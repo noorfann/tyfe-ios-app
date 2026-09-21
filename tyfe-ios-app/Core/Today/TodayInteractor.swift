@@ -31,6 +31,13 @@ protocol TodayInteractor: GlobalInteractor {
     ) -> ActivityModel?
 
     @discardableResult
+    func updatePhase1Activity(
+        activityId: String,
+        name: String,
+        category: ActivityCategory?
+    ) -> ActivityModel?
+
+    @discardableResult
     func addPhase1ActivityToDailyPlan(
         activityId: String,
         sessionCount: Int
@@ -47,6 +54,9 @@ protocol TodayInteractor: GlobalInteractor {
 
     @discardableResult
     func startPhase1FocusSession(activityId: String) -> FocusSessionModel?
+
+    @discardableResult
+    func abandonPhase1FocusSession(focusSessionId: String) -> FocusSessionModel?
 }
 
 extension CoreInteractor: TodayInteractor { }

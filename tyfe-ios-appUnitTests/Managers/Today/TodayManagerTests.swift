@@ -33,6 +33,45 @@ struct TodayManagerTests {
         #expect(manager.createActivity(name: "Read a chapter", category: .study, colorToken: "teal")?.id == activity.id)
     }
 
+    @Test func updatingActivityPreservesIdentityAndAllowsDuplicateNames() throws {
+        let manager = TodayManager(repository: MockLocalAppRepository())
+        let original = try #require(manager.activities.first)
+        let duplicate = try #require(manager.createActivity(
+            name: "Shared name",
+            category: .study,
+            colorToken: "saffron"
+        ))
+
+        let updated = try #require(manager.updateActivity(
+            activityId: original.activityId,
+            name: "  Shared name  ",
+            category: .home
+        ))
+
+        #expect(updated.activityId == original.activityId)
+        #expect(updated.name == duplicate.name)
+        #expect(updated.category == .home)
+        #expect(updated.iconToken == "house.fill")
+        #expect(updated.colorToken == original.colorToken)
+        #expect(updated.isArchived == original.isArchived)
+        #expect(updated.createdAt == original.createdAt)
+        #expect(manager.activities.filter { $0.name == "Shared name" }.count == 2)
+    }
+
+    @Test func updatingActivityRejectsBlankNameWithoutChangingActivity() {
+        let manager = TodayManager(repository: MockLocalAppRepository())
+        let original = manager.activities[0]
+
+        let updated = manager.updateActivity(
+            activityId: original.activityId,
+            name: "   ",
+            category: .work
+        )
+
+        #expect(updated == nil)
+        #expect(manager.activities[0] == original)
+    }
+
     @Test func planEditingPreservesCompletedSessionMinimum() throws {
         let clock = TestFocusClock()
         let repository = MockLocalAppRepository()
@@ -51,6 +90,23 @@ struct TodayManagerTests {
         #expect(today.dailyPlan?.planItems.first?.plannedSessionCount == 1)
         #expect(today.dailyPlan?.originalIntendedSessionCount == 3)
         #expect(today.completedSessionCount(for: activityId) == 1)
+    }
+
+    @Test func activityWithCompletedSessionCannotBeRemovedFromToday() throws {
+        let clock = TestFocusClock()
+        let repository = MockLocalAppRepository()
+        let today = TodayManager(repository: repository, clock: clock)
+        let focus = FocusManager(repository: repository, clock: clock)
+        let activityId = ActivityModel.mock.activityId
+        _ = today.addActivityToDailyPlan(activityId: activityId, sessionCount: 1)
+        let session = try #require(focus.startFocusSession(activityId: activityId))
+        _ = try focus.beginFocusSession(focusSessionId: session.focusSessionId)
+        clock.advance(by: TimeInterval(session.durationSeconds))
+        _ = try focus.refreshFocusSession(focusSessionId: session.focusSessionId)
+
+        _ = today.removeActivityFromDailyPlan(activityId: activityId)
+
+        #expect(today.dailyPlan?.planItems.contains { $0.activityId == activityId } == true)
     }
 
     @Test func todayProjectionReadsFocusCompletionFromTheSharedRepository() throws {
