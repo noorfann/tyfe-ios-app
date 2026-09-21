@@ -64,7 +64,7 @@ struct HomeInteractorTests {
         )
         let claim = try interactor.createRewardClaim(
             rewardId: "reward-starter-social",
-            durationTier: .fifteenMinutes
+            durationTier: .tenMinutes
         )
         _ = try interactor.startRewardClaim(rewardClaimId: claim.rewardClaimId)
 
