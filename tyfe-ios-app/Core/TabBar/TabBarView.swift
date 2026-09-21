@@ -159,7 +159,7 @@ private extension TabBarProgressStatusKind {
         switch self {
         case .reward: return "Reward in progress"
         case .focusRunning: return "Focus in progress"
-        case .focusPaused: return "Focus paused"
+        case .focusResting: return "Rest in progress"
         }
     }
 
@@ -167,28 +167,28 @@ private extension TabBarProgressStatusKind {
         switch self {
         case .reward: return "clock.fill"
         case .focusRunning: return "timer"
-        case .focusPaused: return "pause.fill"
+        case .focusResting: return "hourglass"
         }
     }
 
     var accent: Color {
         switch self {
         case .reward: return TyfeEditorialPalette.saffron
-        case .focusRunning, .focusPaused: return TyfeEditorialPalette.focus
+        case .focusRunning, .focusResting: return TyfeEditorialPalette.focus
         }
     }
 
     var accessibilityHint: String {
         switch self {
         case .reward: return "Opens Rewards"
-        case .focusRunning, .focusPaused: return "Opens Focus"
+        case .focusRunning, .focusResting: return "Opens Focus"
         }
     }
 
     var accessibilityIdentifier: String {
         switch self {
         case .reward: return "reward-in-progress-status"
-        case .focusRunning, .focusPaused: return "focus-in-progress-status"
+        case .focusRunning, .focusResting: return "focus-in-progress-status"
         }
     }
 }

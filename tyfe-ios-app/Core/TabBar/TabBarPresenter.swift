@@ -40,7 +40,7 @@ struct TabBarTab: Identifiable {
 enum TabBarProgressStatusKind: Equatable {
     case reward
     case focusRunning
-    case focusPaused
+    case focusResting
 }
 
 struct TabBarProgressStatus: Equatable {
@@ -75,9 +75,9 @@ class TabBarPresenter {
 
     var progressStatusKind: TabBarProgressStatusKind? {
         if let focusSession = interactor.activeFocusSession,
-           focusSession.state == .running || focusSession.state == .paused {
+           focusSession.state == .running || focusSession.isResting {
             guard !interactor.isFocusScreenVisible else { return nil }
-            return focusSession.state == .paused ? .focusPaused : .focusRunning
+            return focusSession.isResting ? .focusResting : .focusRunning
         }
 
         guard interactor.activeRewardClaim?.state == .active else { return nil }
@@ -135,7 +135,7 @@ class TabBarPresenter {
             guard let rewardsTab = tabs.first(where: { $0.title == "Rewards" }) else { return }
             interactor.trackEvent(event: Event.rewardStatusPressed(delegate: delegate))
             selectedTab = rewardsTab.id
-        case .focusRunning, .focusPaused:
+        case .focusRunning, .focusResting:
             guard let focusSession = interactor.activeFocusSession,
                   let activity = interactor.activity(forFocusSession: focusSession),
                   let todayTab = tabs.first(where: { $0.title == "Today" }) else { return }
@@ -186,7 +186,7 @@ class TabBarPresenter {
         _ = try? interactor.refreshRewardClaim()
 
         if let focusSession = interactor.activeFocusSession,
-           focusSession.state == .running || focusSession.state == .paused {
+           focusSession.state == .running || focusSession.isResting {
             if let refresh = try? interactor.refreshFocusSession(
                 focusSessionId: focusSession.focusSessionId
             ) {
@@ -194,8 +194,8 @@ class TabBarPresenter {
                 case .running:
                     progressRemainingSeconds = refresh.remainingFocusSeconds
                     return
-                case .paused:
-                    progressRemainingSeconds = refresh.remainingPauseSeconds
+                case .completed where refresh.session.isResting:
+                    progressRemainingSeconds = refresh.remainingRestSeconds
                     return
                 case .ready, .completed, .abandoned:
                     break

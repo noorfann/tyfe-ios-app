@@ -5,7 +5,7 @@ import Testing
 @MainActor
 struct TabBarPresenterTests {
 
-    @Test func focusProgressShowsRunningAndPausedCountdowns() throws {
+    @Test func focusProgressShowsRunningAndRestCountdowns() throws {
         let context = makeContext()
         let session = try #require(
             context.interactor.focusManager.startFocusSession(activityId: ActivityModel.mock.activityId)
@@ -20,12 +20,15 @@ struct TabBarPresenterTests {
         #expect(context.presenter.progressStatusKind == .focusRunning)
         #expect(context.presenter.progressRemainingSeconds > 1_490)
 
-        _ = try context.interactor.focusManager.pauseFocusSession(focusSessionId: session.focusSessionId)
+        _ = try context.interactor.focusManager.markFocusSessionCompleteForTesting(
+            focusSessionId: session.focusSessionId
+        )
+        _ = try context.interactor.focusManager.startFocusRest(focusSessionId: session.focusSessionId)
         context.presenter.syncProgressTicker()
 
-        #expect(context.presenter.progressStatusKind == .focusPaused)
-        #expect(context.presenter.progressRemainingSeconds <= FocusSessionModel.pauseAllowanceSeconds)
-        #expect(context.presenter.progressRemainingSeconds > FocusSessionModel.pauseAllowanceSeconds - 5)
+        #expect(context.presenter.progressStatusKind == .focusResting)
+        #expect(context.presenter.progressRemainingSeconds <= FocusSessionModel.restDurationSeconds)
+        #expect(context.presenter.progressRemainingSeconds > FocusSessionModel.restDurationSeconds - 5)
         context.presenter.onViewDisappear(delegate: context.delegate)
     }
 

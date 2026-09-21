@@ -23,8 +23,12 @@ final class FocusManager {
         self.calendar = calendar
         self.notificationScheduler = notificationScheduler
 
-        if let activeFocusSession, activeFocusSession.state == .running {
-            notificationScheduler?.scheduleFocusCompletion(for: activeFocusSession)
+        if let activeFocusSession {
+            if activeFocusSession.state == .running {
+                notificationScheduler?.scheduleFocusCompletion(for: activeFocusSession)
+            } else if activeFocusSession.isResting {
+                notificationScheduler?.scheduleFocusRestCompletion(for: activeFocusSession)
+            }
         }
     }
 
@@ -54,7 +58,7 @@ final class FocusManager {
 
     var activeFocusSession: FocusSessionModel? {
         focusSessions.last { session in
-            session.state == .ready || session.state == .running || session.state == .paused
+            session.state == .ready || session.state == .running || session.isResting
         }
     }
 
@@ -144,8 +148,17 @@ final class FocusManager {
     }
 
     func startAnotherFocusSession(activityId: String) throws -> FocusSessionModel {
-        guard activeFocusSession == nil else {
-            throw FocusManagerError.activeSessionExists
+        if let activeFocusSession {
+            guard activeFocusSession.isResting else {
+                throw FocusManagerError.activeSessionExists
+            }
+            _ = try skipFocusRest(focusSessionId: activeFocusSession.focusSessionId)
+        } else if let pendingRestSession = focusSessions.last(where: {
+            $0.activityId == activityId
+                && $0.state == .completed
+                && ($0.restState == .pending || $0.restState == .active)
+        }) {
+            _ = try skipFocusRest(focusSessionId: pendingRestSession.focusSessionId)
         }
         guard let session = startFocusSession(activityId: activityId) else {
             throw FocusManagerError.persistenceFailed
@@ -187,65 +200,80 @@ final class FocusManager {
             return FocusSessionRefresh(
                 session: completedSession,
                 remainingFocusSeconds: 0,
-                remainingPauseSeconds: 0,
+                remainingRestSeconds: 0,
                 completion: completionResult(for: completedSession)
             )
         }
 
-        let remainingFocusSeconds = self.remainingFocusSeconds(for: session)
+        if session.isResting,
+           let restEndsAt = session.restEndsAt,
+           clock.now >= restEndsAt {
+            let completedRest = try completeFocusRest(focusSessionId: session.focusSessionId)
+            return FocusSessionRefresh(
+                session: completedRest,
+                remainingFocusSeconds: 0,
+                remainingRestSeconds: 0,
+                completion: completionResult(for: completedRest)
+            )
+        }
 
-        let remainingPauseSeconds = pauseRemaining(for: session)
-        let visibleSession = session.updated(
-            state: session.state,
-            pauseRemainingSeconds: remainingPauseSeconds
-        )
+        let remainingFocusSeconds = self.remainingFocusSeconds(for: session)
+        let remainingRestSeconds = self.remainingRestSeconds(for: session)
         return FocusSessionRefresh(
-            session: visibleSession,
+            session: session,
             remainingFocusSeconds: remainingFocusSeconds,
-            remainingPauseSeconds: remainingPauseSeconds,
+            remainingRestSeconds: remainingRestSeconds,
             completion: session.state == .completed ? completionResult(for: session) : nil
         )
     }
 
     @discardableResult
-    func pauseFocusSession(focusSessionId: String) throws -> FocusSessionModel {
-        let refresh = try refreshFocusSession(focusSessionId: focusSessionId)
-        guard refresh.session.state == .running else {
-            if refresh.session.state == .completed { throw FocusManagerError.invalidState }
-            throw refresh.session.pauseUsed ? FocusManagerError.pauseAlreadyUsed : FocusManagerError.invalidState
-        }
-        guard !refresh.session.pauseUsed else { throw FocusManagerError.pauseAlreadyUsed }
-
-        let pausedSession = refresh.session.updated(
-            state: .paused,
-            pausedAt: clock.now,
-            pauseUsed: true,
-            pauseRemainingSeconds: FocusSessionModel.pauseAllowanceSeconds
-        )
-        try replace(pausedSession)
-        notificationScheduler?.cancelFocusCompletion(focusSessionId: pausedSession.focusSessionId)
-        return pausedSession
-    }
-
-    @discardableResult
-    func resumeFocusSession(focusSessionId: String) throws -> FocusSessionModel {
+    func startFocusRest(focusSessionId: String) throws -> FocusSessionModel {
         let session = try session(for: focusSessionId)
-        guard session.state == .paused, let pausedAt = session.pausedAt else {
+        guard session.state == .completed, session.restState == .pending else {
             throw FocusManagerError.invalidState
         }
 
-        let elapsedPause = min(
-            max(clock.now.timeIntervalSince(pausedAt), 0),
-            TimeInterval(FocusSessionModel.pauseAllowanceSeconds)
+        let restingSession = session.updated(
+            state: .completed,
+            restState: .active,
+            restEndsAt: .some(clock.now.addingTimeInterval(TimeInterval(FocusSessionModel.restDurationSeconds)))
         )
-        let resumedSession = session.updated(
-            state: .running,
-            focusEndsAt: (session.focusEndsAt ?? clock.now).addingTimeInterval(elapsedPause),
-            pauseRemainingSeconds: FocusSessionModel.pauseAllowanceSeconds - Int(elapsedPause)
+        try replace(restingSession)
+        notificationScheduler?.scheduleFocusRestCompletion(for: restingSession)
+        return restingSession
+    }
+
+    @discardableResult
+    func completeFocusRest(focusSessionId: String) throws -> FocusSessionModel {
+        let session = try session(for: focusSessionId)
+        guard session.isResting,
+              let restEndsAt = session.restEndsAt,
+              clock.now >= restEndsAt else {
+            throw FocusManagerError.invalidState
+        }
+
+        return try finishRest(session)
+    }
+
+    @discardableResult
+    func skipFocusRest(focusSessionId: String) throws -> FocusSessionModel {
+        let session = try session(for: focusSessionId)
+        guard session.state == .completed else {
+            throw FocusManagerError.invalidState
+        }
+        guard session.restState == .pending || session.restState == .active else {
+            return session
+        }
+
+        let skippedSession = session.updated(
+            state: .completed,
+            restState: .skipped,
+            restEndsAt: .some(nil)
         )
-        try replace(resumedSession)
-        notificationScheduler?.scheduleFocusCompletion(for: resumedSession)
-        return resumedSession
+        try replace(skippedSession)
+        notificationScheduler?.cancelFocusRestCompletion(focusSessionId: skippedSession.focusSessionId)
+        return skippedSession
     }
 
     @discardableResult
@@ -312,24 +340,14 @@ final class FocusManager {
             return session.durationSeconds
         case .running:
             return remainingSeconds(until: session.focusEndsAt)
-        case .paused:
-            return remainingSeconds(
-                until: session.focusEndsAt
-                    ?? session.startedAt.addingTimeInterval(TimeInterval(session.durationSeconds))
-            )
         case .completed, .abandoned:
             return 0
         }
     }
 
-    private func pauseRemaining(for session: FocusSessionModel) -> Int {
-        guard session.state == .paused, let pausedAt = session.pausedAt else {
-            return session.state == .completed || session.state == .abandoned ? 0 : session.pauseRemainingSeconds
-        }
-        return max(
-            FocusSessionModel.pauseAllowanceSeconds - Int(ceil(max(clock.now.timeIntervalSince(pausedAt), 0))),
-            0
-        )
+    private func remainingRestSeconds(for session: FocusSessionModel) -> Int {
+        guard session.isResting, let restEndsAt = session.restEndsAt else { return 0 }
+        return remainingSeconds(until: restEndsAt)
     }
 
     private func completeNaturally(_ session: FocusSessionModel) throws -> FocusSessionModel {
@@ -339,7 +357,8 @@ final class FocusManager {
         let completedSession = session.updated(
             state: .completed,
             completedAt: clock.now,
-            pauseRemainingSeconds: 0,
+            restState: .pending,
+            restEndsAt: .some(nil),
             isBonusSession: isBonusSession
         )
         let creditKey = "focus-session-" + session.focusSessionId + "-credit"
@@ -367,6 +386,17 @@ final class FocusManager {
         stateRevision += 1
         notificationScheduler?.cancelFocusCompletion(focusSessionId: completedSession.focusSessionId)
         return completedSession
+    }
+
+    private func finishRest(_ session: FocusSessionModel) throws -> FocusSessionModel {
+        let completedRest = session.updated(
+            state: .completed,
+            restState: .completed,
+            restEndsAt: .some(nil)
+        )
+        try replace(completedRest)
+        notificationScheduler?.cancelFocusRestCompletion(focusSessionId: completedRest.focusSessionId)
+        return completedRest
     }
 
     private func completionResult(for session: FocusSessionModel) -> FocusCompletionResult {

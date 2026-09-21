@@ -9,14 +9,13 @@ struct FocusCompletionResult: Equatable, Codable {
 struct FocusSessionRefresh: Equatable {
     let session: FocusSessionModel
     let remainingFocusSeconds: Int
-    let remainingPauseSeconds: Int
+    let remainingRestSeconds: Int
     let completion: FocusCompletionResult?
 }
 
 enum FocusManagerError: Error, Equatable {
     case sessionNotFound
     case invalidState
-    case pauseAlreadyUsed
     case activeSessionExists
     case rewardInProgress
     case persistenceFailed

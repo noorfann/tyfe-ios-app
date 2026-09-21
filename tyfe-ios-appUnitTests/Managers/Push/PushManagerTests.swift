@@ -50,6 +50,27 @@ struct PushManagerTests {
         assertCopyIsWarm(service.scheduledRequests)
     }
 
+    @Test func authorizedManagerSchedulesFocusRestCompletion() async {
+        let clock = TestFocusClock()
+        let service = MockLocalNotificationService(status: .authorized)
+        let manager = PushManager(service: service, clock: clock, preferences: enabledPreferences())
+        let session = FocusSessionModel(
+            focusSessionId: "focus-session-rest",
+            activityId: ActivityModel.mock.activityId,
+            state: .completed,
+            startedAt: clock.now,
+            completedAt: clock.now.addingTimeInterval(1_500),
+            restState: .active,
+            restEndsAt: clock.now.addingTimeInterval(300)
+        )
+
+        manager.scheduleFocusRestCompletion(for: session)
+        await waitForRequestCount(1, service: service)
+
+        #expect(service.scheduledRequests.first?.identifier == "tyfe.focus-rest.focus-session-rest.completion")
+        assertCopyIsWarm(service.scheduledRequests)
+    }
+
     @Test func authorizedManagerSchedulesRewardExpiry() async {
         let clock = TestFocusClock()
         let service = MockLocalNotificationService(status: .authorized)
@@ -57,10 +78,10 @@ struct PushManagerTests {
         let rewardClaim = RewardClaimModel(
             rewardClaimId: "reward-claim-test",
             rewardId: RewardModel.mock.rewardId,
-            durationTier: .fifteenMinutes,
+            durationTier: .tenMinutes,
             state: .active,
             startsAt: clock.now,
-            endsAt: clock.now.addingTimeInterval(900)
+            endsAt: clock.now.addingTimeInterval(TimeInterval(RewardDurationTier.tenMinutes.durationMinutes * 60))
         )
 
         manager.scheduleRewardExpiry(for: rewardClaim)

@@ -72,6 +72,7 @@ struct FocusView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
+        .interactiveDismissDisabled(presenter.session.state == .running)
         .onAppear {
             presenter.onViewAppear(delegate: delegate)
             enterFocusChamber()
@@ -116,7 +117,10 @@ struct FocusView: View {
             VStack(spacing: TyfeSpacing.card) {
                 focusTopBar(daypart: daypart)
 
-                if presenter.session.state == .completed || presenter.session.state == .abandoned {
+                if presenter.isResting {
+                    restTimer(daypart: daypart)
+                        .transition(.opacity)
+                } else if presenter.session.state == .completed || presenter.session.state == .abandoned {
                     outcome(daypart: daypart)
                         .transition(.asymmetric(
                             insertion: .scale(scale: 0.96).combined(with: .opacity),
@@ -166,6 +170,7 @@ struct FocusView: View {
                 .asButton(.press) {
                     presenter.onMinimizePressed()
                 }
+                .disabled(presenter.session.state == .running)
                 .accessibilityLabel("Minimize Focus")
                 .accessibilityHint("Returns to the app while preserving the current session")
         }
@@ -173,11 +178,6 @@ struct FocusView: View {
     }
 
     private var timerProgress: Double {
-        if presenter.isPaused {
-            guard presenter.session.pauseAllowanceSeconds > 0 else { return 0 }
-            return Double(presenter.remainingPauseSeconds) / Double(presenter.session.pauseAllowanceSeconds)
-        }
-
         guard presenter.session.durationSeconds > 0 else { return 0 }
         return Double(presenter.remainingFocusSeconds) / Double(presenter.session.durationSeconds)
     }
@@ -192,8 +192,6 @@ struct FocusView: View {
             supportingText: presenter.allowanceText,
             statusDescription: presenter.statusDescription,
             onBegin: presenter.onPrimaryActionPressed,
-            onPause: presenter.onPrimaryActionPressed,
-            onResume: presenter.onPrimaryActionPressed,
             onAbandon: presenter.onAbandonPressed
         )
 #if MOCK
@@ -210,6 +208,68 @@ struct FocusView: View {
                 .padding(TyfeSpacing.small)
         }
 #endif
+    }
+
+    private func restTimer(daypart: FocusDaypart) -> some View {
+        let style = daypart.visualStyle
+
+        return TyfeSurfaceView(
+            role: .paper,
+            fill: style.cardFill,
+            foreground: style.primaryForeground,
+            strokeColor: style.cardBorder
+        ) {
+            VStack(spacing: TyfeSpacing.card) {
+                Image(systemName: "hourglass")
+                    .font(.system(size: 38, weight: .black))
+                    .foregroundStyle(style.accentForeground)
+                    .frame(width: 76, height: 76)
+                    .background(style.accentFill.opacity(0.14))
+                    .clipShape(Circle())
+                    .accessibilityHidden(true)
+
+                VStack(spacing: TyfeSpacing.small) {
+                    Text("Take a 5-minute rest")
+                        .font(TyfeTypography.display)
+                        .multilineTextAlignment(.center)
+
+                    Text("Let your mind reset before your next Focus Session.")
+                        .font(TyfeTypography.interface)
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(style.secondaryForeground)
+                }
+
+                Text(presenter.restTimerText)
+                    .font(.system(size: 54, weight: .black, design: .monospaced))
+                    .monospacedDigit()
+                    .foregroundStyle(style.primaryForeground)
+                    .accessibilityLabel("Rest timer")
+                    .accessibilityValue(presenter.restTimerText)
+
+                TyfeActionButtonView(
+                    title: "Skip and start another",
+                    systemImage: "arrow.clockwise",
+                    fill: style.accentFill,
+                    foreground: style.accentForeground,
+                    borderColor: style.accentForeground,
+                    onTap: presenter.onStartAnotherPressed
+                )
+
+                Text("Back to Today")
+                    .font(TyfeTypography.interfaceStrong)
+                    .foregroundStyle(style.primaryForeground)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .contentShape(Rectangle())
+                    .asButton(.press) {
+                        presenter.onBackToTodayPressed()
+                    }
+                    .accessibilityLabel("Back to Today")
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .environment(\.colorScheme, .dark)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Five-minute Focus rest")
     }
 
     private func outcome(daypart: FocusDaypart) -> some View {
@@ -331,8 +391,8 @@ struct FocusView: View {
     focusPreview(session: .runningMock)
 }
 
-#Preview("Focus - paused") {
-    focusPreview(session: .pausedMock)
+#Preview("Focus - rest") {
+    focusPreview(session: .restingMock)
 }
 
 #Preview("Focus - complete morning") {
@@ -409,7 +469,7 @@ extension CoreBuilder {
 extension CoreRouter {
 
     func showFocusView(delegate: FocusDelegate) {
-        router.showScreen(.push) { router in
+        router.showScreen(.fullScreenCover) { router in
             builder.focusView(router: router, delegate: delegate)
         }
     }

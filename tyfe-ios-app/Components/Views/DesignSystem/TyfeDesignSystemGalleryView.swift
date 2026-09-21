@@ -9,8 +9,8 @@ final class TyfeDesignSystemGalleryPresenter {
     let focusSessions = [
         FocusSessionModel.readyMock,
         FocusSessionModel.runningMock,
-        FocusSessionModel.pausedMock,
         FocusSessionModel.completedMock,
+        FocusSessionModel.restingMock,
         FocusSessionModel.abandonedMock
     ]
     let rewards = RewardModel.mocks
@@ -104,8 +104,6 @@ struct TyfeDesignSystemGalleryView: View {
                     supportingText: supportingText(for: session),
                     statusDescription: statusDescription(for: session.state),
                     onBegin: {},
-                    onPause: {},
-                    onResume: {},
                     onAbandon: {}
                 )
             }
@@ -113,7 +111,7 @@ struct TyfeDesignSystemGalleryView: View {
     }
 
     private var rewardSection: some View {
-        gallerySection("Reward tiers") {
+        gallerySection("Reward rate") {
             ForEach(presenter.rewards) { reward in
                 TyfeSurfaceView(role: .paper) {
                     VStack(alignment: .leading, spacing: TyfeSpacing.control) {
@@ -170,7 +168,6 @@ struct TyfeDesignSystemGalleryView: View {
         switch state {
         case .ready: return "25:00"
         case .running: return "18:42"
-        case .paused: return "04:32"
         case .completed: return "00:00"
         case .abandoned: return "08:11"
         }
@@ -180,7 +177,6 @@ struct TyfeDesignSystemGalleryView: View {
         switch state {
         case .ready: return 1
         case .running: return 0.75
-        case .paused: return 0.91
         case .completed: return 0
         case .abandoned: return 0.33
         }
@@ -188,10 +184,10 @@ struct TyfeDesignSystemGalleryView: View {
 
     private func supportingText(for session: FocusSessionModel) -> String {
         switch session.state {
-        case .ready: return "One pause available, up to five minutes"
-        case .running: return "One pause available, phone lock will not pause"
-        case .paused: return "Your Focus timer is held while paused"
-        case .completed, .abandoned: return "No pause available"
+        case .ready: return "25 minutes of focus"
+        case .running: return "Phone lock will not stop Focus"
+        case .completed: return "Focus Session complete"
+        case .abandoned: return "No Reward Credit earned"
         }
     }
 
@@ -199,7 +195,6 @@ struct TyfeDesignSystemGalleryView: View {
         switch state {
         case .ready: return "Ready when you are"
         case .running: return "Stay with this one thing"
-        case .paused: return "Take your pause, then return"
         case .completed: return "Session complete"
         case .abandoned: return "Session ended"
         }

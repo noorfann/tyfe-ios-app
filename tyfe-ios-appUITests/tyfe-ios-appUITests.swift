@@ -107,7 +107,7 @@ final class TyfeappUITests: XCTestCase {
         app.buttons["Begin Focus"].tap()
         XCTAssertTrue(alert.buttons["Start Focus"].waitForExistence(timeout: 5))
         alert.buttons["Start Focus"].tap()
-        XCTAssertTrue(app.buttons["Pause once"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Focus in progress"].waitForExistence(timeout: 5))
     }
 
 #if MOCK
@@ -134,7 +134,7 @@ final class TyfeappUITests: XCTestCase {
     }
 
     @MainActor
-    func testMinimizedFocusShowsLimeProgressAndReopensTheSession() throws {
+    func testRunningFocusCannotBeMinimizedAndAbandonedFocusCanDismiss() throws {
         let app = XCUIApplication()
         app.launchArguments.append(contentsOf: ["UI_TESTING", "SIGNED_IN"])
         app.launchArguments.append("FOCUS_PROGRESS_FLOW")
@@ -150,32 +150,19 @@ final class TyfeappUITests: XCTestCase {
         alert.buttons["Start Focus"].tap()
 
         XCTAssertTrue(app.buttons["Minimize Focus"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Minimize Focus"].isEnabled)
+        app.swipeDown()
+        XCTAssertTrue(app.staticTexts["FOCUS CHAMBER"].exists)
+
+        app.buttons["Abandon Session"].tap()
+        let abandonAlert = app.alerts["Leave this session?"]
+        XCTAssertTrue(abandonAlert.buttons["Abandon Session"].waitForExistence(timeout: 5))
+        abandonAlert.buttons["Abandon Session"].tap()
+
+        XCTAssertTrue(app.staticTexts["Session ended"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Minimize Focus"].isEnabled)
         app.buttons["Minimize Focus"].tap()
-        let focusStatus = app.buttons["focus-in-progress-status"]
-        XCTAssertTrue(focusStatus.waitForExistence(timeout: 5))
-        XCTAssertTrue(focusStatus.label.hasPrefix("Focus in progress"))
-        XCTAssertFalse(app.buttons["Pause once"].exists)
-
-        for tabTitle in ["Today", "Rewards", "Circles", "Settings"] {
-            app.buttons[tabTitle].tap()
-            let screenTitle = app.staticTexts[tabTitle].firstMatch
-            XCTAssertTrue(screenTitle.waitForExistence(timeout: 5))
-            XCTAssertLessThanOrEqual(
-                focusStatus.frame.maxY,
-                screenTitle.frame.minY,
-                "Focus status overlaps the \(tabTitle) screen title"
-            )
-        }
-
-        focusStatus.tap()
-        XCTAssertTrue(app.staticTexts["FOCUS CHAMBER"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["Pause once"].waitForExistence(timeout: 5))
-        app.buttons["Pause once"].tap()
-        XCTAssertTrue(app.buttons["Minimize Focus"].waitForExistence(timeout: 5))
-        app.buttons["Minimize Focus"].tap()
-
-        XCTAssertTrue(focusStatus.waitForExistence(timeout: 5))
-        XCTAssertTrue(focusStatus.label.hasPrefix("Focus paused"))
+        XCTAssertFalse(app.staticTexts["FOCUS CHAMBER"].exists)
     }
 
     @MainActor

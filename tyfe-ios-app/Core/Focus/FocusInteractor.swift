@@ -7,8 +7,9 @@ protocol FocusInteractor: GlobalInteractor {
     func setFocusScreenVisible(_ isVisible: Bool)
     func refreshFocusSession(focusSessionId: String) throws -> FocusSessionRefresh
     func beginFocusSession(focusSessionId: String) throws -> FocusSessionModel
-    func pauseFocusSession(focusSessionId: String) throws -> FocusSessionModel
-    func resumeFocusSession(focusSessionId: String) throws -> FocusSessionModel
+    func startFocusRest(focusSessionId: String) throws -> FocusSessionModel
+    func completeFocusRest(focusSessionId: String) throws -> FocusSessionModel
+    func skipFocusRest(focusSessionId: String) throws -> FocusSessionModel
     func abandonFocusSession(focusSessionId: String) throws -> FocusSessionModel
     func startAnotherFocusSession(activityId: String) throws -> FocusSessionModel
 #if MOCK
@@ -23,7 +24,7 @@ extension CoreInteractor: FocusInteractor {
 
     func refreshFocusSession(focusSessionId: String) throws -> FocusSessionRefresh {
         let refresh = try focusManager.refreshFocusSession(focusSessionId: focusSessionId)
-        if refresh.completion != nil {
+        if refresh.completion != nil, refresh.session.restState != .active {
             scheduleStreakRecording(for: refresh.session)
             scheduleSharedProgressSync(for: refresh.session.localDay)
             Task { await updateSocialFocusStatus(.available) }
@@ -101,16 +102,21 @@ extension CoreInteractor: FocusInteractor {
         return session
     }
 
-    func pauseFocusSession(focusSessionId: String) throws -> FocusSessionModel {
-        let session = try focusManager.pauseFocusSession(focusSessionId: focusSessionId)
+    func startFocusRest(focusSessionId: String) throws -> FocusSessionModel {
+        let session = try focusManager.startFocusRest(focusSessionId: focusSessionId)
         Task { await updateSocialFocusStatus(.available) }
         return session
     }
 
-    func resumeFocusSession(focusSessionId: String) throws -> FocusSessionModel {
-        guard !isRewardInProgress else { throw FocusManagerError.rewardInProgress }
-        let session = try focusManager.resumeFocusSession(focusSessionId: focusSessionId)
-        Task { await updateSocialFocusStatus(.focusing) }
+    func completeFocusRest(focusSessionId: String) throws -> FocusSessionModel {
+        let session = try focusManager.completeFocusRest(focusSessionId: focusSessionId)
+        Task { await updateSocialFocusStatus(.available) }
+        return session
+    }
+
+    func skipFocusRest(focusSessionId: String) throws -> FocusSessionModel {
+        let session = try focusManager.skipFocusRest(focusSessionId: focusSessionId)
+        Task { await updateSocialFocusStatus(.available) }
         return session
     }
 
@@ -122,7 +128,9 @@ extension CoreInteractor: FocusInteractor {
 
     func startAnotherFocusSession(activityId: String) throws -> FocusSessionModel {
         guard !isRewardInProgress else { throw FocusManagerError.rewardInProgress }
-        return try focusManager.startAnotherFocusSession(activityId: activityId)
+        let session = try focusManager.startAnotherFocusSession(activityId: activityId)
+        Task { await updateSocialFocusStatus(.focusing) }
+        return session
     }
 
 #if MOCK

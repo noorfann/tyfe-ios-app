@@ -5,12 +5,9 @@ import Testing
 struct Phase1ModelsTests {
 
     @Test func rewardTiersExposeProductData() {
-        #expect(RewardDurationTier.fifteenMinutes.durationMinutes == 15)
-        #expect(RewardDurationTier.fifteenMinutes.creditCost == 1)
-        #expect(RewardDurationTier.thirtyMinutes.durationMinutes == 30)
-        #expect(RewardDurationTier.thirtyMinutes.creditCost == 2)
-        #expect(RewardDurationTier.sixtyMinutes.durationMinutes == 60)
-        #expect(RewardDurationTier.sixtyMinutes.creditCost == 4)
+        #expect(RewardDurationTier.allCases == [.tenMinutes])
+        #expect(RewardDurationTier.tenMinutes.durationMinutes == 10)
+        #expect(RewardDurationTier.tenMinutes.creditCost == 1)
     }
 
     @Test func dailyPlanKeepsTimeBlocksOptional() {
@@ -56,7 +53,7 @@ struct Phase1ModelsTests {
         let session = FocusSessionModel.mock
         #expect(session.id == session.focusSessionId)
         #expect(session.durationMinutes == 25)
-        #expect(session.pauseAllowanceSeconds == 300)
+        #expect(FocusSessionModel.restDurationSeconds == 300)
 
         let encoded = try JSONEncoder().encode(session)
         let decoded = try JSONDecoder().decode(FocusSessionModel.self, from: encoded)

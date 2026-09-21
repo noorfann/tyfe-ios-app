@@ -7,7 +7,6 @@ struct TyfeStateBadgeView: View {
         switch state {
         case .ready: return .neutral
         case .running: return .success
-        case .paused: return .warning
         case .completed: return .accent
         case .abandoned: return .error
         }

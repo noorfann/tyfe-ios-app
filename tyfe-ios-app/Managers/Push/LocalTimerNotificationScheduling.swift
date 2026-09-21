@@ -6,6 +6,8 @@ protocol LocalTimerNotificationScheduling: AnyObject {
     func cancelPlanReminders(dailyPlanId: String)
     func scheduleFocusCompletion(for session: FocusSessionModel)
     func cancelFocusCompletion(focusSessionId: String)
+    func scheduleFocusRestCompletion(for session: FocusSessionModel)
+    func cancelFocusRestCompletion(focusSessionId: String)
     func scheduleRewardExpiry(for claim: RewardClaimModel)
     func cancelRewardExpiry(rewardClaimId: String)
 }

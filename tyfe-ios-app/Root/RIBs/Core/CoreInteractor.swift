@@ -380,6 +380,19 @@ struct CoreInteractor: GlobalInteractor {
     }
 
     @discardableResult
+    func updatePhase1Activity(
+        activityId: String,
+        name: String,
+        category: ActivityCategory?
+    ) -> ActivityModel? {
+        todayManager.updateActivity(
+            activityId: activityId,
+            name: name,
+            category: category
+        )
+    }
+
+    @discardableResult
     func acceptPhase1DailyPlan(
         intendedSessionCount: Int,
         activityIds: [String],
@@ -398,6 +411,11 @@ struct CoreInteractor: GlobalInteractor {
     func startPhase1FocusSession(activityId: String) -> FocusSessionModel? {
         guard !isRewardInProgress else { return nil }
         return focusManager.startFocusSession(activityId: activityId)
+    }
+
+    @discardableResult
+    func abandonPhase1FocusSession(focusSessionId: String) -> FocusSessionModel? {
+        try? focusManager.abandonFocusSession(focusSessionId: focusSessionId)
     }
 
     @discardableResult
@@ -505,8 +523,8 @@ struct CoreInteractor: GlobalInteractor {
     }
 
     var isFocusInProgress: Bool {
-        guard let state = focusManager.activeFocusSession?.state else { return false }
-        return state == .running || state == .paused
+        guard let session = focusManager.activeFocusSession else { return false }
+        return session.state == .running || session.isResting
     }
 
     func activity(forFocusSession session: FocusSessionModel) -> ActivityModel? {

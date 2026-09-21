@@ -7,6 +7,8 @@ final class RecordingLocalTimerNotificationScheduler: LocalTimerNotificationSche
     private(set) var cancelledDailyPlanIds: [String] = []
     private(set) var scheduledFocusSessions: [FocusSessionModel] = []
     private(set) var cancelledFocusSessionIds: [String] = []
+    private(set) var scheduledFocusRestSessions: [FocusSessionModel] = []
+    private(set) var cancelledFocusRestSessionIds: [String] = []
     private(set) var scheduledRewardClaims: [RewardClaimModel] = []
     private(set) var cancelledRewardClaimIds: [String] = []
 
@@ -24,6 +26,14 @@ final class RecordingLocalTimerNotificationScheduler: LocalTimerNotificationSche
 
     func cancelFocusCompletion(focusSessionId: String) {
         cancelledFocusSessionIds.append(focusSessionId)
+    }
+
+    func scheduleFocusRestCompletion(for session: FocusSessionModel) {
+        scheduledFocusRestSessions.append(session)
+    }
+
+    func cancelFocusRestCompletion(focusSessionId: String) {
+        cancelledFocusRestSessionIds.append(focusSessionId)
     }
 
     func scheduleRewardExpiry(for claim: RewardClaimModel) {

@@ -10,8 +10,6 @@ struct TyfeFocusTimerView: View {
     let supportingText: String
     let statusDescription: String
     let onBegin: () -> Void
-    let onPause: () -> Void
-    let onResume: () -> Void
     let onAbandon: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -27,8 +25,6 @@ struct TyfeFocusTimerView: View {
         supportingText: String? = nil,
         statusDescription: String? = nil,
         onBegin: @escaping () -> Void,
-        onPause: @escaping () -> Void,
-        onResume: @escaping () -> Void,
         onAbandon: @escaping () -> Void
     ) {
         self.session = session
@@ -39,8 +35,6 @@ struct TyfeFocusTimerView: View {
         self.supportingText = supportingText ?? Self.defaultSupportingText(for: session)
         self.statusDescription = statusDescription ?? Self.defaultStatusDescription(for: session.state)
         self.onBegin = onBegin
-        self.onPause = onPause
-        self.onResume = onResume
         self.onAbandon = onAbandon
     }
 
@@ -67,7 +61,7 @@ struct TyfeFocusTimerView: View {
             VStack(spacing: TyfeSpacing.card) {
                 sessionHeading
                 timerDial
-                pauseGuidance
+                sessionGuidance
                 actions
             }
             .frame(maxWidth: .infinity)
@@ -141,34 +135,25 @@ struct TyfeFocusTimerView: View {
     }
 
     private var timerCaption: String {
-        session.state == .paused
-            ? "5-MINUTE PAUSE"
-            : "\(session.durationMinutes) MINUTES"
+        "\(session.durationMinutes) MINUTES"
     }
 
-    private var pauseGuidance: some View {
-        Label(supportingText, systemImage: pauseSymbol)
+    private var sessionGuidance: some View {
+        Label(supportingText, systemImage: session.state == .running ? "timer" : "play.circle.fill")
             .font(TyfeTypography.caption)
             .multilineTextAlignment(.center)
             .foregroundStyle(daypart.visualStyle.secondaryForeground)
             .frame(maxWidth: .infinity)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(Text("Pause allowance"))
+            .accessibilityLabel(Text("Focus guidance"))
             .accessibilityValue(Text(supportingText))
-    }
-
-    private var pauseSymbol: String {
-        if session.state == .paused {
-            return "hourglass"
-        }
-        return session.pauseUsed ? "pause.circle" : "pause.circle.fill"
     }
 
     private var actions: some View {
         VStack(spacing: TyfeSpacing.small) {
             primaryAction
 
-            if session.state == .ready || session.state == .running || session.state == .paused {
+            if session.state == .ready || session.state == .running {
                 Label("Abandon Session", systemImage: "stop.circle")
                     .font(TyfeTypography.interface)
                     .foregroundStyle(TyfeEditorialPalette.error)
@@ -188,14 +173,7 @@ struct TyfeFocusTimerView: View {
         case .ready:
             themedPrimaryButton(title: "Begin Focus", systemImage: "play.fill", onTap: onBegin)
         case .running:
-            themedPrimaryButton(
-                title: "Pause once",
-                systemImage: "pause.fill",
-                isEnabled: !session.pauseUsed,
-                onTap: onPause
-            )
-        case .paused:
-            themedPrimaryButton(title: "Resume Focus", systemImage: "play.fill", onTap: onResume)
+            TyfePillView(label: "Focus in progress", systemImage: "timer", tone: .success)
         case .completed:
             TyfePillView(label: "Session complete", systemImage: "checkmark.circle.fill", tone: .accent)
         case .abandoned:
@@ -223,13 +201,13 @@ struct TyfeFocusTimerView: View {
     private static func defaultSupportingText(for session: FocusSessionModel) -> String {
         switch session.state {
         case .ready:
-            return "One pause available, up to five minutes"
+            return "25 minutes of focus"
         case .running:
-            return session.pauseUsed ? "Pause used, stay with it" : "One pause available, phone lock will not pause"
-        case .paused:
-            return "Pause remaining: \(formatted(seconds: session.pauseRemainingSeconds))"
-        case .completed, .abandoned:
-            return "No pause available"
+            return "Phone lock will not stop Focus"
+        case .completed:
+            return "Focus Session complete"
+        case .abandoned:
+            return "No Reward Credit earned"
         }
     }
 
@@ -237,7 +215,6 @@ struct TyfeFocusTimerView: View {
         switch state {
         case .ready: return "Ready when you are"
         case .running: return "Stay with this one thing"
-        case .paused: return "Take your pause, then return"
         case .completed: return "Session complete"
         case .abandoned: return "Session ended"
         }
@@ -257,24 +234,20 @@ struct TyfeFocusTimerView: View {
         timeText: "25:00",
         progress: 1,
         onBegin: {},
-        onPause: {},
-        onResume: {},
         onAbandon: {}
     )
     .padding(TyfeSpacing.card)
     .background(TyfeEditorialPalette.canvas)
 }
 
-#Preview("Focus timer - paused") {
+#Preview("Focus timer - running") {
     TyfeFocusTimerView(
-        session: .pausedMock,
+        session: .runningMock,
         daypart: .afternoon,
         activityTitle: "Study Swift",
-        timeText: "04:32",
-        progress: 0.91,
+        timeText: "18:42",
+        progress: 0.75,
         onBegin: {},
-        onPause: {},
-        onResume: {},
         onAbandon: {}
     )
     .padding(TyfeSpacing.card)
@@ -289,8 +262,6 @@ struct TyfeFocusTimerView: View {
         timeText: "18:42",
         progress: 0.75,
         onBegin: {},
-        onPause: {},
-        onResume: {},
         onAbandon: {}
     )
     .padding(TyfeSpacing.card)
@@ -306,8 +277,6 @@ struct TyfeFocusTimerView: View {
         timeText: "18:42",
         progress: 0.75,
         onBegin: {},
-        onPause: {},
-        onResume: {},
         onAbandon: {}
     )
     .padding(TyfeSpacing.card)

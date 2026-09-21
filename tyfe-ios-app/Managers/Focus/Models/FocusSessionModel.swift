@@ -3,7 +3,6 @@ import Foundation
 enum FocusSessionState: String, Codable, CaseIterable, Hashable {
     case ready
     case running
-    case paused
     case completed
     case abandoned
 
@@ -11,7 +10,6 @@ enum FocusSessionState: String, Codable, CaseIterable, Hashable {
         switch self {
         case .ready: return "Ready"
         case .running: return "Focusing"
-        case .paused: return "Paused"
         case .completed: return "Complete"
         case .abandoned: return "Incomplete"
         }
@@ -21,16 +19,23 @@ enum FocusSessionState: String, Codable, CaseIterable, Hashable {
         switch self {
         case .ready: return "play.fill"
         case .running: return "timer"
-        case .paused: return "pause.fill"
         case .completed: return "checkmark.circle.fill"
         case .abandoned: return "stop.circle.fill"
         }
     }
 }
 
+enum FocusRestState: String, Codable, CaseIterable, Hashable {
+    case unavailable
+    case pending
+    case active
+    case completed
+    case skipped
+}
+
 struct FocusSessionModel: Identifiable, Codable, Hashable {
     static let durationMinutes = 25
-    static let pauseAllowanceSeconds = 300
+    static let restDurationSeconds = 300
 
     let focusSessionId: String
     let activityId: String
@@ -38,11 +43,10 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
     let startedAt: Date
     let localDay: LocalDay
     let dailyPlanIdAtStart: String?
-    let pausedAt: Date?
     let completedAt: Date?
     let focusEndsAt: Date?
-    let pauseUsed: Bool
-    let pauseRemainingSeconds: Int
+    let restState: FocusRestState
+    let restEndsAt: Date?
     let isBonusSession: Bool
 
     private enum CodingKeys: String, CodingKey {
@@ -52,11 +56,10 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
         case startedAt
         case localDay = "local_day"
         case dailyPlanIdAtStart = "daily_plan_id_at_start"
-        case pausedAt
         case completedAt
         case focusEndsAt
-        case pauseUsed
-        case pauseRemainingSeconds
+        case restState
+        case restEndsAt
         case isBonusSession
     }
 
@@ -72,8 +75,8 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
         Self.durationMinutes
     }
 
-    var pauseAllowanceSeconds: Int {
-        Self.pauseAllowanceSeconds
+    var isResting: Bool {
+        state == .completed && restState == .active
     }
 
     var earnsCompletionAwards: Bool {
@@ -82,11 +85,10 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
 
     func updated(
         state: FocusSessionState,
-        pausedAt: Date? = nil,
         completedAt: Date? = nil,
         focusEndsAt: Date? = nil,
-        pauseUsed: Bool? = nil,
-        pauseRemainingSeconds: Int? = nil,
+        restState: FocusRestState? = nil,
+        restEndsAt: Date?? = nil,
         isBonusSession: Bool? = nil
     ) -> Self {
         Self(
@@ -96,11 +98,10 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
             startedAt: startedAt,
             localDay: localDay,
             dailyPlanIdAtStart: dailyPlanIdAtStart,
-            pausedAt: pausedAt ?? self.pausedAt,
             completedAt: completedAt ?? self.completedAt,
             focusEndsAt: focusEndsAt ?? self.focusEndsAt,
-            pauseUsed: pauseUsed ?? self.pauseUsed,
-            pauseRemainingSeconds: pauseRemainingSeconds ?? self.pauseRemainingSeconds,
+            restState: restState ?? self.restState,
+            restEndsAt: restEndsAt ?? self.restEndsAt,
             isBonusSession: isBonusSession ?? self.isBonusSession
         )
     }
@@ -112,11 +113,10 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
         startedAt: Date,
         localDay: LocalDay? = nil,
         dailyPlanIdAtStart: String? = nil,
-        pausedAt: Date? = nil,
         completedAt: Date? = nil,
         focusEndsAt: Date? = nil,
-        pauseUsed: Bool = false,
-        pauseRemainingSeconds: Int = FocusSessionModel.pauseAllowanceSeconds,
+        restState: FocusRestState = .unavailable,
+        restEndsAt: Date? = nil,
         isBonusSession: Bool = false
     ) {
         self.focusSessionId = focusSessionId
@@ -125,11 +125,10 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
         self.startedAt = startedAt
         self.localDay = localDay ?? LocalDay(containing: startedAt, calendar: .current)
         self.dailyPlanIdAtStart = dailyPlanIdAtStart
-        self.pausedAt = pausedAt
         self.completedAt = completedAt
         self.focusEndsAt = focusEndsAt
-        self.pauseUsed = pauseUsed
-        self.pauseRemainingSeconds = min(max(pauseRemainingSeconds, 0), Self.pauseAllowanceSeconds)
+        self.restState = restState
+        self.restEndsAt = restEndsAt
         self.isBonusSession = isBonusSession
     }
 
@@ -144,11 +143,10 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
             localDay: try container.decodeIfPresent(LocalDay.self, forKey: .localDay)
                 ?? LocalDay(containing: startedAt, calendar: .current),
             dailyPlanIdAtStart: try container.decodeIfPresent(String.self, forKey: .dailyPlanIdAtStart),
-            pausedAt: try container.decodeIfPresent(Date.self, forKey: .pausedAt),
             completedAt: try container.decodeIfPresent(Date.self, forKey: .completedAt),
             focusEndsAt: try container.decodeIfPresent(Date.self, forKey: .focusEndsAt),
-            pauseUsed: try container.decodeIfPresent(Bool.self, forKey: .pauseUsed) ?? false,
-            pauseRemainingSeconds: try container.decodeIfPresent(Int.self, forKey: .pauseRemainingSeconds) ?? Self.pauseAllowanceSeconds,
+            restState: try container.decodeIfPresent(FocusRestState.self, forKey: .restState) ?? .unavailable,
+            restEndsAt: try container.decodeIfPresent(Date.self, forKey: .restEndsAt),
             isBonusSession: try container.decodeIfPresent(Bool.self, forKey: .isBonusSession) ?? false
         )
     }
@@ -159,9 +157,9 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
             "focus_session_activity_id": activityId,
             "focus_session_state": state.rawValue,
             "focus_session_started_at": startedAt,
-            "focus_session_pause_used": pauseUsed,
-            "focus_session_pause_remaining_seconds": pauseRemainingSeconds,
             "focus_session_ends_at": focusEndsAt as Any,
+            "focus_session_rest_state": restState.rawValue,
+            "focus_session_rest_ends_at": restEndsAt as Any,
             "focus_session_is_bonus": isBonusSession
         ]
     }
@@ -188,25 +186,26 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
         )
     }
 
-    static var pausedMock: Self {
-        Self(
-            focusSessionId: "focus-session-paused",
-            activityId: ActivityModel.mock.activityId,
-            state: .paused,
-            startedAt: fixtureDate,
-            pausedAt: fixtureDate.addingTimeInterval(21 * 60),
-            pauseUsed: true,
-            pauseRemainingSeconds: 240
-        )
-    }
-
     static var completedMock: Self {
         Self(
             focusSessionId: "focus-session-completed",
             activityId: ActivityModel.mock.activityId,
             state: .completed,
             startedAt: fixtureDate,
-            completedAt: fixtureDate.addingTimeInterval(25 * 60)
+            completedAt: fixtureDate.addingTimeInterval(25 * 60),
+            restState: .skipped
+        )
+    }
+
+    static var restingMock: Self {
+        Self(
+            focusSessionId: "focus-session-resting",
+            activityId: ActivityModel.mock.activityId,
+            state: .completed,
+            startedAt: fixtureDate,
+            completedAt: fixtureDate.addingTimeInterval(25 * 60),
+            restState: .active,
+            restEndsAt: fixtureDate.addingTimeInterval(30 * 60)
         )
     }
 
@@ -215,9 +214,7 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
             focusSessionId: "focus-session-abandoned",
             activityId: ActivityModel.mock.activityId,
             state: .abandoned,
-            startedAt: fixtureDate,
-            pauseUsed: true,
-            pauseRemainingSeconds: 0
+            startedAt: fixtureDate
         )
     }
 

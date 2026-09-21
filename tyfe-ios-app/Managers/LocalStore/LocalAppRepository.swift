@@ -1,6 +1,8 @@
 import Foundation
 
 struct LocalAppSnapshot: Codable, Hashable {
+    private static let currentSchemaVersion = 4
+
     var schemaVersion: Int
     var activities: [ActivityModel]
     var dailyPlans: [DailyPlanModel]
@@ -27,6 +29,71 @@ struct LocalAppSnapshot: Codable, Hashable {
         case nextSessionNumber
         case nextRewardNumber
         case nextRewardClaimNumber
+    }
+
+    private struct PersistedFocusSession: Decodable {
+        let focusSessionId: String
+        let activityId: String
+        let state: String
+        let startedAt: Date
+        let localDay: LocalDay?
+        let dailyPlanIdAtStart: String?
+        let pausedAt: Date?
+        let completedAt: Date?
+        let focusEndsAt: Date?
+        let restState: FocusRestState?
+        let restEndsAt: Date?
+        let isBonusSession: Bool?
+
+        private enum CodingKeys: String, CodingKey {
+            case focusSessionId
+            case activityId
+            case state
+            case startedAt
+            case localDay = "local_day"
+            case dailyPlanIdAtStart = "daily_plan_id_at_start"
+            case pausedAt
+            case completedAt
+            case focusEndsAt
+            case restState
+            case restEndsAt
+            case isBonusSession
+        }
+
+        func migrated(at now: Date) throws -> FocusSessionModel {
+            let migratedState: FocusSessionState
+            let migratedFocusEndsAt: Date?
+
+            if state == "paused" {
+                let originalEnd = focusEndsAt
+                    ?? startedAt.addingTimeInterval(TimeInterval(FocusSessionModel.durationMinutes * 60))
+                let pauseDate = pausedAt ?? startedAt
+                let remainingSeconds = max(originalEnd.timeIntervalSince(pauseDate), 0)
+                migratedState = .running
+                migratedFocusEndsAt = now.addingTimeInterval(remainingSeconds)
+            } else if let state = FocusSessionState(rawValue: state) {
+                migratedState = state
+                migratedFocusEndsAt = focusEndsAt
+            } else {
+                throw DecodingError.dataCorrupted(
+                    .init(codingPath: [], debugDescription: "Unknown focus session state: \(state)")
+                )
+            }
+
+            return FocusSessionModel(
+                focusSessionId: focusSessionId,
+                activityId: activityId,
+                state: migratedState,
+                startedAt: startedAt,
+                localDay: localDay,
+                dailyPlanIdAtStart: dailyPlanIdAtStart,
+                completedAt: completedAt,
+                focusEndsAt: migratedFocusEndsAt,
+                restState: restState ?? .unavailable,
+                restEndsAt: restEndsAt,
+                isBonusSession: isBonusSession ?? false
+            )
+        }
     }
 
     var dailyPlan: DailyPlanModel? {
@@ -83,7 +150,7 @@ struct LocalAppSnapshot: Codable, Hashable {
     }
 
     init(
-        schemaVersion: Int = 2,
+        schemaVersion: Int = 4,
         activities: [ActivityModel],
         dailyPlan: DailyPlanModel? = nil,
         completedSessionCount: Int = 0,
@@ -113,13 +180,14 @@ struct LocalAppSnapshot: Codable, Hashable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
-            schemaVersion: 2,
+            schemaVersion: Self.currentSchemaVersion,
             activities: try container.decode([ActivityModel].self, forKey: .activities),
             dailyPlan: try container.decodeIfPresent(DailyPlanModel.self, forKey: .dailyPlan),
             dailyPlans: try container.decodeIfPresent([DailyPlanModel].self, forKey: .dailyPlans),
             customRewards: try container.decodeIfPresent([RewardModel].self, forKey: .customRewards) ?? [],
             rewardClaims: try container.decodeIfPresent([RewardClaimModel].self, forKey: .rewardClaims) ?? [],
-            focusSessions: try container.decode([FocusSessionModel].self, forKey: .focusSessions),
+            focusSessions: try container.decode([PersistedFocusSession].self, forKey: .focusSessions)
+                .map { try $0.migrated(at: Date()) },
             creditLedger: try container.decode(RewardCreditLedger.self, forKey: .creditLedger),
             nextActivityNumber: try container.decode(Int.self, forKey: .nextActivityNumber),
             nextSessionNumber: try container.decode(Int.self, forKey: .nextSessionNumber),
@@ -130,7 +198,7 @@ struct LocalAppSnapshot: Codable, Hashable {
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(2, forKey: .schemaVersion)
+        try container.encode(Self.currentSchemaVersion, forKey: .schemaVersion)
         try container.encode(activities, forKey: .activities)
         try container.encode(dailyPlans, forKey: .dailyPlans)
         try container.encode(customRewards, forKey: .customRewards)

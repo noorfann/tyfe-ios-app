@@ -73,7 +73,7 @@ struct TyfePillView: View {
     HStack(spacing: TyfeSpacing.small) {
         TyfePillView(label: "Ready", systemImage: "play.fill")
         TyfePillView(label: "Focusing", systemImage: "timer", tone: .success)
-        TyfePillView(label: "Paused", systemImage: "pause.fill", tone: .warning)
+        TyfePillView(label: "Resting", systemImage: "hourglass", tone: .warning)
         TyfePillView(label: "Offline", systemImage: "wifi.slash", tone: .error)
     }
     .padding(TyfeSpacing.card)

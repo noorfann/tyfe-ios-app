@@ -97,7 +97,7 @@ enum TyfeSurfaceRole: CaseIterable {
         Text("25:00")
             .font(TyfeTypography.timer)
             .foregroundStyle(TyfeEditorialPalette.focus)
-        Text("Focusing · Pause available")
+        Text("Focusing · Rest after completion")
             .font(TyfeTypography.interface)
             .foregroundStyle(TyfeEditorialPalette.onDark)
     }

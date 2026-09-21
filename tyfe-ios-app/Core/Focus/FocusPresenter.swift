@@ -9,23 +9,25 @@ final class FocusPresenter {
 
     private(set) var session: FocusSessionModel
     private(set) var remainingFocusSeconds: Int
-    private(set) var remainingPauseSeconds: Int
+    private(set) var remainingRestSeconds: Int
     private(set) var completion: FocusCompletionResult?
     private(set) var daypart: FocusDaypart
     private var tickerTask: Task<Void, Never>?
     private var daypartTask: Task<Void, Never>?
+    private var hasPresentedRestChoice = false
+    private var hasPresentedRestCompletion = false
 
     init(interactor: FocusInteractor, router: FocusRouter, session: FocusSessionModel) {
         self.interactor = interactor
         self.router = router
         self.session = session
         self.remainingFocusSeconds = session.durationSeconds
-        self.remainingPauseSeconds = session.pauseRemainingSeconds
+        self.remainingRestSeconds = 0
         self.daypart = FocusDaypart(date: Date())
     }
 
-    var isPaused: Bool {
-        session.state == .paused
+    var isResting: Bool {
+        session.isResting
     }
 
     var statusTitle: String {
@@ -36,42 +38,44 @@ final class FocusPresenter {
         switch session.state {
         case .ready: return "Ready when you are"
         case .running: return "Stay with this one thing"
-        case .paused: return "Take your pause, then return"
         case .completed: return "Session complete"
         case .abandoned: return "Session ended"
         }
     }
 
     var timerText: String {
-        isPaused ? formattedPauseRemaining : formatted(seconds: remainingFocusSeconds)
+        formatted(seconds: remainingFocusSeconds)
+    }
+
+    var restTimerText: String {
+        formatted(seconds: remainingRestSeconds)
     }
 
     var allowanceText: String {
         switch session.state {
         case .ready:
-            return "One pause available · up to five minutes"
+            return "25 minutes of focus"
         case .running:
-            return session.pauseUsed ? "Pause used · stay with it" : "One pause available · phone lock will not pause"
-        case .paused:
-            return "Your Focus timer is held while paused"
-        case .completed, .abandoned:
-            return "No pause available"
+            return "Phone lock will not stop Focus"
+        case .completed:
+            return session.restState == .active ? "Rest before your next session" : "Focus Session complete"
+        case .abandoned:
+            return "No Reward Credit earned"
         }
     }
 
     var primaryActionTitle: String {
         switch session.state {
         case .ready: return "Begin Focus"
-        case .running: return "Pause once"
-        case .paused: return "Resume Focus"
+        case .running: return "Focus in progress"
         case .completed, .abandoned: return "Session ended"
         }
     }
 
     var primaryActionSystemImage: String {
         switch session.state {
-        case .ready, .paused: return "play.fill"
-        case .running: return "pause.fill"
+        case .ready: return "play.fill"
+        case .running: return "timer"
         case .completed: return "checkmark.circle.fill"
         case .abandoned: return "stop.circle.fill"
         }
@@ -93,28 +97,11 @@ final class FocusPresenter {
     }
 
     func onPrimaryActionPressed() {
-        do {
-            switch session.state {
-            case .ready:
-                requestBeginConfirmation()
-            case .paused:
-                session = try interactor.resumeFocusSession(focusSessionId: session.focusSessionId)
-                refresh()
-                startTicker()
-                interactor.trackEvent(event: Event.onResume)
-            case .running:
-                guard !session.pauseUsed else { return }
-                session = try interactor.pauseFocusSession(focusSessionId: session.focusSessionId)
-                refresh()
-                startTicker()
-                interactor.trackEvent(event: Event.onPause)
-            case .completed, .abandoned:
-                break
-            }
-        } catch FocusManagerError.rewardInProgress {
-            showRewardBlockingAlert()
-        } catch {
-            showPersistenceAlert()
+        switch session.state {
+        case .ready:
+            requestBeginConfirmation()
+        case .running, .completed, .abandoned:
+            break
         }
     }
 
@@ -152,20 +139,37 @@ final class FocusPresenter {
     func onSceneBecameActive() {
         refresh()
         startDaypartUpdates()
-        if session.state == .running || session.state == .paused {
+        if session.state == .running || session.isResting {
             startTicker()
         }
     }
 
     func onStartAnotherPressed() {
         do {
+            if session.state == .completed,
+               (session.restState == .pending || session.restState == .active) {
+                session = try interactor.skipFocusRest(focusSessionId: session.focusSessionId)
+                interactor.trackEvent(event: Event.onRestSkipped)
+            }
             session = try interactor.startAnotherFocusSession(activityId: session.activityId)
             completion = nil
             remainingFocusSeconds = session.durationSeconds
-            remainingPauseSeconds = session.pauseRemainingSeconds
+            remainingRestSeconds = 0
             startTicker()
+            interactor.trackEvent(event: Event.onStartAnother)
         } catch FocusManagerError.rewardInProgress {
             showRewardBlockingAlert()
+        } catch {
+            showPersistenceAlert()
+        }
+    }
+
+    func onStartRestPressed() {
+        do {
+            session = try interactor.startFocusRest(focusSessionId: session.focusSessionId)
+            refresh()
+            startTicker()
+            interactor.trackEvent(event: Event.onRestStarted)
         } catch {
             showPersistenceAlert()
         }
@@ -190,7 +194,9 @@ final class FocusPresenter {
     }
 
     func onMinimizePressed() {
-        if session.state == .running || session.state == .paused {
+        guard session.state != .running else { return }
+
+        if session.isResting {
             interactor.trackEvent(event: Event.onMinimize)
         }
         router.dismissScreen()
@@ -204,13 +210,25 @@ final class FocusPresenter {
 
     private func refresh() {
         do {
+            let previousSession = session
             let refresh = try interactor.refreshFocusSession(focusSessionId: session.focusSessionId)
             session = refresh.session
             remainingFocusSeconds = refresh.remainingFocusSeconds
-            remainingPauseSeconds = refresh.remainingPauseSeconds
+            remainingRestSeconds = refresh.remainingRestSeconds
             completion = refresh.completion
-            if session.state == .completed || session.state == .abandoned {
+            if session.state == .completed, session.restState == .active {
+                startTicker()
+            } else if session.state == .completed || session.state == .abandoned {
                 stopTicker()
+            }
+
+            if previousSession.state != .completed, session.state == .completed {
+                showRestChoiceIfNeeded()
+            } else if previousSession.restState == .active,
+                      session.restState == .completed {
+                showRestCompletionPromptIfNeeded()
+            } else if previousSession.state == .completed {
+                showRestChoiceIfNeeded()
             }
         } catch {
             showPersistenceAlert()
@@ -219,7 +237,7 @@ final class FocusPresenter {
 
     private func startTicker() {
         stopTicker()
-        guard session.state == .running || session.state == .paused else { return }
+        guard session.state == .running || session.isResting else { return }
         tickerTask = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(1))
@@ -283,21 +301,52 @@ final class FocusPresenter {
         return String(format: "%d:%02d", safeSeconds / 60, safeSeconds % 60)
     }
 
-    private var formattedPauseRemaining: String {
-        formatted(seconds: remainingPauseSeconds)
+    private func showRestChoiceIfNeeded() {
+        guard session.state == .completed,
+              session.restState == .pending,
+              !hasPresentedRestChoice else { return }
+
+        hasPresentedRestChoice = true
+        router.showAlert(
+            .alert,
+            title: "Take a 5-minute rest?",
+            subtitle: "Your Focus Session is complete. Rest before your next session or start another now.",
+            buttons: {
+                AnyView(
+                    Group {
+                        Button("Rest 5 minutes") {
+                            self.onStartRestPressed()
+                        }
+                        Button("Skip and start another") {
+                            self.onStartAnotherPressed()
+                        }
+                    }
+                )
+            }
+        )
     }
 
-    private func updatedSession(
-        state: FocusSessionState,
-        pausedAt: Date? = nil,
-        pauseUsed: Bool? = nil,
-        pauseRemainingSeconds: Int? = nil
-    ) -> FocusSessionModel {
-        session.updated(
-            state: state,
-            pausedAt: pausedAt,
-            pauseUsed: pauseUsed,
-            pauseRemainingSeconds: pauseRemainingSeconds
+    private func showRestCompletionPromptIfNeeded() {
+        guard !hasPresentedRestCompletion else { return }
+
+        hasPresentedRestCompletion = true
+        interactor.trackEvent(event: Event.onRestCompleted)
+        router.showAlert(
+            .alert,
+            title: "Rest complete",
+            subtitle: "You are ready for another Focus Session whenever you are.",
+            buttons: {
+                AnyView(
+                    Group {
+                        Button("Start another session") {
+                            self.onStartAnotherPressed()
+                        }
+                        Button("Back to Today", role: .cancel) {
+                            self.onBackToTodayPressed()
+                        }
+                    }
+                )
+            }
         )
     }
 
@@ -335,8 +384,10 @@ extension FocusPresenter {
         case onAppear(delegate: FocusDelegate)
         case onDisappear(delegate: FocusDelegate)
         case onBegin
-        case onPause
-        case onResume
+        case onStartAnother
+        case onRestStarted
+        case onRestSkipped
+        case onRestCompleted
         case onMinimize
         case onAbandonStart
         case onAbandonConfirmed
@@ -350,10 +401,14 @@ extension FocusPresenter {
                 return "FocusView_Disappear"
             case .onBegin:
                 return "FocusView_Begin"
-            case .onPause:
-                return "FocusView_Pause"
-            case .onResume:
-                return "FocusView_Resume"
+            case .onStartAnother:
+                return "FocusView_StartAnother"
+            case .onRestStarted:
+                return "FocusView_Rest_Started"
+            case .onRestSkipped:
+                return "FocusView_Rest_Skipped"
+            case .onRestCompleted:
+                return "FocusView_Rest_Completed"
             case .onMinimize:
                 return "FocusView_Minimize"
             case .onAbandonStart:

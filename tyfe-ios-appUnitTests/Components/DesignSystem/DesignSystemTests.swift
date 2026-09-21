@@ -26,7 +26,7 @@ struct DesignSystemTests {
             systemImage: "circle.fill",
             accent: TyfeEditorialPalette.saffron
         )
-        let badge = TyfeStateBadgeView(state: .paused)
+        let badge = TyfeStateBadgeView(state: .running)
         let bottomSheet = TyfeBottomSheet(
             title: "New Reward",
             onClose: {},
@@ -60,16 +60,14 @@ struct DesignSystemTests {
             onStart: {}
         )
         let timer = TyfeFocusTimerView(
-            session: .pausedMock,
+            session: .runningMock,
             daypart: .afternoon,
             activityTitle: "Study Swift",
             timeText: "04:32",
             progress: 0.91,
-            supportingText: "Your Focus timer is held while paused",
-            statusDescription: "Take your pause, then return",
+            supportingText: "Phone lock will not stop Focus",
+            statusDescription: "Stay with this one thing",
             onBegin: {},
-            onPause: {},
-            onResume: {},
             onAbandon: {}
         )
         let status = TyfeStatusView(kind: .offline, onRetry: {})
@@ -169,6 +167,7 @@ struct DesignSystemTests {
             focusStatus: .focusing,
             isSelf: false,
             isViewerOwner: true,
+            sentKinds: [.heart],
             onCheer: { _ in },
             onRemove: {}
         )

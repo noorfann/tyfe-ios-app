@@ -18,6 +18,7 @@ final class PushManager: LocalTimerNotificationScheduling {
     private static let preferencesKey = "tyfe.notification-preferences"
     private static let planPrefix = "tyfe.plan."
     private static let focusPrefix = "tyfe.focus."
+    private static let focusRestPrefix = "tyfe.focus-rest."
     private static let rewardPrefix = "tyfe.reward."
 
     init(
@@ -107,6 +108,34 @@ final class PushManager: LocalTimerNotificationScheduling {
 
     func cancelFocusCompletion(focusSessionId: String) {
         let identifier = focusIdentifier(focusSessionId: focusSessionId)
+        cancelRequests(operationKey: identifier, matching: identifier)
+    }
+
+    func scheduleFocusRestCompletion(for session: FocusSessionModel) {
+        guard let restEndsAt = session.restEndsAt, session.isResting else {
+            cancelFocusRestCompletion(focusSessionId: session.focusSessionId)
+            return
+        }
+
+        let identifier = focusRestIdentifier(focusSessionId: session.focusSessionId)
+        let requests = [LocalNotificationRequest(
+            identifier: identifier,
+            title: "Rest complete",
+            body: "You’re ready for another Focus Session whenever you are.",
+            deliveryDate: restEndsAt
+        )]
+        setDesiredGroup(
+            PendingLocalNotificationGroup(
+                identifierPrefix: identifier,
+                kind: .focusRestCompletion,
+                requests: requests
+            ),
+            operationKey: identifier
+        )
+    }
+
+    func cancelFocusRestCompletion(focusSessionId: String) {
+        let identifier = focusRestIdentifier(focusSessionId: focusSessionId)
         cancelRequests(operationKey: identifier, matching: identifier)
     }
 
@@ -237,6 +266,8 @@ final class PushManager: LocalTimerNotificationScheduling {
             return preferences.planRemindersEnabled
         case .focusCompletion:
             return preferences.focusCompletionEnabled
+        case .focusRestCompletion:
+            return preferences.focusCompletionEnabled
         case .rewardExpiry:
             return preferences.rewardExpiryEnabled
         }
@@ -260,6 +291,10 @@ final class PushManager: LocalTimerNotificationScheduling {
 
     private func focusIdentifier(focusSessionId: String) -> String {
         Self.focusPrefix + focusSessionId + ".completion"
+    }
+
+    private func focusRestIdentifier(focusSessionId: String) -> String {
+        Self.focusRestPrefix + focusSessionId + ".completion"
     }
 
     private func rewardIdentifier(rewardClaimId: String) -> String {

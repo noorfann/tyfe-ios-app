@@ -12,7 +12,7 @@ struct FocusManagerTests {
         return calendar
     }
 
-    @Test func beginningAndPausingAFocusSessionUsesPersistedTime() throws {
+    @Test func beginningAFocusSessionUsesPersistedTime() throws {
         let clock = TestFocusClock()
         let repository = MockLocalAppRepository()
         let manager = FocusManager(repository: repository, clock: clock)
@@ -21,31 +21,53 @@ struct FocusManagerTests {
         let running = try manager.beginFocusSession(focusSessionId: session.focusSessionId)
         #expect(running.state == .running)
         #expect(try manager.refreshFocusSession(focusSessionId: session.focusSessionId).remainingFocusSeconds == 1_500)
-
-        clock.advance(by: 120)
-        let paused = try manager.pauseFocusSession(focusSessionId: session.focusSessionId)
-        #expect(paused.state == .paused)
-        #expect(paused.pauseUsed)
-        #expect(try manager.refreshFocusSession(focusSessionId: session.focusSessionId).remainingFocusSeconds == 1_380)
-        #expect(throws: FocusManagerError.pauseAlreadyUsed) {
-            try manager.pauseFocusSession(focusSessionId: session.focusSessionId)
-        }
     }
 
-    @Test func resumingShiftsTheDeadlineByTheTimeSpentPaused() throws {
+    @Test func completedFocusSessionOffersAndPersistsFiveMinuteRest() throws {
+        let clock = TestFocusClock()
+        let scheduler = RecordingLocalTimerNotificationScheduler()
+        let manager = FocusManager(
+            repository: MockLocalAppRepository(),
+            clock: clock,
+            notificationScheduler: scheduler
+        )
+        let session = try #require(manager.startFocusSession(activityId: ActivityModel.mock.activityId))
+        _ = try manager.beginFocusSession(focusSessionId: session.focusSessionId)
+
+        clock.advance(by: TimeInterval(session.durationSeconds))
+        let completed = try manager.refreshFocusSession(focusSessionId: session.focusSessionId).session
+        #expect(completed.restState == .pending)
+
+        let resting = try manager.startFocusRest(focusSessionId: session.focusSessionId)
+        #expect(resting.isResting)
+        #expect(resting.restEndsAt == clock.now.addingTimeInterval(300))
+        #expect(manager.activeFocusSession?.focusSessionId == session.focusSessionId)
+        #expect(scheduler.scheduledFocusRestSessions.map(\.focusSessionId) == [session.focusSessionId])
+
+        clock.advance(by: 120)
+        let duringRest = try manager.refreshFocusSession(focusSessionId: session.focusSessionId)
+        #expect(duringRest.remainingRestSeconds == 180)
+
+        clock.advance(by: 180)
+        let finished = try manager.refreshFocusSession(focusSessionId: session.focusSessionId)
+        #expect(finished.session.restState == .completed)
+        #expect(finished.remainingRestSeconds == 0)
+        #expect(manager.activeFocusSession == nil)
+        #expect(scheduler.cancelledFocusRestSessionIds == [session.focusSessionId])
+    }
+
+    @Test func skippingRestStartsAnotherSession() throws {
         let clock = TestFocusClock()
         let manager = FocusManager(repository: MockLocalAppRepository(), clock: clock)
         let session = try #require(manager.startFocusSession(activityId: ActivityModel.mock.activityId))
         _ = try manager.beginFocusSession(focusSessionId: session.focusSessionId)
-        clock.advance(by: 1_200)
-        _ = try manager.pauseFocusSession(focusSessionId: session.focusSessionId)
+        clock.advance(by: TimeInterval(session.durationSeconds))
+        _ = try manager.refreshFocusSession(focusSessionId: session.focusSessionId)
 
-        clock.advance(by: 120)
-        let resumed = try manager.resumeFocusSession(focusSessionId: session.focusSessionId)
+        let nextSession = try manager.startAnotherFocusSession(activityId: session.activityId)
 
-        #expect(resumed.state == .running)
-        #expect(resumed.pauseRemainingSeconds == 180)
-        #expect(try manager.refreshFocusSession(focusSessionId: session.focusSessionId).remainingFocusSeconds == 300)
+        #expect(nextSession.state == .ready)
+        #expect(manager.focusSessions.first(where: { $0.focusSessionId == session.focusSessionId })?.restState == .skipped)
     }
 
     @Test func naturalCompletionAwardsCreditExactlyOnce() throws {
@@ -181,19 +203,10 @@ struct FocusManagerTests {
 
         let running = try manager.beginFocusSession(focusSessionId: session.focusSessionId)
         clock.advance(by: 60)
-        _ = try manager.pauseFocusSession(focusSessionId: session.focusSessionId)
-        clock.advance(by: 30)
-        let resumed = try manager.resumeFocusSession(focusSessionId: session.focusSessionId)
         _ = try manager.abandonFocusSession(focusSessionId: session.focusSessionId)
 
-        #expect(scheduler.scheduledFocusSessions.map(\.focusEndsAt) == [
-            running.focusEndsAt,
-            resumed.focusEndsAt
-        ])
-        #expect(scheduler.cancelledFocusSessionIds == [
-            session.focusSessionId,
-            session.focusSessionId
-        ])
+        #expect(scheduler.scheduledFocusSessions.map(\.focusEndsAt) == [running.focusEndsAt])
+        #expect(scheduler.cancelledFocusSessionIds == [session.focusSessionId])
     }
 
     @Test func persistedActiveSessionIsRecoveredWithoutCreatingADuplicate() throws {
@@ -231,16 +244,8 @@ struct FocusManagerTests {
         #expect(recorder.count == 2)
 
         observeActiveSession()
-        _ = try manager.pauseFocusSession(focusSessionId: ready.focusSessionId)
-        #expect(recorder.count == 3)
-
-        observeActiveSession()
-        _ = try manager.resumeFocusSession(focusSessionId: ready.focusSessionId)
-        #expect(recorder.count == 4)
-
-        observeActiveSession()
         _ = try manager.abandonFocusSession(focusSessionId: ready.focusSessionId)
-        #expect(recorder.count == 5)
+        #expect(recorder.count == 3)
         #expect(manager.activeFocusSession == nil)
     }
 
@@ -321,7 +326,7 @@ struct FocusManagerTests {
         #expect(recreatedManager.rewardCredits == 1)
     }
 
-    @Test func relaunchRestoresPausedSessionWithoutAwards() throws {
+    @Test func relaunchRestoresActiveRestAndDerivesRemainingFromClock() throws {
         let clock = TestFocusClock()
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("tyfe-focus-\(UUID().uuidString).json")
@@ -334,9 +339,11 @@ struct FocusManagerTests {
         )
         let session = try #require(firstManager.startFocusSession(activityId: ActivityModel.mock.activityId))
         _ = try firstManager.beginFocusSession(focusSessionId: session.focusSessionId)
-        clock.advance(by: 60)
-        _ = try firstManager.pauseFocusSession(focusSessionId: session.focusSessionId)
+        clock.advance(by: TimeInterval(session.durationSeconds))
+        _ = try firstManager.refreshFocusSession(focusSessionId: session.focusSessionId)
+        _ = try firstManager.startFocusRest(focusSessionId: session.focusSessionId)
 
+        clock.advance(by: 90)
         let relaunchedManager = FocusManager(
             repository: LocalFileRepository(persistence: persistence),
             clock: clock
@@ -344,9 +351,10 @@ struct FocusManagerTests {
         let refresh = try relaunchedManager.refreshFocusSession(focusSessionId: session.focusSessionId)
 
         #expect(refresh.session.focusSessionId == session.focusSessionId)
-        #expect(refresh.session.state == .paused)
-        #expect(refresh.completion == nil)
-        #expect(relaunchedManager.rewardCredits == 0)
+        #expect(refresh.session.isResting)
+        #expect(refresh.remainingRestSeconds == 210)
+        #expect(relaunchedManager.activeFocusSession?.focusSessionId == session.focusSessionId)
+        #expect(relaunchedManager.rewardCredits == 1)
     }
 
     @Test func terminalSessionsReportNoRemainingFocusTime() throws {
@@ -386,39 +394,39 @@ struct FocusManagerTests {
         #expect(abandonedRefresh.remainingFocusSeconds == 0)
     }
 
-    @Test func legacyPausedSessionUsesStartedAtFallbackForRemainingTime() throws {
-        let clock = TestFocusClock()
-        clock.advance(by: 60)
-        let session = FocusSessionModel(
-            focusSessionId: "focus-session-paused-legacy",
-            activityId: ActivityModel.mock.activityId,
-            state: .paused,
-            startedAt: clock.now.addingTimeInterval(-60),
-            pausedAt: clock.now.addingTimeInterval(-10),
-            focusEndsAt: nil,
-            pauseUsed: true,
-            pauseRemainingSeconds: 290
-        )
+    @Test func legacyPausedSessionMigratesToRunningWithRemainingFocusTime() throws {
+        let startedAt = Date(timeIntervalSince1970: 1_756_944_000)
         let snapshot = LocalAppSnapshot(
             activities: [ActivityModel.mock],
             dailyPlan: nil,
             completedSessionCount: 0,
-            focusSessions: [session],
+            focusSessions: [FocusSessionModel.runningMock],
             creditLedger: RewardCreditLedger(),
             nextActivityNumber: 2,
             nextSessionNumber: 2
         )
-        let manager = FocusManager(
-            repository: MockLocalAppRepository(snapshot: snapshot),
-            clock: clock
-        )
+        let data = try JSONEncoder().encode(snapshot)
+        var json = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        var sessions = try #require(json["focusSessions"] as? [[String: Any]])
+        sessions[0]["state"] = "paused"
+        sessions[0]["startedAt"] = startedAt.timeIntervalSinceReferenceDate
+        sessions[0]["pausedAt"] = startedAt.addingTimeInterval(21 * 60).timeIntervalSinceReferenceDate
+        sessions[0]["focusEndsAt"] = startedAt.addingTimeInterval(25 * 60).timeIntervalSinceReferenceDate
+        sessions[0]["pauseUsed"] = true
+        sessions[0]["pauseRemainingSeconds"] = 300
+        sessions[0].removeValue(forKey: "restState")
+        sessions[0].removeValue(forKey: "restEndsAt")
+        json["focusSessions"] = sessions
 
-        let refresh = try manager.refreshFocusSession(focusSessionId: session.focusSessionId)
+        let migratedData = try JSONSerialization.data(withJSONObject: json)
+        let migrated = try JSONDecoder().decode(LocalAppSnapshot.self, from: migratedData)
+        let session = try #require(migrated.focusSessions.first)
+        let focusEndsAt = try #require(session.focusEndsAt)
 
-        #expect(refresh.session.state == .paused)
-        #expect(refresh.session.focusEndsAt == nil)
-        #expect(refresh.remainingFocusSeconds == session.durationSeconds - 60)
-        #expect(refresh.completion == nil)
+        #expect(session.state == .running)
+        #expect(session.restState == .unavailable)
+        #expect(focusEndsAt > Date())
+        #expect(focusEndsAt < Date().addingTimeInterval(5 * 60))
     }
 
 #if MOCK
