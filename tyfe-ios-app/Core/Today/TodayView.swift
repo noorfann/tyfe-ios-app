@@ -346,6 +346,8 @@ struct TodayActivityDeckView: View {
     let onPrevious: () -> Void
 
     @State private var dragOffset: CGFloat = 0
+    @State private var isDeckDragging = false
+    @GestureState private var isDeckGestureActive = false
     @ScaledMetric(relativeTo: .body) private var deckHeight: CGFloat = 248
     @ScaledMetric(relativeTo: .body) private var readOnlyDeckHeight: CGFloat = 196
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -386,7 +388,15 @@ struct TodayActivityDeckView: View {
             .frame(maxWidth: .infinity)
             .frame(height: isReadOnly ? readOnlyDeckHeight : deckHeight)
             .contentShape(Rectangle())
-            .highPriorityGesture(deckGesture)
+            .simultaneousGesture(deckGesture)
+            .onChange(of: isDeckGestureActive) { _, isActive in
+                guard !isActive else { return }
+                isDeckDragging = false
+                guard dragOffset != 0 else { return }
+                withAnimation(deckAnimation) {
+                    dragOffset = 0
+                }
+            }
             .accessibilityElement(children: .contain)
             .accessibilityLabel(isReadOnly ? "Historical activities" : "Today activities")
             .accessibilityValue("Activity \(selectedIndex + 1) of \(planItems.count)")
@@ -415,6 +425,7 @@ struct TodayActivityDeckView: View {
             isNext: nextPlanItemId == card.item.id,
             isRewardInProgress: isRewardInProgress,
             isReadOnly: isReadOnly,
+            isDeckDragging: isDeckDragging,
             onStart: { onStart(card.item) },
             onEdit: { onEdit(card.item) }
         )
@@ -431,8 +442,12 @@ struct TodayActivityDeckView: View {
 
     private var deckGesture: some Gesture {
         DragGesture(minimumDistance: 12)
+            .updating($isDeckGestureActive) { _, state, _ in
+                state = true
+            }
             .onChanged { value in
                 guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                isDeckDragging = true
                 dragOffset = value.translation.width
             }
             .onEnded { value in
@@ -477,6 +492,7 @@ struct TodayPlanCardView: View {
     let isNext: Bool
     let isRewardInProgress: Bool
     let isReadOnly: Bool
+    let isDeckDragging: Bool
     let onStart: () -> Void
     let onEdit: () -> Void
 
@@ -540,6 +556,7 @@ struct TodayPlanCardView: View {
                             }
                             .contentShape(Capsule())
                             .asButton(.press, action: onEdit)
+                            .disabled(isDeckDragging)
                             .accessibilityLabel("Edit " + activity.name)
                     }
 
@@ -549,6 +566,7 @@ struct TodayPlanCardView: View {
                         isEnabled: !isComplete && !isRewardInProgress,
                         onTap: onStart
                     )
+                    .disabled(isDeckDragging)
                 }
             }
         }
