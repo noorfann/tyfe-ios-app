@@ -265,12 +265,20 @@ final class MockSocialService: SocialService {
         guard senderId == currentUserId, senderId != recipientId, sharesCircle(with: recipientId) else {
             throw SocialServiceError.notPermitted
         }
+        let localDateString = localDate.socialDateString
+        let isDuplicate = cheers.contains {
+            $0.senderId == senderId
+                && $0.recipientId == recipientId
+                && $0.localDate == localDateString
+                && $0.kind == kind
+        }
+        guard !isDuplicate else { return }
         cheerCounter += 1
         let cheer = CheerModel(
             cheerId: "mock-cheer-\(cheerCounter)",
             senderId: senderId,
             recipientId: recipientId,
-            localDate: localDate.socialDateString,
+            localDate: localDateString,
             kind: kind,
             createdAt: .now
         )

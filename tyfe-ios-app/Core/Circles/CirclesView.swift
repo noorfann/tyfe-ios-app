@@ -62,6 +62,7 @@ struct CirclesView: View {
                 placeholder: "ABCD2345",
                 value: $presenter.joinCode,
                 actionTitle: "Join Circle",
+                autocapitalization: .characters,
                 onSave: { presenter.onSubmitJoinCode() }
             )
         }
@@ -189,6 +190,7 @@ struct CirclesView: View {
                     focusStatus: presenter.focusStatus(for: member.userId),
                     isSelf: member.userId == presenter.currentUserId,
                     isViewerOwner: presenter.isSelectedCircleOwner,
+                    sentKinds: presenter.sentCheerKinds(to: member.userId),
                     onCheer: { presenter.onSendCheer($0, to: member.userId) },
                     onRemove: { presenter.onRemoveMember(member.userId) }
                 )

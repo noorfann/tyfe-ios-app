@@ -185,12 +185,17 @@ final class SupabaseSocialService: SocialService {
     ) async throws {
         try await client
             .from("cheers")
-            .insert(CheerInsert(
-                kind: kind.rawValue,
-                senderId: senderId,
-                recipientId: recipientId,
-                localDate: localDate.socialDateString
-            ))
+            .upsert(
+                CheerInsert(
+                    kind: kind.rawValue,
+                    senderId: senderId,
+                    recipientId: recipientId,
+                    localDate: localDate.socialDateString
+                ),
+                onConflict: "sender_id,recipient_id,local_date,kind",
+                returning: .minimal,
+                ignoreDuplicates: true
+            )
             .execute()
     }
 

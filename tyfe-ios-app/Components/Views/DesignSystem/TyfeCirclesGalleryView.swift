@@ -116,17 +116,17 @@ struct TyfeCirclesGalleryView: View {
 
     private var ownerDetailSection: some View {
         gallerySection("Owner view · members") {
-            memberRow(TyfeCirclesGalleryMemberFixture(member: presenter.owner, progress: presenter.ownerProgress, focus: nil, isSelf: true, isViewerOwner: true))
-            memberRow(TyfeCirclesGalleryMemberFixture(member: presenter.focusingMember, progress: presenter.focusingProgress, focus: .focusing, isSelf: false, isViewerOwner: true))
-            memberRow(TyfeCirclesGalleryMemberFixture(member: presenter.availableMember, progress: presenter.availableProgress, focus: .available, isSelf: false, isViewerOwner: true))
-            memberRow(TyfeCirclesGalleryMemberFixture(member: presenter.quietMember, progress: presenter.quietProgress, focus: nil, isSelf: false, isViewerOwner: true))
+            memberRow(TyfeCirclesGalleryMemberFixture(member: presenter.owner, progress: presenter.ownerProgress, focus: nil, isSelf: true, isViewerOwner: true, sentKinds: []))
+            memberRow(TyfeCirclesGalleryMemberFixture(member: presenter.focusingMember, progress: presenter.focusingProgress, focus: .focusing, isSelf: false, isViewerOwner: true, sentKinds: [.heart, .fire]))
+            memberRow(TyfeCirclesGalleryMemberFixture(member: presenter.availableMember, progress: presenter.availableProgress, focus: .available, isSelf: false, isViewerOwner: true, sentKinds: []))
+            memberRow(TyfeCirclesGalleryMemberFixture(member: presenter.quietMember, progress: presenter.quietProgress, focus: nil, isSelf: false, isViewerOwner: true, sentKinds: Set(CheerKind.allCases)))
             TyfeActionButtonView(title: "Invite", systemImage: "person.badge.plus", role: .primary, onTap: {})
         }
     }
 
     private var memberDetailSection: some View {
         gallerySection("Member view · non-owner") {
-            memberRow(TyfeCirclesGalleryMemberFixture(member: presenter.availableMember, progress: presenter.availableProgress, focus: .available, isSelf: false, isViewerOwner: false))
+            memberRow(TyfeCirclesGalleryMemberFixture(member: presenter.availableMember, progress: presenter.availableProgress, focus: .available, isSelf: false, isViewerOwner: false, sentKinds: [.star]))
             TyfeActionButtonView(
                 title: "Leave Circle",
                 systemImage: "rectangle.portrait.and.arrow.right",
@@ -174,6 +174,7 @@ struct TyfeCirclesGalleryView: View {
             focusStatus: fixture.focus,
             isSelf: fixture.isSelf,
             isViewerOwner: fixture.isViewerOwner,
+            sentKinds: fixture.sentKinds,
             onCheer: { _ in },
             onRemove: {}
         )
@@ -199,6 +200,7 @@ private struct TyfeCirclesGalleryMemberFixture {
     let focus: CircleFocusStatus?
     let isSelf: Bool
     let isViewerOwner: Bool
+    let sentKinds: Set<CheerKind>
 }
 
 #Preview("Circles gallery") {

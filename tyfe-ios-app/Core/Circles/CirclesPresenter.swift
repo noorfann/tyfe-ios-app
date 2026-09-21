@@ -228,6 +228,14 @@ final class CirclesPresenter {
         }
     }
 
+    func sentCheerKinds(to userId: String) -> Set<CheerKind> {
+        CheerModel.sentKinds(
+            in: interactor.socialCheers,
+            from: currentUserId,
+            to: userId
+        )
+    }
+
     func onLeaveCircleTapped() {
         Task {
             guard let userId = interactor.currentAuthUserId,

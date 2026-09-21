@@ -55,3 +55,20 @@ struct CheerModel: Identifiable, Codable, Hashable {
         case createdAt = "created_at"
     }
 }
+
+extension CheerModel {
+
+    static func sentKinds(
+        in cheers: [CheerModel],
+        from senderId: String?,
+        to recipientId: String
+    ) -> Set<CheerKind> {
+        guard let senderId = senderId?.lowercased() else { return [] }
+        let targetRecipientId = recipientId.lowercased()
+        return cheers.reduce(into: Set<CheerKind>()) { result, cheer in
+            guard cheer.senderId.lowercased() == senderId,
+                  cheer.recipientId.lowercased() == targetRecipientId else { return }
+            result.insert(cheer.kind)
+        }
+    }
+}

@@ -6,6 +6,7 @@ struct TyfeCircleMemberRowView: View {
     let focusStatus: CircleFocusStatus?
     let isSelf: Bool
     let isViewerOwner: Bool
+    let sentKinds: Set<CheerKind>
     let onCheer: (CheerKind) -> Void
     let onRemove: () -> Void
 
@@ -61,15 +62,31 @@ struct TyfeCircleMemberRowView: View {
     private var cheerMenu: some View {
         Menu {
             ForEach(CheerKind.allCases, id: \.self) { kind in
-                Button {
-                    onCheer(kind)
-                } label: {
-                    Label(kind.displayName, systemImage: kind.symbolName)
+                if sentKinds.contains(kind) {
+                    Button {} label: {
+                        Label("\(kind.displayName) · Sent", systemImage: "checkmark")
+                    }
+                    .disabled(true)
+                } else {
+                    Button {
+                        onCheer(kind)
+                    } label: {
+                        Label(kind.displayName, systemImage: kind.symbolName)
+                    }
                 }
             }
         } label: {
-            Label("Cheer", systemImage: "hands.clap")
+            Label(cheerMenuTitle, systemImage: cheerMenuSymbolName)
                 .font(TyfeTypography.caption)
         }
+        .disabled(sentKinds.count == CheerKind.allCases.count)
+    }
+
+    private var cheerMenuTitle: String {
+        sentKinds.count == CheerKind.allCases.count ? "Cheered" : "Cheer"
+    }
+
+    private var cheerMenuSymbolName: String {
+        sentKinds.count == CheerKind.allCases.count ? "checkmark.circle.fill" : "hands.clap"
     }
 }

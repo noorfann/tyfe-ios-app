@@ -5,6 +5,7 @@ struct TyfeCircleNameSheetCardView: View {
     let placeholder: String
     @Binding var value: String
     let actionTitle: String
+    var autocapitalization: TextInputAutocapitalization = .sentences
     let onSave: () -> Void
 
     private var canSave: Bool {
@@ -21,7 +22,11 @@ struct TyfeCircleNameSheetCardView: View {
                         .textCase(.uppercase)
                         .foregroundStyle(TyfeEditorialPalette.muted)
 
-                    TyfeTextFieldView(placeholder: placeholder, text: $value)
+                    TyfeTextFieldView(
+                        placeholder: placeholder,
+                        text: $value,
+                        autocapitalization: autocapitalization
+                    )
                 }
             }
 
