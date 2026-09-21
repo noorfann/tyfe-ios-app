@@ -143,7 +143,15 @@ struct FocusView: View {
     }
 
     private func focusTopBar(daypart: FocusDaypart) -> some View {
-        HStack(spacing: 12) {
+        let isMinimizeDisabled = presenter.session.state == .running
+        let minimizeForeground = isMinimizeDisabled
+            ? TyfeEditorialPalette.disabledInk
+            : daypart.visualStyle.accentForeground
+        let minimizeFill = isMinimizeDisabled
+            ? TyfeEditorialPalette.disabledFill
+            : daypart.visualStyle.accentFill
+
+        return HStack(spacing: 12) {
             Image(systemName: daypart.symbolName)
                 .font(.headline)
                 .foregroundStyle(daypart.symbolColor)
@@ -156,21 +164,21 @@ struct FocusView: View {
 
             Image(systemName: "chevron.down")
                 .font(.subheadline.weight(.black))
-                .foregroundStyle(daypart.visualStyle.accentForeground)
+                .foregroundStyle(minimizeForeground)
                 .frame(width: 44, height: 44)
-                .background(daypart.visualStyle.accentFill)
+                .background(minimizeFill)
                 .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control, style: .continuous))
                 .overlay {
                     RoundedRectangle(cornerRadius: TyfeRadius.control, style: .continuous)
                         .stroke(
-                            daypart.visualStyle.accentForeground,
+                            minimizeForeground,
                             lineWidth: TyfeStroke.standard
                         )
                 }
                 .asButton(.press) {
                     presenter.onMinimizePressed()
                 }
-                .disabled(presenter.session.state == .running)
+                .disabled(isMinimizeDisabled)
                 .accessibilityLabel("Minimize Focus")
                 .accessibilityHint("Returns to the app while preserving the current session")
         }
