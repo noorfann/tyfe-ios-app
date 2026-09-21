@@ -124,6 +124,9 @@ struct TabBarView: View {
                 presenter.syncProgressTicker()
             }
         }
+        .onNotificationReceived(name: .focusLiveActivityNavigation) { notification in
+            presenter.onFocusLiveActivityNavigation(notification: notification, delegate: delegate)
+        }
     }
 }
 

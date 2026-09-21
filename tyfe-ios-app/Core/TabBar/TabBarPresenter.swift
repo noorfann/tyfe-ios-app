@@ -150,6 +150,22 @@ class TabBarPresenter {
         }
     }
 
+    func onFocusLiveActivityNavigation(notification: Notification, delegate: TabBarDelegate) {
+        guard let sessionId = notification.userInfo?["focusSessionId"] as? String,
+              let focusSession = interactor.activeFocusSession,
+              focusSession.state == .running,
+              focusSession.focusSessionId == sessionId,
+              let activity = interactor.activity(forFocusSession: focusSession),
+              let todayTab = tabs.first(where: { $0.title == "Today" }) else { return }
+
+        interactor.trackEvent(event: Event.focusLiveActivityOpened(delegate: delegate))
+        selectedTab = todayTab.id
+        router.showFocusOverlay(
+            delegate: FocusDelegate(activity: activity, session: focusSession),
+            tabSelectionAction: tabSelectionAction(delegate: delegate)
+        )
+    }
+
     func syncProgressTicker() {
         refreshProgressState()
         if progressStatusKind != nil {
@@ -222,6 +238,7 @@ extension TabBarPresenter {
         case tabReselected(tab: TabBarTab, delegate: TabBarDelegate)
         case rewardStatusPressed(delegate: TabBarDelegate)
         case focusStatusPressed(session: FocusSessionModel, delegate: TabBarDelegate)
+        case focusLiveActivityOpened(delegate: TabBarDelegate)
 
         var eventName: String {
             switch self {
@@ -231,6 +248,7 @@ extension TabBarPresenter {
             case .tabReselected:            return "TabBar_TabReselected"
             case .rewardStatusPressed:      return "TabBar_RewardStatusPressed"
             case .focusStatusPressed:       return "TabBar_FocusStatusPressed"
+            case .focusLiveActivityOpened:  return "TabBar_FocusLiveActivityOpened"
             }
         }
 
@@ -248,6 +266,8 @@ extension TabBarPresenter {
                 var params = session.eventParameters
                 params.merge(delegate.eventParameters)
                 return params
+            case .focusLiveActivityOpened(delegate: let delegate):
+                return delegate.eventParameters
             }
         }
 

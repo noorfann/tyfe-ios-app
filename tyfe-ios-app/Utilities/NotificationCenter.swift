@@ -18,4 +18,7 @@ extension Notification.Name {
     
     /// Notification for when app is opened from a Push Notification
     static let pushNotification = Notification.Name("PushNotification")
+
+    /// Notification for opening the active Focus Session from its Live Activity
+    static let focusLiveActivityNavigation = Notification.Name("FocusLiveActivityNavigation")
 }

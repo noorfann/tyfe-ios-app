@@ -18,21 +18,28 @@ class ModuleWrapperPresenter {
     func handleDeepLink(url: URL, delegate: ModuleWrapperDelegate) {
         interactor.trackEvent(event: Event.deepLinkStart)
 
-        guard
-            let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-            let queryItems = components.queryItems,
-            !queryItems.isEmpty else {
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+            interactor.trackEvent(event: Event.deepLinkNoQueryItems)
+            return
+        }
+
+        guard delegate.moduleId == Constants.tabbarModuleId,
+              components.scheme == "tyfe",
+              components.host == "focus",
+              let sessionId = components.queryItems?.first(where: { $0.name == "sessionId" })?.value,
+              let activeSession = interactor.activeFocusSession,
+              activeSession.state == .running,
+              activeSession.focusSessionId == sessionId else {
             interactor.trackEvent(event: Event.deepLinkNoQueryItems)
             return
         }
 
         interactor.trackEvent(event: Event.deepLinkSuccess)
-
-        for queryItem in queryItems {
-            if let value = queryItem.value, !value.isEmpty {
-                // Do something with value
-            }
-        }
+        NotificationCenter.default.post(
+            name: .focusLiveActivityNavigation,
+            object: nil,
+            userInfo: ["focusSessionId": sessionId]
+        )
     }
 
     // WARNING: This view does NOT have a NavigationStack, so router.showScreen(.push) will NOT work here.

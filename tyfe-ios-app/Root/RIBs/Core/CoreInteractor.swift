@@ -60,6 +60,10 @@ struct CoreInteractor: GlobalInteractor {
         appState.toggleColorScheme()
     }
 
+    func reconcileFocusLiveActivity() {
+        focusManager.reconcileLiveActivity()
+    }
+
     // MARK: AuthManager
     
     var auth: UserAuthInfo? {
