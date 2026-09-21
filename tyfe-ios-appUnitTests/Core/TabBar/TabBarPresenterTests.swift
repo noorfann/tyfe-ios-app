@@ -72,6 +72,28 @@ struct TabBarPresenterTests {
         context.presenter.onViewDisappear(delegate: context.delegate)
     }
 
+    @Test func openingFocusLiveActivitySelectsTodayAndReopensTheSameSession() throws {
+        let context = makeContext(startingTabId: "Rewards")
+        let session = try #require(
+            context.interactor.focusManager.startFocusSession(activityId: ActivityModel.mock.activityId)
+        )
+        _ = try context.interactor.focusManager.beginFocusSession(
+            focusSessionId: session.focusSessionId
+        )
+
+        context.presenter.onFocusLiveActivityNavigation(
+            notification: Notification(
+                name: .focusLiveActivityNavigation,
+                userInfo: ["focusSessionId": session.focusSessionId]
+            ),
+            delegate: context.delegate
+        )
+
+        #expect(context.presenter.selectedTab == "Today")
+        #expect(context.router.presentedDelegate?.session.focusSessionId == session.focusSessionId)
+        #expect(context.router.presentedDelegate?.activity.activityId == session.activityId)
+    }
+
     private func makeContext(startingTabId: String = "Today") -> TestContext {
         let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
         let interactor = CoreInteractor(container: dependencies.container)

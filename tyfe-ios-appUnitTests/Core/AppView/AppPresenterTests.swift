@@ -48,6 +48,17 @@ struct AppPresenterTests {
         #expect(context.manager.pendingReceivedCheers.isEmpty)
     }
 
+    @Test func enteringTheForegroundReconcilesTheFocusLiveActivity() {
+        let interactor = RecordingAppViewInteractor()
+        let presenter = AppPresenter(interactor: interactor)
+
+        presenter.onScenePhaseChanged(.active)
+        presenter.onScenePhaseChanged(.background)
+        presenter.onScenePhaseChanged(.active)
+
+        #expect(interactor.focusLiveActivityReconciliationCount == 2)
+    }
+
     private func makeContext() -> AppPresenterTestContext {
         let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
         let service = MockSocialService(currentUserId: UserAuthInfo.mock().uid)
@@ -92,4 +103,50 @@ private struct AppPresenterTestContext {
     let manager: SocialManager
     let service: MockSocialService
     let recipientId: String
+}
+
+@MainActor
+private final class RecordingAppViewInteractor: AppViewInteractor {
+    let auth: UserAuthInfo? = nil
+    let startingModuleId = Constants.tabbarModuleId
+    let colorScheme: ColorScheme = .light
+    let pendingReceivedCheerCount = 0
+    private(set) var focusLiveActivityReconciliationCount = 0
+
+    func toggleColorScheme() {}
+
+    func logIn(user: UserAuthInfo, isNewUser: Bool) async throws {}
+
+    func signInAnonymously() async throws -> (user: UserAuthInfo, isNewUser: Bool) {
+        (UserAuthInfo.mock(), false)
+    }
+
+    func syncSocialRealtime() async {}
+
+    func consumePendingReceivedCheers() -> [CheerModel] {
+        []
+    }
+
+    func discardPendingReceivedCheers() {}
+
+    func synchronizeRewardCreditDay() {}
+
+    func reconcileFocusLiveActivity() {
+        focusLiveActivityReconciliationCount += 1
+    }
+
+    func trackEvent(eventName: String, parameters: [String: Any]?, type: LogType) {}
+    func trackEvent(event: AnyLoggableEvent) {}
+    func trackEvent(event: LoggableEvent) {}
+    func trackScreenEvent(event: LoggableEvent) {}
+    func prepareHaptic(option: HapticOption) {}
+    func prepareHaptics(options: [HapticOption]) {}
+    func playHaptic(option: HapticOption) {}
+    func playHaptics(options: [HapticOption]) {}
+    func tearDownHaptic(option: HapticOption) {}
+    func tearDownHaptics(options: [HapticOption]) {}
+    func tearDownAllHaptics() {}
+    func prepareSoundEffect(sound: SoundEffectFile, simultaneousPlayers: Int) {}
+    func playSoundEffect(sound: SoundEffectFile) {}
+    func tearDownSoundEffect(sound: SoundEffectFile) {}
 }

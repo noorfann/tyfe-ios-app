@@ -23,6 +23,22 @@ struct FocusManagerTests {
         #expect(try manager.refreshFocusSession(focusSessionId: session.focusSessionId).remainingFocusSeconds == 1_500)
     }
 
+    @Test func beginningAFocusSessionStartsOneLiveActivityAfterPersistence() throws {
+        let clock = TestFocusClock()
+        let scheduler = RecordingFocusLiveActivityScheduler()
+        let manager = FocusManager(
+            repository: MockLocalAppRepository(),
+            clock: clock,
+            liveActivityScheduler: scheduler
+        )
+        let session = try #require(manager.startFocusSession(activityId: ActivityModel.mock.activityId))
+
+        _ = try manager.beginFocusSession(focusSessionId: session.focusSessionId)
+        _ = try manager.beginFocusSession(focusSessionId: session.focusSessionId)
+
+        #expect(scheduler.startedSessions.map(\.focusSessionId) == [session.focusSessionId])
+    }
+
     @Test func completedFocusSessionOffersAndPersistsFiveMinuteRest() throws {
         let clock = TestFocusClock()
         let scheduler = RecordingLocalTimerNotificationScheduler()
@@ -88,6 +104,100 @@ struct FocusManagerTests {
         #expect(manager.rewardCredits == manager.creditLedger.reduce(0) { $0 + $1.amount })
         #expect(manager.completedSessionCount == 1)
         #expect(manager.creditLedger.count == 1)
+    }
+
+    @Test func naturalCompletionEndsTheLiveActivityAfterAwardingCredit() throws {
+        let clock = TestFocusClock()
+        let scheduler = RecordingFocusLiveActivityScheduler()
+        let manager = FocusManager(
+            repository: MockLocalAppRepository(),
+            clock: clock,
+            liveActivityScheduler: scheduler
+        )
+        let session = try #require(manager.startFocusSession(activityId: ActivityModel.mock.activityId))
+        _ = try manager.beginFocusSession(focusSessionId: session.focusSessionId)
+
+        clock.advance(by: TimeInterval(session.durationSeconds))
+        _ = try manager.refreshFocusSession(focusSessionId: session.focusSessionId)
+
+        #expect(scheduler.endedSessions.count == 1)
+        #expect(scheduler.endedSessions.first?.session.focusSessionId == session.focusSessionId)
+        #expect(scheduler.endedSessions.first?.reason == .completed)
+    }
+
+    @Test func abandoningFocusEndsTheLiveActivityWithoutCompletion() throws {
+        let scheduler = RecordingFocusLiveActivityScheduler()
+        let manager = FocusManager(
+            repository: MockLocalAppRepository(),
+            liveActivityScheduler: scheduler
+        )
+        let session = try #require(manager.startFocusSession(activityId: ActivityModel.mock.activityId))
+        _ = try manager.beginFocusSession(focusSessionId: session.focusSessionId)
+
+        _ = try manager.abandonFocusSession(focusSessionId: session.focusSessionId)
+
+        #expect(scheduler.endedSessions.count == 1)
+        #expect(scheduler.endedSessions.first?.reason == .abandoned)
+        #expect(manager.rewardCredits == 0)
+    }
+
+    @Test func runningSessionIsReconciledWhenFocusManagerIsRecreated() throws {
+        let clock = TestFocusClock()
+        let repository = MockLocalAppRepository()
+        let firstScheduler = RecordingFocusLiveActivityScheduler()
+        let firstManager = FocusManager(
+            repository: repository,
+            clock: clock,
+            liveActivityScheduler: firstScheduler
+        )
+        let session = try #require(firstManager.startFocusSession(activityId: ActivityModel.mock.activityId))
+        _ = try firstManager.beginFocusSession(focusSessionId: session.focusSessionId)
+
+        let secondScheduler = RecordingFocusLiveActivityScheduler()
+        _ = FocusManager(
+            repository: repository,
+            clock: clock,
+            liveActivityScheduler: secondScheduler
+        )
+
+        #expect(
+            secondScheduler.reconciledSessions.compactMap { $0 }.last?.focusSessionId
+                == session.focusSessionId
+        )
+    }
+
+    @Test func runningSessionIsReconciledWhenTheAppReturnsToTheForeground() throws {
+        let clock = TestFocusClock()
+        let scheduler = RecordingFocusLiveActivityScheduler()
+        let manager = FocusManager(
+            repository: MockLocalAppRepository(),
+            clock: clock,
+            liveActivityScheduler: scheduler
+        )
+        let session = try #require(manager.startFocusSession(activityId: ActivityModel.mock.activityId))
+        _ = try manager.beginFocusSession(focusSessionId: session.focusSessionId)
+
+        manager.reconcileLiveActivity()
+
+        let reconciledSession = try #require(scheduler.reconciledSessions.last ?? nil)
+        #expect(reconciledSession.focusSessionId == session.focusSessionId)
+    }
+
+    @Test func expiredRunningSessionIsNotRecreatedWhenTheAppReturnsToTheForeground() throws {
+        let clock = TestFocusClock()
+        let scheduler = RecordingFocusLiveActivityScheduler()
+        let manager = FocusManager(
+            repository: MockLocalAppRepository(),
+            clock: clock,
+            liveActivityScheduler: scheduler
+        )
+        let session = try #require(manager.startFocusSession(activityId: ActivityModel.mock.activityId))
+        _ = try manager.beginFocusSession(focusSessionId: session.focusSessionId)
+        clock.advance(by: TimeInterval(session.durationSeconds))
+
+        manager.reconcileLiveActivity()
+
+        #expect(scheduler.reconciledSessions.last == nil)
     }
 
     @Test func completionCrossingMidnightStaysOnTheStartDay() throws {
