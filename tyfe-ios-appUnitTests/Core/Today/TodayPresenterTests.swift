@@ -132,6 +132,31 @@ struct TodayPresenterTests {
         #expect(presenter.planItems.isEmpty)
     }
 
+    @Test func creatingActivitySelectsItsCardForImmediateVisibility() throws {
+        let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
+        let manager = try #require(dependencies.container.resolve(TodayManager.self))
+        _ = manager.addActivityToDailyPlan(
+            activityId: ActivityModel.mock.activityId,
+            sessionCount: 1
+        )
+        let presenter = TodayPresenter(
+            interactor: CoreInteractor(container: dependencies.container),
+            router: RecordingTodayRouter()
+        )
+        presenter.onViewAppear(delegate: TodayDelegate())
+        let existingItem = try #require(presenter.planItems.first)
+        #expect(presenter.selectedPlanItemId == existingItem.id)
+
+        presenter.saveActivity(name: "Write report", category: .work, sessionCount: 1)
+
+        let newActivity = try #require(manager.activities.first { $0.name == "Write report" })
+        let newItem = try #require(
+            presenter.planItems.first { $0.activityId == newActivity.activityId }
+        )
+        #expect(presenter.planItems.count == 2)
+        #expect(presenter.selectedPlanItemId == newItem.id)
+    }
+
     @Test func startingFocusUsesTheLatestSelectedActivity() throws {
         let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
         let manager = try #require(dependencies.container.resolve(TodayManager.self))

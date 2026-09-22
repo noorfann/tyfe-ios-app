@@ -186,6 +186,9 @@ final class TodayPresenter {
         )
         isAddActivitySheetPresented = false
         reload()
+        if let newItem = planItems.first(where: { $0.activityId == activity.activityId }) {
+            selectedPlanItemId = newItem.id
+        }
         pendingDeckCoachmark =
             planItems.count >= 2 && !interactor.hasSeenDeckSwipeCoachmark
     }
