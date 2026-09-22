@@ -8,7 +8,6 @@ struct TyfeFocusTimerView: View {
     let timeText: String
     let progress: Double
     let supportingText: String
-    let statusDescription: String
     let onBegin: () -> Void
     let onAbandon: () -> Void
 
@@ -23,7 +22,6 @@ struct TyfeFocusTimerView: View {
         timeText: String,
         progress: Double = 1,
         supportingText: String? = nil,
-        statusDescription: String? = nil,
         onBegin: @escaping () -> Void,
         onAbandon: @escaping () -> Void
     ) {
@@ -33,7 +31,6 @@ struct TyfeFocusTimerView: View {
         self.timeText = timeText
         self.progress = min(max(progress, 0), 1)
         self.supportingText = supportingText ?? Self.defaultSupportingText(for: session)
-        self.statusDescription = statusDescription ?? Self.defaultStatusDescription(for: session.state)
         self.onBegin = onBegin
         self.onAbandon = onAbandon
     }
@@ -70,21 +67,12 @@ struct TyfeFocusTimerView: View {
     }
 
     private var sessionHeading: some View {
-        VStack(spacing: TyfeSpacing.small) {
-            TyfeStateBadgeView(state: session.state)
-
-            Text(activityTitle)
-                .font(TyfeTypography.displayCompact)
-                .multilineTextAlignment(.center)
-                .lineLimit(2)
-                .minimumScaleFactor(0.8)
-
-            Text(statusDescription)
-                .font(TyfeTypography.caption)
-                .multilineTextAlignment(.center)
-                .foregroundStyle(daypart.visualStyle.secondaryForeground)
-        }
-        .frame(maxWidth: .infinity)
+        Text(activityTitle)
+            .font(TyfeTypography.displayCompact)
+            .multilineTextAlignment(.center)
+            .lineLimit(2)
+            .minimumScaleFactor(0.8)
+            .frame(maxWidth: .infinity)
     }
 
     private var timerDial: some View {
@@ -173,7 +161,7 @@ struct TyfeFocusTimerView: View {
         case .ready:
             themedPrimaryButton(title: "Begin Focus", systemImage: "play.fill", onTap: onBegin)
         case .running:
-            TyfePillView(label: "Focus in progress", systemImage: "timer", tone: .success)
+            TyfeFocusStatusPillView(status: .focusing)
         case .completed:
             TyfePillView(label: "Session complete", systemImage: "checkmark.circle.fill", tone: .accent)
         case .abandoned:
@@ -203,20 +191,11 @@ struct TyfeFocusTimerView: View {
         case .ready:
             return "25 minutes of focus"
         case .running:
-            return "Phone lock will not stop Focus"
+            return "Phone lock will not stop the timer"
         case .completed:
             return "Focus Session complete"
         case .abandoned:
             return "No Reward Credit earned"
-        }
-    }
-
-    private static func defaultStatusDescription(for state: FocusSessionState) -> String {
-        switch state {
-        case .ready: return "Ready when you are"
-        case .running: return "Stay with this one thing"
-        case .completed: return "Session complete"
-        case .abandoned: return "Session ended"
         }
     }
 

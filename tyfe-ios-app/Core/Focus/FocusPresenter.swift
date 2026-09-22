@@ -32,15 +32,6 @@ final class FocusPresenter {
         session.state.displayName
     }
 
-    var statusDescription: String {
-        switch session.state {
-        case .ready: return "Ready when you are"
-        case .running: return "Stay with this one thing"
-        case .completed: return "Session complete"
-        case .abandoned: return "Session ended"
-        }
-    }
-
     var timerText: String {
         formatted(seconds: remainingFocusSeconds)
     }
@@ -54,7 +45,7 @@ final class FocusPresenter {
         case .ready:
             return "25 minutes of focus"
         case .running:
-            return "Phone lock will not stop Focus"
+            return "Phone lock will not stop the timer"
         case .completed:
             return session.restState == .active ? "Rest before your next session" : "Focus Session complete"
         case .abandoned:

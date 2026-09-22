@@ -31,11 +31,7 @@ struct TyfeCircleMemberRowView: View {
             }
             Spacer()
             if let focusStatus {
-                TyfePillView(
-                    label: focusStatus.displayName,
-                    systemImage: focusStatus.symbolName,
-                    tone: focusStatus == .focusing ? .accent : .neutral
-                )
+                TyfeFocusStatusPillView(status: focusStatus)
             }
         }
     }

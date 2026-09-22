@@ -198,7 +198,6 @@ struct FocusView: View {
             timeText: presenter.timerText,
             progress: timerProgress,
             supportingText: presenter.allowanceText,
-            statusDescription: presenter.statusDescription,
             onBegin: presenter.onPrimaryActionPressed,
             onAbandon: presenter.onAbandonPressed
         )
@@ -265,6 +264,8 @@ struct FocusView: View {
 
     private func restTimerHeader(style: FocusDaypartVisualStyle) -> some View {
         VStack(spacing: TyfeSpacing.card) {
+            TyfeFocusStatusPillView(status: .available)
+
             Image(systemName: "hourglass")
                 .font(.system(size: 38, weight: .black))
                 .foregroundStyle(style.accentForeground)

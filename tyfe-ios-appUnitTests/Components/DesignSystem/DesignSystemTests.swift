@@ -27,6 +27,7 @@ struct DesignSystemTests {
             accent: TyfeEditorialPalette.saffron
         )
         let badge = TyfeStateBadgeView(state: .running)
+        let focusStatusPill = TyfeFocusStatusPillView(status: .focusing)
         let bottomSheet = TyfeBottomSheet(
             title: "New Reward",
             onClose: {},
@@ -47,6 +48,7 @@ struct DesignSystemTests {
             pill
             metric
             badge
+            focusStatusPill
             bottomSheet
             coachmark
         }
@@ -65,8 +67,7 @@ struct DesignSystemTests {
             activityTitle: "Study Swift",
             timeText: "04:32",
             progress: 0.91,
-            supportingText: "Phone lock will not stop Focus",
-            statusDescription: "Stay with this one thing",
+            supportingText: "Phone lock will not stop the timer",
             onBegin: {},
             onAbandon: {}
         )

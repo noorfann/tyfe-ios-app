@@ -102,7 +102,6 @@ struct TyfeDesignSystemGalleryView: View {
                     timeText: timeText(for: session.state),
                     progress: progress(for: session.state),
                     supportingText: supportingText(for: session),
-                    statusDescription: statusDescription(for: session.state),
                     onBegin: {},
                     onAbandon: {}
                 )
@@ -185,18 +184,9 @@ struct TyfeDesignSystemGalleryView: View {
     private func supportingText(for session: FocusSessionModel) -> String {
         switch session.state {
         case .ready: return "25 minutes of focus"
-        case .running: return "Phone lock will not stop Focus"
+        case .running: return "Phone lock will not stop the timer"
         case .completed: return "Focus Session complete"
         case .abandoned: return "No Reward Credit earned"
-        }
-    }
-
-    private func statusDescription(for state: FocusSessionState) -> String {
-        switch state {
-        case .ready: return "Ready when you are"
-        case .running: return "Stay with this one thing"
-        case .completed: return "Session complete"
-        case .abandoned: return "Session ended"
         }
     }
 }
