@@ -14,8 +14,6 @@ final class FocusPresenter {
     private(set) var daypart: FocusDaypart
     private var tickerTask: Task<Void, Never>?
     private var daypartTask: Task<Void, Never>?
-    private var hasPresentedRestChoice = false
-    private var hasPresentedRestCompletion = false
 
     init(interactor: FocusInteractor, router: FocusRouter, session: FocusSessionModel) {
         self.interactor = interactor
@@ -222,13 +220,9 @@ final class FocusPresenter {
                 stopTicker()
             }
 
-            if previousSession.state != .completed, session.state == .completed {
-                showRestChoiceIfNeeded()
-            } else if previousSession.restState == .active,
-                      session.restState == .completed {
-                showRestCompletionPromptIfNeeded()
-            } else if previousSession.state == .completed {
-                showRestChoiceIfNeeded()
+            if previousSession.restState == .active,
+               session.restState == .completed {
+                interactor.trackEvent(event: Event.onRestCompleted)
             }
         } catch {
             showPersistenceAlert()
@@ -299,55 +293,6 @@ final class FocusPresenter {
     private func formatted(seconds: Int) -> String {
         let safeSeconds = max(seconds, 0)
         return String(format: "%d:%02d", safeSeconds / 60, safeSeconds % 60)
-    }
-
-    private func showRestChoiceIfNeeded() {
-        guard session.state == .completed,
-              session.restState == .pending,
-              !hasPresentedRestChoice else { return }
-
-        hasPresentedRestChoice = true
-        router.showAlert(
-            .alert,
-            title: "Take a 5-minute rest?",
-            subtitle: "Your Focus Session is complete. Rest before your next session or start another now.",
-            buttons: {
-                AnyView(
-                    Group {
-                        Button("Rest 5 minutes") {
-                            self.onStartRestPressed()
-                        }
-                        Button("Skip and start another") {
-                            self.onStartAnotherPressed()
-                        }
-                    }
-                )
-            }
-        )
-    }
-
-    private func showRestCompletionPromptIfNeeded() {
-        guard !hasPresentedRestCompletion else { return }
-
-        hasPresentedRestCompletion = true
-        interactor.trackEvent(event: Event.onRestCompleted)
-        router.showAlert(
-            .alert,
-            title: "Rest complete",
-            subtitle: "You are ready for another Focus Session whenever you are.",
-            buttons: {
-                AnyView(
-                    Group {
-                        Button("Start another session") {
-                            self.onStartAnotherPressed()
-                        }
-                        Button("Back to Today", role: .cancel) {
-                            self.onBackToTodayPressed()
-                        }
-                    }
-                )
-            }
-        )
     }
 
     func onAbandonPressed() {

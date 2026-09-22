@@ -346,6 +346,18 @@ struct FocusView: View {
                     }
                 )
 
+                if presenter.session.restState == .pending {
+                    TyfeActionButtonView(
+                        title: "Rest 5 minutes",
+                        systemImage: "hourglass",
+                        role: .secondary,
+                        fill: style.accentFill.opacity(0.12),
+                        foreground: style.primaryForeground,
+                        borderColor: style.cardBorder,
+                        onTap: presenter.onStartRestPressed
+                    )
+                }
+
                 TyfeActionButtonView(
                     title: "Start another",
                     systemImage: "arrow.clockwise",
@@ -411,6 +423,11 @@ struct FocusView: View {
 
 #Preview("Focus - complete morning") {
     focusPreview(session: .completedMock)
+        .environment(\.focusDaypartPreviewOverride, .morning)
+}
+
+#Preview("Focus - complete rest pending") {
+    focusPreview(session: .completedMock.updated(state: .completed, restState: .pending))
         .environment(\.focusDaypartPreviewOverride, .morning)
 }
 
