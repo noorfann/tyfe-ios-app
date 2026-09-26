@@ -245,6 +245,7 @@ struct TodayView: View {
                     onNext: presenter.selectNextPlanItem,
                     onPrevious: presenter.selectPreviousPlanItem
                 )
+                .id(presenter.selectedLocalDay)
 
                 if presenter.isViewingToday && presenter.isDeckSwipeCoachmarkPresented {
                     deckSwipeCoachmark
@@ -347,13 +348,19 @@ struct TodayActivityDeckView: View {
 
     @State private var dragOffset: CGFloat = 0
     @State private var isDeckDragging = false
-    @GestureState private var isDeckGestureActive = false
+    @State private var hasAppeared = false
     @ScaledMetric(relativeTo: .body) private var deckHeight: CGFloat = 248
     @ScaledMetric(relativeTo: .body) private var readOnlyDeckHeight: CGFloat = 196
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var deckAnimation: Animation? {
         reduceMotion ? nil : .spring(response: 0.32, dampingFraction: 0.82)
+    }
+
+    private func entranceAnimation(depth: Int) -> Animation? {
+        guard !reduceMotion else { return nil }
+        return .spring(response: 0.38, dampingFraction: 0.78)
+            .delay(Double(depth) * 0.06)
     }
 
     private var selectedIndex: Int? {
@@ -388,15 +395,26 @@ struct TodayActivityDeckView: View {
             .frame(maxWidth: .infinity)
             .frame(height: isReadOnly ? readOnlyDeckHeight : deckHeight)
             .contentShape(Rectangle())
-            .simultaneousGesture(deckGesture)
-            .onChange(of: isDeckGestureActive) { _, isActive in
-                guard !isActive else { return }
-                isDeckDragging = false
-                guard dragOffset != 0 else { return }
-                withAnimation(deckAnimation) {
-                    dragOffset = 0
-                }
-            }
+            .gesture(
+                DeckSwipeGesture(
+                    onBegan: {
+                        isDeckDragging = true
+                    },
+                    onChanged: { translation in
+                        dragOffset = translation
+                    },
+                    onEnded: { translation, velocity in
+                        endDeckSwipe(translation: translation, velocity: velocity)
+                    },
+                    onCancelled: {
+                        isDeckDragging = false
+                        withAnimation(deckAnimation) {
+                            dragOffset = 0
+                        }
+                    }
+                )
+            )
+            .onAppear { hasAppeared = true }
             .accessibilityElement(children: .contain)
             .accessibilityLabel(isReadOnly ? "Historical activities" : "Today activities")
             .accessibilityValue("Activity \(selectedIndex + 1) of \(planItems.count)")
@@ -429,48 +447,37 @@ struct TodayActivityDeckView: View {
             onStart: { onStart(card.item) },
             onEdit: { onEdit(card.item) }
         )
-        .scaleEffect(1 - (CGFloat(depth) * 0.035))
+        .scaleEffect((1 - (CGFloat(depth) * 0.035)) * (hasAppeared ? 1 : 0.94))
         .offset(
             x: depth == 0 ? dragOffset : 0,
-            y: CGFloat(depth) * 12
+            y: (CGFloat(depth) * 12) + (hasAppeared ? 0 : -32)
         )
-        .opacity(1 - (Double(depth) * 0.12))
+        .opacity((1 - (Double(depth) * 0.12)) * (hasAppeared ? 1 : 0))
         .zIndex(Double(visibleCards.count - depth))
         .allowsHitTesting(depth == 0)
         .animation(deckAnimation, value: selectedPlanItemId)
+        .animation(entranceAnimation(depth: depth), value: hasAppeared)
     }
 
-    private var deckGesture: some Gesture {
-        DragGesture(minimumDistance: 12)
-            .updating($isDeckGestureActive) { _, state, _ in
-                state = true
-            }
-            .onChanged { value in
-                guard abs(value.translation.width) > abs(value.translation.height) else { return }
-                isDeckDragging = true
-                dragOffset = value.translation.width
-            }
-            .onEnded { value in
-                let translation = value.translation.width
-                let isHorizontal = abs(translation) > abs(value.translation.height)
-                let passedThreshold = abs(translation) > 80
+    private func endDeckSwipe(translation: CGFloat, velocity: CGFloat) {
+        isDeckDragging = false
 
-                guard isHorizontal, passedThreshold else {
-                    withAnimation(deckAnimation) {
-                        dragOffset = 0
-                    }
-                    return
-                }
-
-                withAnimation(deckAnimation) {
-                    if translation < 0 {
-                        onNext()
-                    } else {
-                        onPrevious()
-                    }
-                    dragOffset = 0
-                }
+        let projectedTranslation = translation + (velocity * 0.25)
+        guard abs(projectedTranslation) > 80 else {
+            withAnimation(deckAnimation) {
+                dragOffset = 0
             }
+            return
+        }
+
+        withAnimation(deckAnimation) {
+            if projectedTranslation < 0 {
+                onNext()
+            } else {
+                onPrevious()
+            }
+            dragOffset = 0
+        }
     }
 
     private struct DeckCard: Identifiable {
