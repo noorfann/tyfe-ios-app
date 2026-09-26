@@ -126,12 +126,12 @@ struct TyfeDesignSystemGalleryView: View {
                         }
                         HStack(spacing: TyfeSpacing.small) {
                             Image(systemName: "clock")
-                            Text("\(reward.durationTier.durationMinutes) minutes · \(reward.durationTier.creditCost) \(reward.durationTier.creditCost == 1 ? "Credit" : "Credits")")
+                            Text("\(reward.durationTier.durationMinutes) minutes · \(reward.durationTier.creditLabel)")
                                 .font(TyfeTypography.interface)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         TyfeActionButtonView(
-                            title: reward.availability == .available ? "Take this Reward" : reward.availability.displayName,
+                            title: reward.availability == .available ? "Claim" : reward.availability.displayName,
                             systemImage: reward.availability == .available ? "gift.fill" : "lock.fill",
                             isEnabled: reward.availability == .available,
                             onTap: {}

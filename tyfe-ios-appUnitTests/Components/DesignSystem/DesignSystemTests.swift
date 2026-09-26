@@ -97,6 +97,7 @@ struct DesignSystemTests {
             onStart: {}
         )
         let tiers = TyfeTierLegendView()
+        let coupon = TyfeCouponShape(tearOffset: 92)
         let statusBar = TyfeProgressStatusBarView(
             title: "Reward in progress",
             timeText: "12:30",
@@ -111,6 +112,7 @@ struct DesignSystemTests {
             readyClaim
             activeClaim
             tiers
+            coupon
             statusBar
         }
     }

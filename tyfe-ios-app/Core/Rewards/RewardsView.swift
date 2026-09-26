@@ -193,7 +193,7 @@ struct RewardsView: View {
         .accessibilityLabel("Rewards, scroll sideways for more")
     }
 
-    private static let rewardCardWidth: CGFloat = 260
+    private static let rewardCardWidth: CGFloat = 280
     private static let summaryCardHeight: CGFloat = 132
     private static let summaryCardContentHeight: CGFloat = summaryCardHeight - (TyfeSpacing.card * 2)
     private static let summaryRowMinimumWidth: CGFloat = 320
