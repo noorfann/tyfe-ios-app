@@ -10,6 +10,7 @@ import SwiftfulUI
 struct AppView<Content: View>: View {
 
     @State private var presenter: AppPresenter
+    @State private var isSplashVisible: Bool
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private let content: () -> Content
@@ -19,6 +20,10 @@ struct AppView<Content: View>: View {
         @ViewBuilder content: @escaping () -> Content
     ) {
         _presenter = State(initialValue: presenter)
+        _isSplashVisible = State(
+            initialValue: !Utilities.isUITesting
+                || ProcessInfo.processInfo.arguments.contains("SHOW_SPLASH")
+        )
         self.content = content
     }
 
@@ -55,6 +60,8 @@ struct AppView<Content: View>: View {
                         }
                 }
             )
+            .allowsHitTesting(!isSplashVisible)
+            .accessibilityHidden(isSplashVisible)
             .onAppear {
                 presenter.onViewAppear()
                 presenter.onScenePhaseChanged(scenePhase)
@@ -70,6 +77,16 @@ struct AppView<Content: View>: View {
                 )
                 .transition(.opacity)
                 .zIndex(1)
+            }
+
+            if isSplashVisible {
+                SplashView {
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        isSplashVisible = false
+                    }
+                }
+                .transition(.opacity)
+                .zIndex(2)
             }
         }
         .animation(reduceMotion ? nil : .easeOut(duration: 0.15), value: presenter.activeCheerKinds)
