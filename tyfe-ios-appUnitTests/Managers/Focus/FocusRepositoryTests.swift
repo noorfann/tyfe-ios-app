@@ -61,11 +61,12 @@ struct FocusRepositoryTests {
         #expect(migrated.creditLedger.balance == currentSnapshot.creditLedger.balance)
     }
 
-    @Test func legacyRewardTiersMigrateToTheSingleTenMinuteTier() throws {
+    @Test func legacyRewardTiersDecodeToTheirTenMinuteBlocks() throws {
         let legacyTiers = try ["fifteenMinutes", "thirtyMinutes", "sixtyMinutes"].map {
             try JSONDecoder().decode(RewardDurationTier.self, from: Data("\"\($0)\"".utf8))
         }
-        #expect(legacyTiers == [.tenMinutes, .tenMinutes, .tenMinutes])
+        #expect(legacyTiers == [.tenMinutes, .thirtyMinutes, .sixtyMinutes])
+        #expect(legacyTiers.map(\.creditCost) == [1, 3, 6])
 
         let customReward = RewardModel(
             rewardId: "legacy-custom-reward",
@@ -105,7 +106,7 @@ struct FocusRepositoryTests {
         let migrated = try JSONDecoder().decode(LocalAppSnapshot.self, from: migratedData)
 
         #expect(migrated.schemaVersion == 4)
-        #expect(migrated.customRewards.first?.durationTier == .tenMinutes)
-        #expect(migrated.rewardClaims.first?.durationTier == .tenMinutes)
+        #expect(migrated.customRewards.first?.durationTier == .thirtyMinutes)
+        #expect(migrated.rewardClaims.first?.durationTier == .sixtyMinutes)
     }
 }

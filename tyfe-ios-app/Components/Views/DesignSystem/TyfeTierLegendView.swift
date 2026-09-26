@@ -16,46 +16,37 @@ struct TyfeTierLegendView: View {
                     .tracking(1.1)
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
-                HStack(alignment: .top, spacing: TyfeSpacing.small) {
-                    ForEach(RewardDurationTier.allCases, id: \.self) { tier in
-                        VStack(spacing: TyfeSpacing.unit) {
-                            Image(systemName: "clock")
-                                .imageScale(.small)
-                                .foregroundStyle(TyfeEditorialPalette.terracotta)
-                                .accessibilityHidden(true)
+                HStack(alignment: .firstTextBaseline, spacing: TyfeSpacing.small) {
+                    rateValue("1", unit: "CREDIT")
 
-                            Text("\(tier.durationMinutes) MIN")
-                                .font(TyfeTypography.eyebrow)
-                                .tracking(0.8)
-                                .foregroundStyle(TyfeEditorialPalette.muted)
-                                .multilineTextAlignment(.center)
+                    Text("=")
+                        .font(TyfeTypography.interfaceStrong)
+                        .foregroundStyle(TyfeEditorialPalette.muted)
 
-                            Text(String(tier.creditCost))
-                                .font(TyfeTypography.displayCompact)
-
-                            Text(tier.creditCost == 1 ? "CREDIT" : "CREDITS")
-                                .font(TyfeTypography.caption)
-                                .foregroundStyle(TyfeEditorialPalette.muted)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .accessibilityElement(children: .combine)
-                        .accessibilityLabel("\(tier.durationMinutes) minutes")
-                        .accessibilityValue(creditLabel(for: tier))
-                    }
+                    rateValue("10", unit: "MIN")
                 }
             }
             .frame(minHeight: minContentHeight)
         }
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("Reward rate")
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Reward rate. 1 credit equals 10 minutes of downtime.")
     }
 
-    private func creditLabel(for tier: RewardDurationTier) -> String {
-        tier.creditCost == 1 ? "1 Credit" : "\(tier.creditCost) Credits"
+    private func rateValue(_ value: String, unit: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: TyfeSpacing.unit) {
+            Text(value)
+                .font(TyfeTypography.displayCompact)
+
+            Text(unit)
+                .font(TyfeTypography.eyebrow)
+                .tracking(0.8)
+                .foregroundStyle(TyfeEditorialPalette.muted)
+        }
+        .accessibilityHidden(true)
     }
 }
 
-#Preview("Tier legend") {
+#Preview("Reward rate") {
     TyfeTierLegendView()
         .padding(TyfeSpacing.card)
         .background(TyfeEditorialPalette.canvas)

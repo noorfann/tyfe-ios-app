@@ -7,12 +7,30 @@ enum RewardKind: String, Codable, CaseIterable, Hashable {
 
 enum RewardDurationTier: String, Codable, CaseIterable, Hashable {
     case tenMinutes
+    case twentyMinutes
+    case thirtyMinutes
+    case fortyMinutes
+    case fiftyMinutes
+    case sixtyMinutes
+
+    /// One Reward Credit buys ten minutes of downtime.
+    static let creditMinutes = 10
 
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         switch try container.decode(String.self) {
-        case "tenMinutes", "fifteenMinutes", "thirtyMinutes", "sixtyMinutes":
+        case "tenMinutes", "fifteenMinutes":
             self = .tenMinutes
+        case "twentyMinutes":
+            self = .twentyMinutes
+        case "thirtyMinutes":
+            self = .thirtyMinutes
+        case "fortyMinutes":
+            self = .fortyMinutes
+        case "fiftyMinutes":
+            self = .fiftyMinutes
+        case "sixtyMinutes":
+            self = .sixtyMinutes
         default:
             throw DecodingError.dataCorruptedError(
                 in: container,
@@ -27,15 +45,26 @@ enum RewardDurationTier: String, Codable, CaseIterable, Hashable {
     }
 
     var durationMinutes: Int {
-        10
+        switch self {
+        case .tenMinutes: return 10
+        case .twentyMinutes: return 20
+        case .thirtyMinutes: return 30
+        case .fortyMinutes: return 40
+        case .fiftyMinutes: return 50
+        case .sixtyMinutes: return 60
+        }
     }
 
     var creditCost: Int {
-        1
+        durationMinutes / Self.creditMinutes
     }
 
     var displayName: String {
         "\(durationMinutes) minutes"
+    }
+
+    var creditLabel: String {
+        creditCost == 1 ? "1 Credit" : "\(creditCost) Credits"
     }
 }
 
@@ -78,8 +107,8 @@ struct RewardModel: Identifiable, Codable, Hashable {
     static var starters: [Self] {
         [
             RewardModel(
-                rewardId: "reward-starter-game",
-                name: "Play a game",
+                rewardId: "reward-starter-social",
+                name: "Scroll social media",
                 kind: .starter,
                 durationTier: .tenMinutes,
                 availability: .available
@@ -88,14 +117,14 @@ struct RewardModel: Identifiable, Codable, Hashable {
                 rewardId: "reward-starter-episode",
                 name: "Watch an episode",
                 kind: .starter,
-                durationTier: .tenMinutes,
+                durationTier: .thirtyMinutes,
                 availability: .available
             ),
             RewardModel(
-                rewardId: "reward-starter-social",
-                name: "Scroll social media",
+                rewardId: "reward-starter-game",
+                name: "Play a game",
                 kind: .starter,
-                durationTier: .tenMinutes,
+                durationTier: .sixtyMinutes,
                 availability: .available
             )
         ]
@@ -108,31 +137,31 @@ struct RewardModel: Identifiable, Codable, Hashable {
     static var mocks: [Self] {
         [
             RewardModel(
-                rewardId: "reward-game-10",
-                name: "Play a game",
-                kind: .starter,
-                durationTier: .tenMinutes,
-                availability: .available
-            ),
-            RewardModel(
-                rewardId: "reward-episode-10",
-                name: "Watch an episode",
-                kind: .starter,
-                durationTier: .tenMinutes,
-                availability: .available
-            ),
-            RewardModel(
                 rewardId: "reward-social-10",
                 name: "Scroll social media",
                 kind: .starter,
                 durationTier: .tenMinutes,
+                availability: .available
+            ),
+            RewardModel(
+                rewardId: "reward-episode-30",
+                name: "Watch an episode",
+                kind: .starter,
+                durationTier: .thirtyMinutes,
+                availability: .available
+            ),
+            RewardModel(
+                rewardId: "reward-game-60",
+                name: "Play a game",
+                kind: .starter,
+                durationTier: .sixtyMinutes,
                 availability: .insufficientBalance
             ),
             RewardModel(
                 rewardId: "reward-custom-reading",
                 name: "Read for a while",
                 kind: .custom,
-                durationTier: .tenMinutes,
+                durationTier: .twentyMinutes,
                 availability: .unavailable
             )
         ]

@@ -31,13 +31,37 @@ struct RewardManagerTests {
         )
     }
 
-    @Test func starterCatalogIncludesGamesEpisodesAndSocial() {
+    @Test func starterCatalogIncludesGamesEpisodesAndSocial() throws {
         let manager = makeManager()
         let starters = manager.rewards.filter { $0.kind == .starter }
 
         #expect(Set(starters.map(\.name)) == Set(["Scroll social media", "Watch an episode", "Play a game"]))
-        #expect(starters.allSatisfy {
-            $0.durationTier == .tenMinutes && $0.durationTier.creditCost == 1
+        #expect(starters.map(\.durationTier.creditCost) == [1, 3, 6])
+
+        let social = try #require(starters.first { $0.name == "Scroll social media" })
+        let episode = try #require(starters.first { $0.name == "Watch an episode" })
+        let game = try #require(starters.first { $0.name == "Play a game" })
+
+        #expect(social.durationTier == .tenMinutes)
+        #expect(episode.durationTier == .thirtyMinutes)
+        #expect(game.durationTier == .sixtyMinutes)
+    }
+
+    @Test func claimDeductsTheDurationDerivedCost() throws {
+        var snapshot = LocalAppSnapshot.mock
+        snapshot.creditLedger = .openingBalance(amount: 6, recordedAt: TestFocusClock().now)
+        let repository = MockLocalAppRepository(snapshot: snapshot)
+        let manager = makeManager(repository: repository)
+
+        let claim = try manager.createRewardClaim(
+            rewardId: "reward-starter-episode",
+            durationTier: .thirtyMinutes
+        )
+
+        #expect(claim.state == .ready)
+        #expect(manager.rewardCredits == 3)
+        #expect(repository.snapshot.creditLedger.entries.contains {
+            $0.source == .rewardClaim && $0.sourceId == claim.rewardClaimId && $0.amount == -3
         })
     }
 
@@ -90,7 +114,7 @@ struct RewardManagerTests {
         let social = try #require(manager.rewards.first { $0.rewardId == "reward-starter-social" })
 
         #expect(manager.availability(for: social) == .available)
-        #expect(manager.availability(for: game) == .available)
+        #expect(manager.availability(for: game) == .insufficientBalance)
 
         _ = try manager.createRewardClaim(rewardId: social.rewardId, durationTier: .tenMinutes)
 

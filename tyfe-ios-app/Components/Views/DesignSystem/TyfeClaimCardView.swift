@@ -92,7 +92,7 @@ struct TyfeClaimCardView: View {
     }
 
     private var costLabel: String {
-        claim.durationTier.creditCost == 1 ? "1 Credit" : "\(claim.durationTier.creditCost) Credits"
+        claim.durationTier.creditLabel
     }
 }
 

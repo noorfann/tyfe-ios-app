@@ -5,9 +5,21 @@ import Testing
 struct Phase1ModelsTests {
 
     @Test func rewardTiersExposeProductData() {
-        #expect(RewardDurationTier.allCases == [.tenMinutes])
+        #expect(RewardDurationTier.allCases == [
+            .tenMinutes,
+            .twentyMinutes,
+            .thirtyMinutes,
+            .fortyMinutes,
+            .fiftyMinutes,
+            .sixtyMinutes
+        ])
         #expect(RewardDurationTier.tenMinutes.durationMinutes == 10)
         #expect(RewardDurationTier.tenMinutes.creditCost == 1)
+        #expect(RewardDurationTier.thirtyMinutes.durationMinutes == 30)
+        #expect(RewardDurationTier.thirtyMinutes.creditCost == 3)
+        #expect(RewardDurationTier.sixtyMinutes.durationMinutes == 60)
+        #expect(RewardDurationTier.sixtyMinutes.creditCost == 6)
+        #expect(RewardDurationTier.thirtyMinutes.creditLabel == "3 Credits")
     }
 
     @Test func dailyPlanKeepsTimeBlocksOptional() {
