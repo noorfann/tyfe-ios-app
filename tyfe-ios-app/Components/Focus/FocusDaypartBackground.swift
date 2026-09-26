@@ -56,7 +56,7 @@ enum FocusDaypart: CaseIterable, Hashable, Sendable {
                 primaryForeground: Color(hex: "F7F7F2"),
                 secondaryForeground: Color(hex: "C7D9E5"),
                 accentFill: Color(hex: "FFE49A"),
-                focusAccentFill: Color(hex: "72B7D9"),
+                focusAccentFill: TyfeEditorialPalette.focus,
                 accentForeground: Color(hex: "1E201C"),
                 backgroundForeground: Color(hex: "1E201C")
             )
