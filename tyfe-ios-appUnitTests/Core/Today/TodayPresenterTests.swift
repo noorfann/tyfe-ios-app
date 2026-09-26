@@ -257,6 +257,68 @@ struct TodayPresenterTests {
         #expect(delegate.session.focusSessionId == firstSession.focusSessionId)
         #expect(focusManager.focusSessions.count == 1)
     }
+
+#if MOCK
+    @Test func focusDismissalRefreshesCompletedSessionsAndCredits() throws {
+        let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
+        let manager = try #require(dependencies.container.resolve(TodayManager.self))
+        let focusManager = try #require(dependencies.container.resolve(FocusManager.self))
+        _ = manager.addActivityToDailyPlan(
+            activityId: ActivityModel.mock.activityId,
+            sessionCount: 1
+        )
+        let presenter = TodayPresenter(
+            interactor: CoreInteractor(container: dependencies.container),
+            router: RecordingTodayRouter()
+        )
+        presenter.onViewAppear(delegate: TodayDelegate())
+        presenter.onStartFocusPressed()
+        let session = try #require(focusManager.focusSessions.first)
+
+        _ = try focusManager.beginFocusSession(focusSessionId: session.focusSessionId)
+        _ = try focusManager.markFocusSessionCompleteForTesting(
+            focusSessionId: session.focusSessionId
+        )
+
+        #expect(presenter.completedSessionCounts[ActivityModel.mock.activityId, default: 0] == 0)
+        #expect(presenter.rewardCredits == 0)
+
+        presenter.onFocusViewDismissed()
+
+        #expect(presenter.completedSessionCounts[ActivityModel.mock.activityId, default: 0] == 1)
+        #expect(presenter.rewardCredits == 1)
+    }
+
+    @Test func focusDelegateCarriesDismissActionThatRefreshesToday() throws {
+        let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
+        let manager = try #require(dependencies.container.resolve(TodayManager.self))
+        let focusManager = try #require(dependencies.container.resolve(FocusManager.self))
+        _ = manager.addActivityToDailyPlan(
+            activityId: ActivityModel.mock.activityId,
+            sessionCount: 1
+        )
+        let router = RecordingTodayRouter()
+        let presenter = TodayPresenter(
+            interactor: CoreInteractor(container: dependencies.container),
+            router: router
+        )
+        presenter.onViewAppear(delegate: TodayDelegate())
+        presenter.onStartFocusPressed()
+
+        let delegate = try #require(router.presentedFocusDelegate)
+        let onDismiss = try #require(delegate.onDismiss)
+        let session = try #require(focusManager.focusSessions.first)
+        _ = try focusManager.beginFocusSession(focusSessionId: session.focusSessionId)
+        _ = try focusManager.markFocusSessionCompleteForTesting(
+            focusSessionId: session.focusSessionId
+        )
+
+        onDismiss()
+
+        #expect(presenter.completedSessionCounts[ActivityModel.mock.activityId, default: 0] == 1)
+        #expect(presenter.rewardCredits == 1)
+    }
+#endif
 }
 
 @MainActor

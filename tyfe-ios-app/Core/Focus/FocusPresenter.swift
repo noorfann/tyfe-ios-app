@@ -83,6 +83,7 @@ final class FocusPresenter {
         stopDaypartUpdates()
         interactor.setFocusScreenVisible(false)
         interactor.trackEvent(event: Event.onDisappear(delegate: delegate))
+        delegate.onDismiss?()
     }
 
     func onPrimaryActionPressed() {

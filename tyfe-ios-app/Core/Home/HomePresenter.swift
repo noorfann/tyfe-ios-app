@@ -145,7 +145,23 @@ class HomePresenter {
         reload()
         guard let activity = dashboardState.activeFocusActivity else { return }
         interactor.trackEvent(event: Event.onStartFocus)
-        router.showFocusView(delegate: FocusDelegate(activity: activity, session: session))
+        router.showFocusView(
+            delegate: FocusDelegate(
+                activity: activity,
+                session: session,
+                onDismiss: focusViewDismissedAction
+            )
+        )
+    }
+
+    func onFocusViewDismissed() {
+        reload()
+    }
+
+    private var focusViewDismissedAction: () -> Void {
+        { [weak self] in
+            self?.onFocusViewDismissed()
+        }
     }
 
     private func reload() {

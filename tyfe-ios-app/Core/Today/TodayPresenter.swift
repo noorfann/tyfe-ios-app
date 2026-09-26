@@ -295,7 +295,11 @@ final class TodayPresenter {
                 self.activeFocusSession = activeFocusSession
                 interactor.trackEvent(event: Event.startFocus)
                 router.showFocusView(
-                    delegate: FocusDelegate(activity: activeActivity, session: activeFocusSession)
+                    delegate: FocusDelegate(
+                        activity: activeActivity,
+                        session: activeFocusSession,
+                        onDismiss: focusViewDismissedAction
+                    )
                 )
                 return
             }
@@ -307,7 +311,23 @@ final class TodayPresenter {
         }
         activeFocusSession = session
         interactor.trackEvent(event: Event.startFocus)
-        router.showFocusView(delegate: FocusDelegate(activity: activity, session: session))
+        router.showFocusView(
+            delegate: FocusDelegate(
+                activity: activity,
+                session: session,
+                onDismiss: focusViewDismissedAction
+            )
+        )
+    }
+
+    func onFocusViewDismissed() {
+        reload()
+    }
+
+    private var focusViewDismissedAction: () -> Void {
+        { [weak self] in
+            self?.onFocusViewDismissed()
+        }
     }
 
     func onPreviousDayPressed() {

@@ -4,10 +4,16 @@ import SwiftfulUI
 struct FocusDelegate {
     let activity: ActivityModel
     let session: FocusSessionModel
+    let onDismiss: (() -> Void)?
 
-    init(activity: ActivityModel, session: FocusSessionModel) {
+    init(
+        activity: ActivityModel,
+        session: FocusSessionModel,
+        onDismiss: (() -> Void)? = nil
+    ) {
         self.activity = activity
         self.session = session
+        self.onDismiss = onDismiss
     }
 
     init(activityTitle: String) {
