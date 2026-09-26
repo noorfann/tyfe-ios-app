@@ -11,10 +11,6 @@ struct TyfeFocusTimerView: View {
     let onBegin: () -> Void
     let onAbandon: () -> Void
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @ScaledMetric(relativeTo: .largeTitle) private var scaledTimerDiameter: CGFloat = 248
-
     init(
         session: FocusSessionModel,
         daypart: FocusDaypart,
@@ -33,19 +29,6 @@ struct TyfeFocusTimerView: View {
         self.supportingText = supportingText ?? Self.defaultSupportingText(for: session)
         self.onBegin = onBegin
         self.onAbandon = onAbandon
-    }
-
-    private var timerDiameter: CGFloat {
-        let upperBound: CGFloat = dynamicTypeSize.isAccessibilitySize ? 232 : 284
-        return min(max(scaledTimerDiameter, 212), upperBound)
-    }
-
-    private var timerAccent: Color {
-        daypart.visualStyle.accentFill
-    }
-
-    private var progressAnimation: Animation? {
-        reduceMotion ? nil : .easeOut(duration: 0.12)
     }
 
     var body: some View {
@@ -76,50 +59,16 @@ struct TyfeFocusTimerView: View {
     }
 
     private var timerDial: some View {
-        ZStack {
-            Circle()
-                .fill(daypart.visualStyle.primaryForeground.opacity(0.035))
-
-            Circle()
-                .stroke(
-                    daypart.visualStyle.primaryForeground.opacity(0.12),
-                    style: StrokeStyle(lineWidth: 10)
-                )
-
-            Circle()
-                .trim(from: 0, to: progress)
-                .stroke(
-                    timerAccent,
-                    style: StrokeStyle(lineWidth: 10, lineCap: .round)
-                )
-                .rotationEffect(.degrees(-90))
-                .animation(progressAnimation, value: progress)
-
-            Circle()
-                .stroke(
-                    daypart.visualStyle.primaryForeground.opacity(0.18),
-                    style: StrokeStyle(lineWidth: TyfeStroke.hairline)
-                )
-                .padding(18)
-
-            VStack(spacing: TyfeSpacing.small) {
-                Text(timeText)
-                    .font(.system(size: 54, weight: .black, design: .monospaced))
-                    .monospacedDigit()
-                    .foregroundStyle(daypart.visualStyle.primaryForeground)
-                    .minimumScaleFactor(0.62)
-
-                Text(timerCaption)
-                    .font(TyfeTypography.caption)
-                    .tracking(1.1)
-                    .foregroundStyle(daypart.visualStyle.secondaryForeground)
-            }
-            .padding(TyfeSpacing.card)
-        }
-        .frame(width: timerDiameter, height: timerDiameter)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text("Focus Session timer"))
-        .accessibilityValue(Text("\(timeText), \(session.state.displayName)"))
+        TyfeTimerDialView(
+            timeText: timeText,
+            caption: timerCaption,
+            progress: progress,
+            accent: daypart.visualStyle.accentFill,
+            primaryForeground: daypart.visualStyle.primaryForeground,
+            secondaryForeground: daypart.visualStyle.secondaryForeground,
+            accessibilityLabel: "Focus Session timer",
+            accessibilityValue: "\(timeText), \(session.state.displayName)"
+        )
     }
 
     private var timerCaption: String {

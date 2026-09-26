@@ -223,74 +223,20 @@ struct FocusView: View {
 #endif
     }
 
-    private func restTimer(daypart: FocusDaypart) -> some View {
-        let style = daypart.visualStyle
-
-        return TyfeSurfaceView(
-            role: .paper,
-            fill: style.cardFill,
-            foreground: style.primaryForeground,
-            strokeColor: style.cardBorder
-        ) {
-            VStack(spacing: TyfeSpacing.card) {
-                restTimerHeader(style: style)
-
-                Text(presenter.restTimerText)
-                    .font(.system(size: 54, weight: .black, design: .monospaced))
-                    .monospacedDigit()
-                    .foregroundStyle(style.primaryForeground)
-                    .accessibilityLabel("Rest timer")
-                    .accessibilityValue(presenter.restTimerText)
-
-                TyfeActionButtonView(
-                    title: "Skip and start another",
-                    systemImage: "arrow.clockwise",
-                    fill: style.accentFill,
-                    foreground: style.accentForeground,
-                    borderColor: style.accentForeground,
-                    onTap: presenter.onStartAnotherPressed
-                )
-
-                Text("Back to Today")
-                    .font(TyfeTypography.interfaceStrong)
-                    .foregroundStyle(style.primaryForeground)
-                    .frame(maxWidth: .infinity, minHeight: 44)
-                    .contentShape(Rectangle())
-                    .asButton(.press) {
-                        presenter.onBackToTodayPressed()
-                    }
-                    .accessibilityLabel("Back to Today")
-            }
-            .frame(maxWidth: .infinity)
-        }
-        .environment(\.colorScheme, .dark)
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("Five-minute Focus rest")
+    private var restProgress: Double {
+        let total = Double(FocusSessionModel.restDurationSeconds)
+        guard total > 0 else { return 0 }
+        return Double(presenter.remainingRestSeconds) / total
     }
 
-    private func restTimerHeader(style: FocusDaypartVisualStyle) -> some View {
-        VStack(spacing: TyfeSpacing.card) {
-            TyfeFocusStatusPillView(status: .available)
-
-            Image(systemName: "hourglass")
-                .font(.system(size: 38, weight: .black))
-                .foregroundStyle(style.accentForeground)
-                .frame(width: 76, height: 76)
-                .background(style.accentFill.opacity(0.14))
-                .clipShape(Circle())
-                .accessibilityHidden(true)
-
-            VStack(spacing: TyfeSpacing.small) {
-                Text("Take a 5-minute rest")
-                    .font(TyfeTypography.display)
-                    .multilineTextAlignment(.center)
-
-                Text("Let your mind reset before your next Focus Session.")
-                    .font(TyfeTypography.interface)
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(style.secondaryForeground)
-            }
-        }
+    private func restTimer(daypart: FocusDaypart) -> some View {
+        TyfeRestTimerView(
+            daypart: daypart,
+            timeText: presenter.restTimerText,
+            progress: restProgress,
+            onSkip: presenter.onStartAnotherPressed,
+            onBackToToday: presenter.onBackToTodayPressed
+        )
     }
 
     private func outcome(daypart: FocusDaypart) -> some View {

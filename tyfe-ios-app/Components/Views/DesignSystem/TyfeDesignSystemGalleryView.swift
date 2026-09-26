@@ -106,6 +106,13 @@ struct TyfeDesignSystemGalleryView: View {
                     onAbandon: {}
                 )
             }
+            TyfeRestTimerView(
+                daypart: .night,
+                timeText: "04:12",
+                progress: 0.84,
+                onSkip: {},
+                onBackToToday: {}
+            )
         }
     }
 

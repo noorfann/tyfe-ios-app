@@ -71,12 +71,31 @@ struct DesignSystemTests {
             onBegin: {},
             onAbandon: {}
         )
+        let restTimer = TyfeRestTimerView(
+            daypart: .afternoon,
+            timeText: "04:12",
+            progress: 0.84,
+            onSkip: {},
+            onBackToToday: {}
+        )
+        let timerDial = TyfeTimerDialView(
+            timeText: "04:12",
+            caption: "5 MINUTES",
+            progress: 0.84,
+            accent: FocusDaypart.afternoon.visualStyle.accentFill,
+            primaryForeground: FocusDaypart.afternoon.visualStyle.primaryForeground,
+            secondaryForeground: FocusDaypart.afternoon.visualStyle.secondaryForeground,
+            accessibilityLabel: "Rest timer",
+            accessibilityValue: "04:12"
+        )
         let status = TyfeStatusView(kind: .offline, onRetry: {})
         let motif = TyfeMotifView(kind: .completion)
 
         _ = Group {
             activity
             timer
+            restTimer
+            timerDial
             status
             motif
         }
