@@ -34,6 +34,7 @@ struct TyfeFocusTimerView: View {
     var body: some View {
         TyfeSurfaceView(
             role: .focusChamber,
+            glass: true,
             fill: daypart.visualStyle.cardFill,
             foreground: daypart.visualStyle.primaryForeground,
             strokeColor: daypart.visualStyle.cardBorder

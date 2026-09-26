@@ -15,6 +15,7 @@ struct TyfeRestTimerView: View {
     var body: some View {
         TyfeSurfaceView(
             role: .focusChamber,
+            glass: true,
             fill: style.cardFill,
             foreground: style.primaryForeground,
             strokeColor: style.cardBorder

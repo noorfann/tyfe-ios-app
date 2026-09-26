@@ -244,6 +244,7 @@ struct FocusView: View {
 
         return TyfeSurfaceView(
             role: .paper,
+            glass: true,
             fill: style.cardFill,
             foreground: style.primaryForeground,
             strokeColor: style.cardBorder

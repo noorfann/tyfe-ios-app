@@ -2,10 +2,13 @@ import SwiftUI
 
 struct TyfeSurfaceView<Content: View>: View {
     let role: TyfeSurfaceRole
+    private let glass: Bool
     private let fillOverride: Color?
     private let foregroundOverride: Color?
     private let strokeColorOverride: Color?
     private let content: Content
+
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     private var resolvedFill: Color {
         fillOverride ?? role.fill
@@ -28,12 +31,14 @@ struct TyfeSurfaceView<Content: View>: View {
 
     init(
         role: TyfeSurfaceRole = .paper,
+        glass: Bool = false,
         fill: Color? = nil,
         foreground: Color? = nil,
         strokeColor: Color? = nil,
         @ViewBuilder content: () -> Content
     ) {
         self.role = role
+        self.glass = glass
         self.fillOverride = fill
         self.foregroundOverride = foreground
         self.strokeColorOverride = strokeColor
@@ -45,7 +50,15 @@ struct TyfeSurfaceView<Content: View>: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(TyfeSpacing.card)
             .foregroundStyle(resolvedForeground)
-            .background(resolvedFill)
+            .background {
+                if glass && !reduceTransparency {
+                    RoundedRectangle(cornerRadius: TyfeRadius.card)
+                        .fill(.ultraThinMaterial)
+                        .overlay(resolvedFill.opacity(0.24))
+                } else {
+                    resolvedFill
+                }
+            }
             .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.card))
             .overlay {
                 RoundedRectangle(cornerRadius: TyfeRadius.card)
