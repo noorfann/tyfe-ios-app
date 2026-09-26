@@ -25,7 +25,7 @@ final class SystemFocusLiveActivityScheduler: FocusLiveActivityScheduling {
 #endif
     }
 
-    func start(for session: FocusSessionModel) {
+    func start(for session: FocusSessionModel, activityTitle: String) {
 #if os(iOS) && canImport(ActivityKit)
         let existingActivities = activities(for: session.focusSessionId)
         endImmediately(Array(existingActivities.dropFirst()))
@@ -51,7 +51,10 @@ final class SystemFocusLiveActivityScheduler: FocusLiveActivityScheduling {
 
         do {
             let activity = try Activity.request(
-                attributes: FocusLiveActivityAttributes(focusSessionId: session.focusSessionId),
+                attributes: FocusLiveActivityAttributes(
+                    focusSessionId: session.focusSessionId,
+                    activityTitle: activityTitle
+                ),
                 content: content,
                 pushType: nil
             )
@@ -60,7 +63,7 @@ final class SystemFocusLiveActivityScheduler: FocusLiveActivityScheduling {
             return
         }
 #else
-        _ = session
+        _ = (session, activityTitle)
 #endif
     }
 
@@ -89,21 +92,22 @@ final class SystemFocusLiveActivityScheduler: FocusLiveActivityScheduling {
 #endif
     }
 
-    func reconcile(activeSession: FocusSessionModel?) {
+    func reconcile(activeSession: FocusSessionModel?, activityTitle: String?) {
 #if os(iOS) && canImport(ActivityKit)
         guard let activeSession,
               activeSession.state == .running,
               let focusEndsAt = activeSession.focusEndsAt,
-              Date.now < focusEndsAt else {
+              Date.now < focusEndsAt,
+              let activityTitle else {
             endImmediately(Activity<FocusLiveActivityAttributes>.activities)
             return
         }
 
         dismissedSessionIds.remove(activeSession.focusSessionId)
         persistDismissedSessionIds()
-        start(for: activeSession)
+        start(for: activeSession, activityTitle: activityTitle)
 #else
-        _ = activeSession
+        _ = (activeSession, activityTitle)
 #endif
     }
 

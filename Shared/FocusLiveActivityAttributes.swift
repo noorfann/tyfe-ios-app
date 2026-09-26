@@ -5,6 +5,7 @@ import Foundation
 @available(iOS 16.1, *)
 struct FocusLiveActivityAttributes: ActivityAttributes {
     let focusSessionId: String
+    let activityTitle: String
 
     enum Phase: String, Codable, Hashable {
         case running

@@ -6,6 +6,19 @@ import Testing
 
 @MainActor
 struct FocusLiveActivityAttributesTests {
+    @Test func attributesRoundTripActivityTitle() throws {
+        let attributes = FocusLiveActivityAttributes(
+            focusSessionId: "focus-session-1",
+            activityTitle: "Study Swift"
+        )
+
+        let data = try JSONEncoder().encode(attributes)
+        let decoded = try JSONDecoder().decode(FocusLiveActivityAttributes.self, from: data)
+
+        #expect(decoded.focusSessionId == attributes.focusSessionId)
+        #expect(decoded.activityTitle == "Study Swift")
+    }
+
     @Test func contentStateUsesDefaultCodableWireShapeBelowActivityKitLimit() throws {
         let state = FocusLiveActivityAttributes.ContentState(
             phase: .running,

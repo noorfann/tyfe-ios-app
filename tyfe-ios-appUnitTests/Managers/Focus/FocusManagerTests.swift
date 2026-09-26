@@ -39,6 +39,21 @@ struct FocusManagerTests {
         #expect(scheduler.startedSessions.map(\.focusSessionId) == [session.focusSessionId])
     }
 
+    @Test func beginningAFocusSessionForwardsTheActivityTitleToTheLiveActivity() throws {
+        let clock = TestFocusClock()
+        let scheduler = RecordingFocusLiveActivityScheduler()
+        let manager = FocusManager(
+            repository: MockLocalAppRepository(),
+            clock: clock,
+            liveActivityScheduler: scheduler
+        )
+        let session = try #require(manager.startFocusSession(activityId: ActivityModel.mock.activityId))
+
+        _ = try manager.beginFocusSession(focusSessionId: session.focusSessionId)
+
+        #expect(scheduler.startedActivityTitles == [ActivityModel.mock.name])
+    }
+
     @Test func completedFocusSessionOffersAndPersistsFiveMinuteRest() throws {
         let clock = TestFocusClock()
         let scheduler = RecordingLocalTimerNotificationScheduler()

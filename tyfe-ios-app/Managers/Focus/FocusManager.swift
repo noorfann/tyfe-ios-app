@@ -71,11 +71,20 @@ final class FocusManager {
               session.state == .running,
               let focusEndsAt = session.focusEndsAt,
               clock.now < focusEndsAt else {
-            liveActivityScheduler?.reconcile(activeSession: nil)
+            liveActivityScheduler?.reconcile(activeSession: nil, activityTitle: nil)
             return
         }
 
-        liveActivityScheduler?.reconcile(activeSession: session)
+        liveActivityScheduler?.reconcile(
+            activeSession: session,
+            activityTitle: activityTitle(for: session)
+        )
+    }
+
+    private func activityTitle(for session: FocusSessionModel) -> String {
+        observableSnapshot.activities.first {
+            $0.activityId == session.activityId
+        }?.name ?? "Focus Session"
     }
 
     var currentLocalDay: LocalDay {
@@ -196,7 +205,7 @@ final class FocusManager {
         )
         try replace(runningSession)
         notificationScheduler?.scheduleFocusCompletion(for: runningSession)
-        liveActivityScheduler?.start(for: runningSession)
+        liveActivityScheduler?.start(for: runningSession, activityTitle: activityTitle(for: runningSession))
         return runningSession
     }
 
@@ -208,7 +217,7 @@ final class FocusManager {
             session = session.updated(state: .running, focusEndsAt: focusEndsAt)
             try replace(session)
             notificationScheduler?.scheduleFocusCompletion(for: session)
-            liveActivityScheduler?.start(for: session)
+            liveActivityScheduler?.start(for: session, activityTitle: activityTitle(for: session))
         }
 
         if session.state == .running,

@@ -29,7 +29,11 @@ struct FocusLiveActivityWidget: Widget {
                     }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    FocusLiveActivityStatusView(state: context.state)
+                    VStack(alignment: .leading, spacing: 2) {
+                        FocusLiveActivityTitleView(title: context.attributes.activityTitle)
+                        FocusLiveActivityStatusView(state: context.state)
+                            .font(.subheadline)
+                    }
                 }
             } compactLeading: {
                 FocusLiveActivityProgressRingView(state: context.state)
@@ -50,7 +54,10 @@ private struct FocusLiveActivityLockScreenView: View {
     var body: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                FocusLiveActivityBrandView()
+                HStack(spacing: 6) {
+                    FocusLiveActivityLogoView()
+                    FocusLiveActivityTitleView(title: context.attributes.activityTitle)
+                }
                 FocusLiveActivityStatusView(state: context.state)
                     .font(.subheadline)
             }
@@ -76,6 +83,19 @@ private struct FocusLiveActivityBrandView: View {
                 .font(.headline)
                 .fontWeight(.semibold)
         }
+    }
+}
+
+private struct FocusLiveActivityTitleView: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .font(.headline)
+            .fontWeight(.semibold)
+            .lineLimit(1)
+            .truncationMode(.tail)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
