@@ -155,7 +155,7 @@ struct FocusView: View {
             : daypart.visualStyle.accentForeground
         let minimizeFill = isMinimizeDisabled
             ? TyfeEditorialPalette.disabledFill
-            : daypart.visualStyle.accentFill
+            : daypart.visualStyle.focusAccentFill
 
         return HStack(spacing: 12) {
             Image(systemName: daypart.symbolName)
@@ -290,7 +290,7 @@ struct FocusView: View {
                 TyfeActionButtonView(
                     title: "Claim Reward",
                     systemImage: "gift.fill",
-                    fill: style.accentFill,
+                    fill: style.focusAccentFill,
                     foreground: style.accentForeground,
                     borderColor: style.accentForeground,
                     onTap: {
@@ -305,7 +305,7 @@ struct FocusView: View {
                         title: "Rest 5 minutes",
                         systemImage: "hourglass",
                         role: .secondary,
-                        fill: style.accentFill.opacity(0.12),
+                        fill: style.focusAccentFill.opacity(0.12),
                         foreground: style.primaryForeground,
                         borderColor: style.cardBorder,
                         onTap: presenter.onStartRestPressed
@@ -316,7 +316,7 @@ struct FocusView: View {
                     title: "Start another",
                     systemImage: "arrow.clockwise",
                     role: .secondary,
-                    fill: style.accentFill.opacity(0.12),
+                    fill: style.focusAccentFill.opacity(0.12),
                     foreground: style.primaryForeground,
                     borderColor: style.cardBorder,
                     onTap: presenter.onStartAnotherPressed

@@ -64,7 +64,7 @@ struct TyfeFocusTimerView: View {
             timeText: timeText,
             caption: timerCaption,
             progress: progress,
-            accent: daypart.visualStyle.accentFill,
+            accent: daypart.visualStyle.focusAccentFill,
             primaryForeground: daypart.visualStyle.primaryForeground,
             secondaryForeground: daypart.visualStyle.secondaryForeground,
             accessibilityLabel: "Focus Session timer",
@@ -129,7 +129,7 @@ struct TyfeFocusTimerView: View {
             title: title,
             systemImage: systemImage,
             isEnabled: isEnabled,
-            fill: daypart.visualStyle.accentFill,
+            fill: daypart.visualStyle.focusAccentFill,
             foreground: daypart.visualStyle.accentForeground,
             borderColor: daypart.visualStyle.accentForeground,
             onTap: onTap

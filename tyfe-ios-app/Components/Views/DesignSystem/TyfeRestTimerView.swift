@@ -51,7 +51,7 @@ struct TyfeRestTimerView: View {
             timeText: timeText,
             caption: "5 MINUTES",
             progress: progress,
-            accent: style.accentFill,
+            accent: style.focusAccentFill,
             primaryForeground: style.primaryForeground,
             secondaryForeground: style.secondaryForeground,
             accessibilityLabel: "Rest timer",
@@ -78,7 +78,7 @@ struct TyfeRestTimerView: View {
             TyfeActionButtonView(
                 title: "Skip and start another",
                 systemImage: "arrow.clockwise",
-                fill: style.accentFill,
+                fill: style.focusAccentFill,
                 foreground: style.accentForeground,
                 borderColor: style.accentForeground,
                 onTap: onSkip

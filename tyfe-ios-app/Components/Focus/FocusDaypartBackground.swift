@@ -56,6 +56,7 @@ enum FocusDaypart: CaseIterable, Hashable, Sendable {
                 primaryForeground: Color(hex: "F7F7F2"),
                 secondaryForeground: Color(hex: "C7D9E5"),
                 accentFill: Color(hex: "FFE49A"),
+                focusAccentFill: Color(hex: "72B7D9"),
                 accentForeground: Color(hex: "1E201C"),
                 backgroundForeground: Color(hex: "1E201C")
             )
@@ -66,6 +67,7 @@ enum FocusDaypart: CaseIterable, Hashable, Sendable {
                 primaryForeground: Color(hex: "FFF0D8"),
                 secondaryForeground: Color(hex: "E9C8BE"),
                 accentFill: Color(hex: "F4C98B"),
+                focusAccentFill: Color(hex: "F4C98B"),
                 accentForeground: Color(hex: "443342"),
                 backgroundForeground: Color(hex: "3E2B35")
             )
@@ -76,6 +78,7 @@ enum FocusDaypart: CaseIterable, Hashable, Sendable {
                 primaryForeground: Color(hex: "F7F7F2"),
                 secondaryForeground: Color(hex: "C8D1E8"),
                 accentFill: Color(hex: "DCE7FF"),
+                focusAccentFill: Color(hex: "DCE7FF"),
                 accentForeground: Color(hex: "1E201C"),
                 backgroundForeground: Color(hex: "F7F7F2")
             )
@@ -124,6 +127,7 @@ struct FocusDaypartVisualStyle {
     let primaryForeground: Color
     let secondaryForeground: Color
     let accentFill: Color
+    let focusAccentFill: Color
     let accentForeground: Color
     let backgroundForeground: Color
 }
