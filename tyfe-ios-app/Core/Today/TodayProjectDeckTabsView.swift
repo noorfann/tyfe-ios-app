@@ -71,11 +71,18 @@ struct TodayProjectDeckTabsView: View {
         .background(TyfeEditorialPalette.paper)
         .clipShape(Capsule())
         .overlay {
-            Capsule()
-                .stroke(
-                    isSelected ? projectColor : TyfeEditorialPalette.controlBorder,
-                    lineWidth: isSelected ? TyfeStroke.standard : TyfeStroke.hairline
-                )
+            if isSelected {
+                Capsule()
+                    .strokeBorder(TyfeEditorialPalette.ink, lineWidth: TyfeStroke.hairline)
+                    .overlay {
+                        Capsule()
+                            .inset(by: TyfeStroke.hairline)
+                            .strokeBorder(projectColor, lineWidth: TyfeStroke.emphasis)
+                    }
+            } else {
+                Capsule()
+                    .strokeBorder(TyfeEditorialPalette.controlBorder, lineWidth: TyfeStroke.hairline)
+            }
         }
         .asButton(.press) {
             onSelect(projectId)
