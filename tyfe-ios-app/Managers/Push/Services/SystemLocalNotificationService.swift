@@ -31,7 +31,9 @@ struct SystemLocalNotificationService: LocalNotificationService {
         let content = UNMutableNotificationContent()
         content.title = request.title
         content.body = request.body
-        content.sound = .default
+        content.sound = request.soundFileName.map {
+            UNNotificationSound(named: UNNotificationSoundName(rawValue: $0))
+        } ?? .default
 
         let dateComponents = Calendar.autoupdatingCurrent.dateComponents(
             [.year, .month, .day, .hour, .minute, .second],

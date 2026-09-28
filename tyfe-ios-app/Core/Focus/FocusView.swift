@@ -89,6 +89,8 @@ struct FocusView: View {
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
                 presenter.onSceneBecameActive()
+            } else {
+                presenter.onSceneBecameInactive()
             }
         }
         .onChange(of: presenter.session.state) { oldState, newState in

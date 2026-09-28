@@ -94,7 +94,8 @@ final class PushManager: LocalTimerNotificationScheduling {
                 identifier: identifier,
                 title: "Focus Session complete",
                 body: "Nice work. Your Reward Credit is ready.",
-                deliveryDate: focusEndsAt
+                deliveryDate: focusEndsAt,
+                soundFileName: SoundEffectFile.finish.fileName
             )]
         setDesiredGroup(
             PendingLocalNotificationGroup(
@@ -251,7 +252,8 @@ final class PushManager: LocalTimerNotificationScheduling {
                     identifier: request.identifier,
                     title: request.title,
                     body: request.body,
-                    deliveryDate: deliveryDate
+                    deliveryDate: deliveryDate,
+                    soundFileName: request.soundFileName
                 ))
             }
             logManager?.trackEvent(event: Event.scheduleSuccess(kind: kind))

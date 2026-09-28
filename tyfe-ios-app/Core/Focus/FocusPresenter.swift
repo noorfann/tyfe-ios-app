@@ -14,6 +14,7 @@ final class FocusPresenter {
     private(set) var daypart: FocusDaypart
     private var tickerTask: Task<Void, Never>?
     private var daypartTask: Task<Void, Never>?
+    private var isSceneActive = false
 
     init(interactor: FocusInteractor, router: FocusRouter, session: FocusSessionModel) {
         self.interactor = interactor
@@ -73,14 +74,20 @@ final class FocusPresenter {
     func onViewAppear(delegate: FocusDelegate) {
         interactor.trackScreenEvent(event: Event.onAppear(delegate: delegate))
         interactor.setFocusScreenVisible(true)
+        interactor.prepareSoundEffect(sound: .start, simultaneousPlayers: 1)
+        interactor.prepareSoundEffect(sound: .finish, simultaneousPlayers: 1)
         refresh()
+        isSceneActive = true
         startTicker()
         startDaypartUpdates()
     }
 
     func onViewDisappear(delegate: FocusDelegate) {
+        isSceneActive = false
         stopTicker()
         stopDaypartUpdates()
+        interactor.tearDownSoundEffect(sound: .start)
+        interactor.tearDownSoundEffect(sound: .finish)
         interactor.setFocusScreenVisible(false)
         interactor.trackEvent(event: Event.onDisappear(delegate: delegate))
         delegate.onDismiss?()
@@ -113,11 +120,12 @@ final class FocusPresenter {
         )
     }
 
-    private func beginFocusAfterConfirmation() {
+    func beginFocusAfterConfirmation() {
         do {
             session = try interactor.beginFocusSession(focusSessionId: session.focusSessionId)
             refresh()
             startTicker()
+            interactor.playSoundEffect(sound: .start)
             interactor.trackEvent(event: Event.onBegin)
         } catch FocusManagerError.rewardInProgress {
             showRewardBlockingAlert()
@@ -128,10 +136,15 @@ final class FocusPresenter {
 
     func onSceneBecameActive() {
         refresh()
+        isSceneActive = true
         startDaypartUpdates()
         if session.state == .running || session.isResting {
             startTicker()
         }
+    }
+
+    func onSceneBecameInactive() {
+        isSceneActive = false
     }
 
     func onStartAnotherPressed() {
@@ -168,9 +181,13 @@ final class FocusPresenter {
 #if MOCK
     func onMarkCompletePressed() {
         do {
+            let wasRunning = session.state == .running
             session = try interactor.markFocusSessionCompleteForTesting(
                 focusSessionId: session.focusSessionId
             )
+            if wasRunning, session.state == .completed, isSceneActive {
+                interactor.playSoundEffect(sound: .finish)
+            }
             refresh()
             stopTicker()
         } catch {
@@ -198,7 +215,7 @@ final class FocusPresenter {
         onNavigateToRewards()
     }
 
-    private func refresh() {
+    private func refresh(playCompletionSound: Bool = false) {
         do {
             let previousSession = session
             let refresh = try interactor.refreshFocusSession(focusSessionId: session.focusSessionId)
@@ -206,6 +223,11 @@ final class FocusPresenter {
             remainingFocusSeconds = refresh.remainingFocusSeconds
             remainingRestSeconds = refresh.remainingRestSeconds
             completion = refresh.completion
+            if playCompletionSound,
+               previousSession.state == .running,
+               session.state == .completed {
+                interactor.playSoundEffect(sound: .finish)
+            }
             if session.state == .completed, session.restState == .active {
                 startTicker()
             } else if session.state == .completed || session.state == .abandoned {
@@ -221,6 +243,10 @@ final class FocusPresenter {
         }
     }
 
+    func onTimerTick() {
+        refresh(playCompletionSound: isSceneActive)
+    }
+
     private func startTicker() {
         stopTicker()
         guard session.state == .running || session.isResting else { return }
@@ -228,7 +254,7 @@ final class FocusPresenter {
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(1))
                 guard !Task.isCancelled else { return }
-                self?.refresh()
+                self?.onTimerTick()
             }
         }
     }

@@ -28,6 +28,7 @@ struct PushManagerTests {
         await waitForRequestCount(1, service: service)
 
         #expect(service.scheduledRequests.first?.identifier == "tyfe.plan.daily-plan-test.time-block-test")
+        #expect(service.scheduledRequests.first?.soundFileName == nil)
         assertCopyIsWarm(service.scheduledRequests)
     }
 
@@ -47,6 +48,7 @@ struct PushManagerTests {
         await waitForRequestCount(1, service: service)
 
         #expect(service.scheduledRequests.first?.identifier == "tyfe.focus.focus-session-test.completion")
+        #expect(service.scheduledRequests.first?.soundFileName == "finish.wav")
         assertCopyIsWarm(service.scheduledRequests)
     }
 
@@ -68,6 +70,7 @@ struct PushManagerTests {
         await waitForRequestCount(1, service: service)
 
         #expect(service.scheduledRequests.first?.identifier == "tyfe.focus-rest.focus-session-rest.completion")
+        #expect(service.scheduledRequests.first?.soundFileName == nil)
         assertCopyIsWarm(service.scheduledRequests)
     }
 
@@ -88,6 +91,7 @@ struct PushManagerTests {
         await waitForRequestCount(1, service: service)
 
         #expect(service.scheduledRequests.first?.identifier == "tyfe.reward.reward-claim-test.expiry")
+        #expect(service.scheduledRequests.first?.soundFileName == nil)
         assertCopyIsWarm(service.scheduledRequests)
     }
 
@@ -174,6 +178,7 @@ struct PushManagerTests {
         await waitForRequestCount(1, service: service)
 
         #expect(service.scheduledRequests.first?.deliveryDate == expectedDate)
+        #expect(service.scheduledRequests.first?.soundFileName == "finish.wav")
     }
 
     private func waitForRequestCount(

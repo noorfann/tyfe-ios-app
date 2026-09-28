@@ -10,12 +10,15 @@ import Foundation
 // Add the file to the bundle (ie. in SoundEffectFiles folder) and create an enum case!
 
 enum SoundEffectFile: String, Equatable {
-    case sample
+    case start
+    case finish
     
     var fileName: String {
         switch self {
-        case .sample:
-            return "Sample.wav"
+        case .start:
+            return "start.wav"
+        case .finish:
+            return "finish.wav"
         }
     }
     
