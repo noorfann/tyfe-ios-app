@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftfulUI
+import Lottie
 
 struct FocusDelegate {
     let activity: ActivityModel
@@ -252,7 +253,7 @@ struct FocusView: View {
             strokeColor: style.cardBorder
         ) {
             VStack(spacing: TyfeSpacing.card) {
-                outcomeIcon
+                outcomeArtwork
                 outcomeCopy(style: style)
                 outcomeActions(style: style)
             }
@@ -261,6 +262,19 @@ struct FocusView: View {
         .environment(\.colorScheme, .dark)
         .accessibilityElement(children: .contain)
         .accessibilityLabel(presenter.session.state == .completed ? "Focus session complete" : "Focus session abandoned")
+    }
+
+    @ViewBuilder
+    private var outcomeArtwork: some View {
+        if presenter.session.state == .completed && !reduceMotion {
+            LottieView(animation: .named("finish-session"))
+                .playing(loopMode: .playOnce)
+                .resizable()
+                .frame(width: 160, height: 160)
+                .accessibilityHidden(true)
+        } else {
+            outcomeIcon
+        }
     }
 
     private var outcomeIcon: some View {
