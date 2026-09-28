@@ -72,6 +72,136 @@ struct TodayManagerTests {
         #expect(manager.activities[0] == original)
     }
 
+    @Test func projectsTrimNamesAndRejectCaseInsensitiveDuplicates() throws {
+        let manager = TodayManager(repository: MockLocalAppRepository())
+
+        let project = try #require(manager.createProject(name: "  Writing  "))
+
+        #expect(project.name == "Writing")
+        #expect(manager.createProject(name: " writing ") == nil)
+        #expect(manager.createProject(name: "   ") == nil)
+        #expect(manager.renameProject(projectId: project.projectId, name: "  Writing  ")?.name == "Writing")
+    }
+
+    @Test func projectAppearanceCanBeCreatedAndUpdated() throws {
+        let manager = TodayManager(repository: MockLocalAppRepository())
+        let project = try #require(manager.createProject(
+            name: "Reading",
+            colorToken: "olive"
+        ))
+
+        #expect(project.iconToken == ProjectModel.defaultIconToken)
+        #expect(project.colorToken == "olive")
+
+        let updated = try #require(manager.renameProject(
+            projectId: project.projectId,
+            name: "Learning",
+            colorToken: "#12ABCD"
+        ))
+
+        #expect(updated.name == "Learning")
+        #expect(updated.iconToken == project.iconToken)
+        #expect(updated.colorToken == "#12ABCD")
+    }
+
+    @Test func renamingProjectPreservesLegacyIconToken() throws {
+        var snapshot = LocalAppSnapshot.mock
+        snapshot.projects = [ProjectModel(
+            projectId: "project-legacy",
+            name: "Reading",
+            iconToken: "leaf.fill",
+            colorToken: "olive"
+        )]
+        let manager = TodayManager(repository: MockLocalAppRepository(snapshot: snapshot))
+
+        let updated = try #require(manager.renameProject(
+            projectId: "project-legacy",
+            name: "Nature",
+            colorToken: "#33AA55"
+        ))
+
+        #expect(updated.iconToken == "leaf.fill")
+        #expect(updated.colorToken == "#33AA55")
+    }
+
+    @Test func renamingProjectRejectsAnotherProjectsName() throws {
+        let manager = TodayManager(repository: MockLocalAppRepository())
+        let writing = try #require(manager.createProject(name: "Writing"))
+        let reading = try #require(manager.createProject(name: "Reading"))
+
+        #expect(manager.renameProject(projectId: reading.projectId, name: "  WRITING ") == nil)
+        #expect(manager.projects == [writing, reading])
+    }
+
+    @Test func assigningActivityRequiresExistingProject() throws {
+        let manager = TodayManager(repository: MockLocalAppRepository())
+        let activity = try #require(manager.activities.first)
+        let project = try #require(manager.createProject(name: "Writing"))
+
+        #expect(!manager.assignActivity(activityId: activity.activityId, to: "missing-project"))
+        #expect(manager.assignActivity(activityId: activity.activityId, to: project.projectId))
+        #expect(manager.activities.first?.projectId == project.projectId)
+        #expect(manager.assignActivity(activityId: activity.activityId, to: nil))
+        #expect(manager.activities.first?.projectId == nil)
+    }
+
+    @Test func deletingProjectUnassignsActivitiesAndPreservesPlansAndSessions() throws {
+        let activity = ActivityModel.mock
+        let project = ProjectModel(projectId: "project-to-delete", name: "Writing")
+        let plan = DailyPlanModel(
+            dailyPlanId: "daily-plan-preserved",
+            localDate: Date(),
+            intendedSessionCount: 1,
+            originalIntendedSessionCount: 1,
+            activityIds: [activity.activityId]
+        )
+        let session = FocusSessionModel.completedMock
+        let originalSnapshot = LocalAppSnapshot(
+            activities: [ActivityModel(
+                activityId: activity.activityId,
+                name: activity.name,
+                category: activity.category,
+                iconToken: activity.iconToken,
+                colorToken: activity.colorToken,
+                projectId: project.projectId,
+                isArchived: activity.isArchived,
+                createdAt: activity.createdAt
+            )],
+            projects: [project],
+            dailyPlans: [plan],
+            focusSessions: [session],
+            nextActivityNumber: 2,
+            nextProjectNumber: 2,
+            nextSessionNumber: 2
+        )
+        let repository = MockLocalAppRepository(snapshot: originalSnapshot)
+        let manager = TodayManager(repository: repository)
+
+        #expect(manager.deleteProject(projectId: project.projectId))
+
+        #expect(manager.projects.isEmpty)
+        #expect(manager.activities.first?.projectId == nil)
+        #expect(repository.snapshot.dailyPlans == originalSnapshot.dailyPlans)
+        #expect(repository.snapshot.focusSessions == originalSnapshot.focusSessions)
+    }
+
+    @Test func selectedProjectPersistsAndDeletionFallsBackToUnassigned() throws {
+        let suiteName = "TodayManagerTests.selectedProject.\(UUID().uuidString)"
+        let userDefaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { userDefaults.removePersistentDomain(forName: suiteName) }
+        let repository = MockLocalAppRepository()
+        let manager = TodayManager(repository: repository, userDefaults: userDefaults)
+        let project = try #require(manager.createProject(name: "Writing"))
+
+        manager.setSelectedProjectId(project.projectId)
+
+        #expect(manager.selectedProjectId == project.projectId)
+        let reloaded = TodayManager(repository: repository, userDefaults: userDefaults)
+        #expect(reloaded.selectedProjectId == project.projectId)
+        #expect(reloaded.deleteProject(projectId: project.projectId))
+        #expect(reloaded.selectedProjectId == nil)
+    }
+
     @Test func planEditingPreservesCompletedSessionMinimum() throws {
         let clock = TestFocusClock()
         let repository = MockLocalAppRepository()

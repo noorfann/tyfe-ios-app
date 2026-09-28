@@ -10,7 +10,6 @@ final class StarterActivityPresenter {
     private var onComplete: (() -> Void)?
 
     var activityName = ""
-    var selectedCategory: ActivityCategory = .study
     var selectedColorToken = "teal"
 
     init(interactor: StarterActivityInteractor, router: StarterActivityRouter) {
@@ -34,7 +33,7 @@ final class StarterActivityPresenter {
     func onContinuePressed() {
         guard let activity = interactor.createPhase1Activity(
             name: activityName,
-            category: selectedCategory,
+            category: nil,
             colorToken: selectedColorToken
         ) else {
             return

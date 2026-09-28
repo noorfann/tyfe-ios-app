@@ -6,29 +6,32 @@ struct TodayActivityDetailSheet: View {
     let activity: ActivityModel
     let initialSessionCount: Int
     let completedSessionCount: Int
-    let onSave: (_ name: String, _ category: ActivityCategory?, _ sessionCount: Int) -> Void
+    let projects: [ProjectModel]
+    let onSave: (_ name: String, _ category: ActivityCategory?, _ sessionCount: Int, _ projectId: String?) -> Void
     let onRemove: (() -> Void)?
 
     @State private var activityName: String
-    @State private var selectedCategory: ActivityCategory?
     @State private var sessionCount: Int
+    @State private var selectedProjectId: String?
 
     init(
         activity: ActivityModel,
         initialSessionCount: Int,
         completedSessionCount: Int,
-        onSave: @escaping (_ name: String, _ category: ActivityCategory?, _ sessionCount: Int) -> Void,
+        projects: [ProjectModel],
+        onSave: @escaping (_ name: String, _ category: ActivityCategory?, _ sessionCount: Int, _ projectId: String?) -> Void,
         onRemove: (() -> Void)?
     ) {
         let minimumSessionCount = max(completedSessionCount, 1)
         self.activity = activity
         self.initialSessionCount = initialSessionCount
         self.completedSessionCount = completedSessionCount
+        self.projects = projects
         self.onSave = onSave
         self.onRemove = onRemove
         _activityName = State(initialValue: activity.name)
-        _selectedCategory = State(initialValue: activity.category)
         _sessionCount = State(initialValue: max(initialSessionCount, minimumSessionCount))
+        _selectedProjectId = State(initialValue: activity.projectId)
     }
 
     private var minimumSessionCount: Int {
@@ -61,6 +64,29 @@ struct TodayActivityDetailSheet: View {
         }
     }
 
+    private var projectPicker: some View {
+        VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+            Text("SPACE")
+                .font(TyfeTypography.eyebrow)
+                .tracking(1.1)
+                .foregroundStyle(TyfeEditorialPalette.muted)
+
+            Picker("Space", selection: $selectedProjectId) {
+                Text("Other")
+                    .tag(nil as String?)
+                ForEach(projects) { project in
+                    Text(project.name)
+                        .tag(Optional(project.projectId))
+                }
+            }
+            .pickerStyle(.menu)
+            .tint(TyfeEditorialPalette.ink)
+            .frame(minHeight: 44, alignment: .leading)
+            .accessibilityLabel("Space")
+            .accessibilityIdentifier("activity-space-picker")
+        }
+    }
+
     private var activityForm: some View {
         TyfeSurfaceView(role: .paper) {
             VStack(alignment: .leading, spacing: TyfeSpacing.control) {
@@ -70,18 +96,7 @@ struct TodayActivityDetailSheet: View {
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
                 TyfeTextFieldView(placeholder: "Name your activity", text: $activityName)
-
-                Picker("Category", selection: $selectedCategory) {
-                    Text("Uncategorized")
-                        .tag(nil as ActivityCategory?)
-                    ForEach(ActivityCategory.allCases, id: \.self) { category in
-                        Text(category.displayName)
-                            .tag(Optional(category))
-                    }
-                }
-                .pickerStyle(.menu)
-                .tint(TyfeEditorialPalette.ink)
-                .frame(minHeight: 44, alignment: .leading)
+                projectPicker
             }
         }
     }
@@ -153,7 +168,7 @@ struct TodayActivityDetailSheet: View {
     }
 
     private func save() {
-        onSave(activityName, selectedCategory, sessionCount)
+        onSave(activityName, activity.category, sessionCount, selectedProjectId)
     }
 }
 
@@ -162,7 +177,8 @@ struct TodayActivityDetailSheet: View {
         activity: .mock,
         initialSessionCount: 3,
         completedSessionCount: 0,
-        onSave: { _, _, _ in },
+        projects: ProjectModel.mocks,
+        onSave: { _, _, _, _ in },
         onRemove: { }
     )
     .padding()
@@ -174,7 +190,8 @@ struct TodayActivityDetailSheet: View {
         activity: .mock,
         initialSessionCount: 3,
         completedSessionCount: 1,
-        onSave: { _, _, _ in },
+        projects: ProjectModel.mocks,
+        onSave: { _, _, _, _ in },
         onRemove: nil
     )
     .padding()
@@ -186,7 +203,8 @@ struct TodayActivityDetailSheet: View {
         activity: .mock,
         initialSessionCount: 2,
         completedSessionCount: 2,
-        onSave: { _, _, _ in },
+        projects: ProjectModel.mocks,
+        onSave: { _, _, _, _ in },
         onRemove: nil
     )
     .padding()
@@ -199,7 +217,8 @@ struct TodayActivityDetailSheet: View {
             activity: .mock,
             initialSessionCount: 3,
             completedSessionCount: 1,
-            onSave: { _, _, _ in },
+            projects: ProjectModel.mocks,
+            onSave: { _, _, _, _ in },
             onRemove: nil
         )
         .padding()

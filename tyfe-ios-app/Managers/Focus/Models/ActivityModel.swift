@@ -17,6 +17,7 @@ struct ActivityModel: Identifiable, Codable, Hashable {
     let category: ActivityCategory?
     let iconToken: String?
     let colorToken: String?
+    var projectId: String?
     let isArchived: Bool
     let createdAt: Date
 
@@ -30,6 +31,7 @@ struct ActivityModel: Identifiable, Codable, Hashable {
         category: ActivityCategory? = nil,
         iconToken: String? = nil,
         colorToken: String? = nil,
+        projectId: String? = nil,
         isArchived: Bool = false,
         createdAt: Date
     ) {
@@ -38,6 +40,7 @@ struct ActivityModel: Identifiable, Codable, Hashable {
         self.category = category
         self.iconToken = iconToken
         self.colorToken = colorToken
+        self.projectId = projectId
         self.isArchived = isArchived
         self.createdAt = createdAt
     }

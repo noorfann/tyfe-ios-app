@@ -2,6 +2,15 @@ import SwiftUI
 import Testing
 @testable import tyfe_ios_app
 
+private struct ProjectHistoryFixture {
+    let snapshot: LocalAppSnapshot
+    let project: ProjectModel
+    let firstActivity: ActivityModel
+    let secondActivity: ActivityModel
+    let previousDay: LocalDay
+    let currentDay: LocalDay
+}
+
 @MainActor
 struct TodayPresenterTests {
 
@@ -24,6 +33,75 @@ struct TodayPresenterTests {
         )
     }
 
+    private func projectHistoryFixture() -> ProjectHistoryFixture {
+        let currentDay = LocalDay(containing: Date(), calendar: .autoupdatingCurrent)
+        let previousDay = currentDay.adding(days: -1)
+        let project = ProjectModel(projectId: "project-writing", name: "Writing")
+        let firstActivity = projectActivity(
+            id: "activity-project-first",
+            name: "Write report",
+            category: .work,
+            project: project
+        )
+        let secondActivity = projectActivity(
+            id: "activity-project-second",
+            name: "Study Swift",
+            category: .study,
+            project: project
+        )
+        let plans = [
+            projectPlan(id: "daily-plan-project-previous", day: previousDay, activities: [secondActivity]),
+            projectPlan(id: "daily-plan-project-current", day: currentDay, activities: [firstActivity, secondActivity])
+        ]
+        let snapshot = LocalAppSnapshot(
+            activities: [firstActivity, secondActivity],
+            projects: [project],
+            dailyPlans: plans,
+            focusSessions: [],
+            nextActivityNumber: 1,
+            nextProjectNumber: 1,
+            nextSessionNumber: 1
+        )
+        return ProjectHistoryFixture(
+            snapshot: snapshot,
+            project: project,
+            firstActivity: firstActivity,
+            secondActivity: secondActivity,
+            previousDay: previousDay,
+            currentDay: currentDay
+        )
+    }
+
+    private func projectActivity(
+        id: String,
+        name: String,
+        category: ActivityCategory,
+        project: ProjectModel
+    ) -> ActivityModel {
+        ActivityModel(
+            activityId: id,
+            name: name,
+            category: category,
+            projectId: project.projectId,
+            createdAt: Date()
+        )
+    }
+
+    private func projectPlan(
+        id: String,
+        day: LocalDay,
+        activities: [ActivityModel]
+    ) -> DailyPlanModel {
+        DailyPlanModel(
+            dailyPlanId: id,
+            localDate: day.startDate,
+            localDay: day,
+            intendedSessionCount: activities.count,
+            originalIntendedSessionCount: activities.count,
+            activityIds: activities.map(\.activityId)
+        )
+    }
+
     @Test func pressingStreakRequestsDetailRoute() {
         let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
         let interactor = CoreInteractor(container: dependencies.container)
@@ -34,6 +112,19 @@ struct TodayPresenterTests {
 
         #expect(router.didShowStreak)
         #expect(TodayPresenter.Event.openStreak.eventName == "Today_Streak_Open")
+    }
+
+    @Test func projectManagementOpensDedicatedScreen() {
+        let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
+        let router = RecordingTodayRouter()
+        let presenter = TodayPresenter(
+            interactor: CoreInteractor(container: dependencies.container),
+            router: router
+        )
+
+        presenter.onProjectManagementPressed()
+
+        #expect(router.didShowProjectManagement)
     }
 
     @Test func streakCountReadsLiveManagerState() async throws {
@@ -56,6 +147,7 @@ struct TodayPresenterTests {
     @Test func editingActivityUpdatesGlobalDetailsAndPlannedDuration() throws {
         let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
         let manager = try #require(dependencies.container.resolve(TodayManager.self))
+        let project = try #require(manager.createProject(name: "Writing"))
         _ = manager.addActivityToDailyPlan(
             activityId: ActivityModel.mock.activityId,
             sessionCount: 2
@@ -74,11 +166,13 @@ struct TodayPresenterTests {
         presenter.saveActivityEdits(
             name: "  Renamed activity  ",
             category: .work,
-            sessionCount: 4
+            sessionCount: 4,
+            projectId: project.projectId
         )
 
         #expect(manager.activities.first { $0.activityId == item.activityId }?.name == "Renamed activity")
         #expect(manager.activities.first { $0.activityId == item.activityId }?.category == .work)
+        #expect(manager.activities.first { $0.activityId == item.activityId }?.projectId == project.projectId)
         #expect(manager.dailyPlan?.planItems.first?.plannedSessionCount == 4)
         #expect(!presenter.isActivityDetailSheetPresented)
         #expect(presenter.editingActivity == nil)
@@ -147,7 +241,7 @@ struct TodayPresenterTests {
         let existingItem = try #require(presenter.planItems.first)
         #expect(presenter.selectedPlanItemId == existingItem.id)
 
-        presenter.saveActivity(name: "Write report", category: .work, sessionCount: 1)
+        presenter.saveActivity(name: "Write report", category: .work, sessionCount: 1, projectId: nil)
 
         let newActivity = try #require(manager.activities.first { $0.name == "Write report" })
         let newItem = try #require(
@@ -155,6 +249,162 @@ struct TodayPresenterTests {
         )
         #expect(presenter.planItems.count == 2)
         #expect(presenter.selectedPlanItemId == newItem.id)
+    }
+
+    @Test func projectDeckFiltersActivitiesAndKeepsProgressDayWide() throws {
+        let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
+        let manager = try #require(dependencies.container.resolve(TodayManager.self))
+        let firstActivity = try #require(manager.activities.first)
+        let secondActivity = try #require(manager.createActivity(
+            name: "Write report",
+            category: .work,
+            colorToken: "slateBlue"
+        ))
+        let writing = try #require(manager.createProject(name: "Writing"))
+        let home = try #require(manager.createProject(name: "Home"))
+        #expect(manager.assignActivity(activityId: firstActivity.activityId, to: writing.projectId))
+        #expect(manager.assignActivity(activityId: secondActivity.activityId, to: home.projectId))
+        _ = manager.addActivityToDailyPlan(activityId: firstActivity.activityId, sessionCount: 2)
+        _ = manager.addActivityToDailyPlan(activityId: secondActivity.activityId, sessionCount: 1)
+        let presenter = TodayPresenter(
+            interactor: CoreInteractor(container: dependencies.container),
+            router: RecordingTodayRouter()
+        )
+
+        presenter.onViewAppear(delegate: TodayDelegate())
+        #expect(!presenter.hasUnassignedPlannedActivities)
+        presenter.selectProject(writing.projectId)
+
+        #expect(presenter.deckPlanItems.map(\.activityId) == [firstActivity.activityId])
+        #expect(presenter.planProgressLabel == "0 of 3")
+
+        presenter.selectProject(home.projectId)
+
+        #expect(presenter.deckPlanItems.map(\.activityId) == [secondActivity.activityId])
+    }
+
+    @Test func unassignedDeckAppearsOnlyWhenItHasPlannedActivities() throws {
+        let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
+        let manager = try #require(dependencies.container.resolve(TodayManager.self))
+        let activity = try #require(manager.createActivity(
+            name: "Read a book",
+            category: nil,
+            colorToken: nil
+        ))
+        _ = manager.addActivityToDailyPlan(activityId: activity.activityId, sessionCount: 1)
+        let project = try #require(manager.createProject(name: "Reading"))
+        let presenter = TodayPresenter(
+            interactor: CoreInteractor(container: dependencies.container),
+            router: RecordingTodayRouter()
+        )
+
+        presenter.onViewAppear(delegate: TodayDelegate())
+        #expect(presenter.hasUnassignedPlannedActivities)
+
+        #expect(manager.assignActivity(activityId: activity.activityId, to: project.projectId))
+        presenter.onViewAppear(delegate: TodayDelegate())
+
+        #expect(!presenter.hasUnassignedPlannedActivities)
+    }
+
+    @Test func addingActivityFromSelectedProjectAssignsItToThatDeck() throws {
+        let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
+        let manager = try #require(dependencies.container.resolve(TodayManager.self))
+        let project = try #require(manager.createProject(name: "Writing"))
+        let presenter = TodayPresenter(
+            interactor: CoreInteractor(container: dependencies.container),
+            router: RecordingTodayRouter()
+        )
+        presenter.onViewAppear(delegate: TodayDelegate())
+        presenter.selectProject(project.projectId)
+
+        presenter.saveActivity(
+            name: "Write report",
+            category: .work,
+            sessionCount: 2,
+            projectId: presenter.selectedProjectId
+        )
+
+        let activity = try #require(manager.activities.first { $0.name == "Write report" })
+        #expect(activity.projectId == project.projectId)
+        #expect(presenter.deckPlanItems.map(\.activityId) == [activity.activityId])
+    }
+
+    @Test func choosingDifferentProjectForNewActivityOpensThatDeck() throws {
+        let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
+        let manager = try #require(dependencies.container.resolve(TodayManager.self))
+        let currentProject = try #require(manager.createProject(name: "Writing"))
+        let destinationProject = try #require(manager.createProject(name: "Research"))
+        let presenter = TodayPresenter(
+            interactor: CoreInteractor(container: dependencies.container),
+            router: RecordingTodayRouter()
+        )
+        presenter.onViewAppear(delegate: TodayDelegate())
+        presenter.selectProject(currentProject.projectId)
+
+        presenter.saveActivity(
+            name: "Read papers",
+            category: .study,
+            sessionCount: 1,
+            projectId: destinationProject.projectId
+        )
+
+        let activity = try #require(manager.activities.first { $0.name == "Read papers" })
+        #expect(presenter.selectedProjectId == destinationProject.projectId)
+        #expect(presenter.deckPlanItems.map(\.activityId) == [activity.activityId])
+    }
+
+    @Test func projectSelectionAndDeckFilterPersistAcrossDayNavigation() throws {
+        let fixture = projectHistoryFixture()
+        let dependencies = Dependencies(
+            config: .mock(isSignedIn: true, addLogging: false),
+            snapshotOverride: fixture.snapshot
+        )
+        let presenter = TodayPresenter(
+            interactor: CoreInteractor(container: dependencies.container),
+            router: RecordingTodayRouter()
+        )
+
+        presenter.onViewAppear(delegate: TodayDelegate())
+        presenter.selectProject(fixture.project.projectId)
+        presenter.onPreviousDayPressed()
+
+        #expect(presenter.selectedLocalDay == fixture.previousDay)
+        #expect(presenter.selectedProjectId == fixture.project.projectId)
+        #expect(presenter.deckPlanItems.map(\.activityId) == [fixture.secondActivity.activityId])
+        #expect(presenter.planProgressLabel == "0 of 1")
+
+        presenter.onNextDayPressed()
+
+        #expect(presenter.selectedLocalDay == fixture.currentDay)
+        #expect(presenter.deckPlanItems.map(\.activityId) == [
+            fixture.firstActivity.activityId,
+            fixture.secondActivity.activityId
+        ])
+        #expect(presenter.planProgressLabel == "0 of 2")
+    }
+
+    @Test func deletedSelectedProjectFallsBackToUnassignedDeck() throws {
+        let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
+        let manager = try #require(dependencies.container.resolve(TodayManager.self))
+        let activity = try #require(manager.activities.first)
+        let project = try #require(manager.createProject(name: "Writing"))
+        #expect(manager.assignActivity(activityId: activity.activityId, to: project.projectId))
+        _ = manager.addActivityToDailyPlan(activityId: activity.activityId, sessionCount: 1)
+        let presenter = TodayPresenter(
+            interactor: CoreInteractor(container: dependencies.container),
+            router: RecordingTodayRouter()
+        )
+        presenter.onViewAppear(delegate: TodayDelegate())
+        presenter.selectProject(project.projectId)
+        #expect(presenter.deckPlanItems.isEmpty)
+
+        #expect(manager.deleteProject(projectId: project.projectId))
+        presenter.onViewAppear(delegate: TodayDelegate())
+
+        #expect(presenter.selectedProjectId == nil)
+        #expect(presenter.selectedProjectTitle == "Other")
+        #expect(presenter.deckPlanItems.map(\.activityId) == [activity.activityId])
     }
 
     @Test func startingFocusUsesTheLatestSelectedActivity() throws {
@@ -325,6 +575,7 @@ struct TodayPresenterTests {
 private final class RecordingTodayRouter: TodayRouter {
     var router: AnyRouter { fatalError("Router storage is unused by this recording test double") }
     private(set) var didShowStreak = false
+    private(set) var didShowProjectManagement = false
     private(set) var presentedFocusDelegate: FocusDelegate?
 
     func showStarterActivityView(delegate: StarterActivityDelegate) { }
@@ -335,6 +586,10 @@ private final class RecordingTodayRouter: TodayRouter {
 
     func showStreakView(delegate: StreakDelegate) {
         didShowStreak = true
+    }
+
+    func showProjectManagementView(delegate: TodayProjectManagementDelegate) {
+        didShowProjectManagement = true
     }
 
     func showDevSettingsView() { }

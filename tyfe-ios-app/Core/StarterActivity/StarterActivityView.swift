@@ -94,16 +94,6 @@ struct StarterActivityView: View {
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
                 TyfeTextFieldView(placeholder: "Name your activity", text: $presenter.activityName)
-
-                Picker("Category", selection: $presenter.selectedCategory) {
-                    ForEach(ActivityCategory.allCases, id: \.self) { category in
-                        Text(category.displayName)
-                            .tag(category)
-                    }
-                }
-                .pickerStyle(.menu)
-                .tint(TyfeEditorialPalette.ink)
-                .frame(minHeight: 44, alignment: .leading)
             }
         }
     }

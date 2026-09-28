@@ -4,29 +4,35 @@ import SwiftfulUI
 struct TodayAddActivitySheet: View {
 
     let initialSessionCount: Int
+    let projects: [ProjectModel]
     let onSave: (
         _ name: String,
-        _ category: ActivityCategory,
-        _ sessionCount: Int
+        _ category: ActivityCategory?,
+        _ sessionCount: Int,
+        _ projectId: String?
     ) -> Void
 
     @State private var activityName: String
-    @State private var selectedCategory: ActivityCategory
     @State private var sessionCount: Int
+    @State private var selectedProjectId: String?
 
     init(
         initialSessionCount: Int,
+        projects: [ProjectModel],
+        initialProjectId: String?,
         onSave: @escaping (
             _ name: String,
-            _ category: ActivityCategory,
-            _ sessionCount: Int
+            _ category: ActivityCategory?,
+            _ sessionCount: Int,
+            _ projectId: String?
         ) -> Void
     ) {
         self.initialSessionCount = initialSessionCount
+        self.projects = projects
         self.onSave = onSave
         _activityName = State(initialValue: "")
-        _selectedCategory = State(initialValue: .personal)
         _sessionCount = State(initialValue: max(initialSessionCount, 1))
+        _selectedProjectId = State(initialValue: initialProjectId)
     }
 
     private var canSave: Bool {
@@ -46,6 +52,29 @@ struct TodayAddActivitySheet: View {
         }
     }
 
+    private var projectPicker: some View {
+        VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+            Text("SPACE")
+                .font(TyfeTypography.eyebrow)
+                .tracking(1.1)
+                .foregroundStyle(TyfeEditorialPalette.muted)
+
+            Picker("Space", selection: $selectedProjectId) {
+                Text("Other")
+                    .tag(nil as String?)
+                ForEach(projects) { project in
+                    Text(project.name)
+                        .tag(Optional(project.projectId))
+                }
+            }
+            .pickerStyle(.menu)
+            .tint(TyfeEditorialPalette.ink)
+            .frame(minHeight: 44, alignment: .leading)
+            .accessibilityLabel("Space")
+            .accessibilityIdentifier("activity-space-picker")
+        }
+    }
+
     private var activityForm: some View {
         TyfeSurfaceView(role: .paper) {
             VStack(alignment: .leading, spacing: TyfeSpacing.control) {
@@ -55,16 +84,8 @@ struct TodayAddActivitySheet: View {
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
                 TyfeTextFieldView(placeholder: "Name your activity", text: $activityName)
-
-                Picker("Category", selection: $selectedCategory) {
-                    ForEach(ActivityCategory.allCases, id: \.self) { category in
-                        Text(category.displayName)
-                            .tag(category)
-                    }
-                }
-                .pickerStyle(.menu)
-                .tint(TyfeEditorialPalette.ink)
-                .frame(minHeight: 44, alignment: .leading)
+                    .accessibilityIdentifier("activity-name-field")
+                projectPicker
             }
         }
     }
@@ -134,8 +155,9 @@ struct TodayAddActivitySheet: View {
     private func save() {
         onSave(
             activityName,
-            selectedCategory,
-            sessionCount
+            nil,
+            sessionCount,
+            selectedProjectId
         )
     }
 }

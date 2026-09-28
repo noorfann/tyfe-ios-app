@@ -81,6 +81,140 @@ final class TyfeappUITests: XCTestCase {
     }
 
     @MainActor
+    func testProjectManagementCreatesEditsAndConfirmsDeletion() throws {
+        let app = XCUIApplication()
+        launchPhase1Flow(in: app)
+
+        let manageProjectsButton = app.buttons["today-project-management-button"]
+        XCTAssertTrue(manageProjectsButton.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.staticTexts["TODAY’S ACTIVITIES"].exists)
+        manageProjectsButton.tap()
+        XCTAssertTrue(app.navigationBars["Spaces"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Add Space"].exists)
+
+        let projectId = createSpace(in: app, name: "Writing")
+        let projectColorSwatch = app.descendants(matching: .any)["project-color-\(projectId)"]
+        XCTAssertTrue(projectColorSwatch.exists)
+        XCTAssertTrue(projectColorSwatch.label.contains("Olive"))
+        app.buttons["today-project-management-done"].tap()
+
+        let projectTab = app.buttons["today-project-tab-\(projectId)"]
+        XCTAssertTrue(projectTab.waitForExistence(timeout: 5))
+        XCTAssertTrue((projectTab.value as? String)?.contains("Olive") == true)
+
+        manageProjectsButton.tap()
+        updateSpaceColor(in: app, id: projectId, color: "focus", expectedName: "Lime")
+        XCTAssertTrue(projectColorSwatch.label.contains("Lime"))
+        app.buttons["today-project-management-done"].tap()
+        XCTAssertTrue((projectTab.value as? String)?.contains("Lime") == true)
+
+        manageProjectsButton.tap()
+        deleteSpace(in: app, id: projectId, name: "Writing")
+        app.buttons["today-project-management-done"].tap()
+    }
+
+    @MainActor
+    func testOtherSpaceCanReceiveNewActivity() throws {
+        let app = XCUIApplication()
+        launchPhase1Flow(in: app)
+
+        let addFirstActivityButton = app.buttons["Add your first Activity"]
+        XCTAssertTrue(addFirstActivityButton.waitForExistence(timeout: 5))
+        addFirstActivityButton.tap()
+
+        let spacePicker = app.descendants(matching: .any)["activity-space-picker"]
+        XCTAssertTrue(spacePicker.waitForExistence(timeout: 5))
+        XCTAssertEqual(spacePicker.label, "Space")
+        spacePicker.tap()
+        let otherSpaceOption = app.buttons["Other"]
+        XCTAssertTrue(otherSpaceOption.waitForExistence(timeout: 5))
+        otherSpaceOption.tap()
+
+        let activityNameField = app.textFields["activity-name-field"]
+        XCTAssertTrue(activityNameField.waitForExistence(timeout: 5))
+        activityNameField.tap()
+        activityNameField.typeText("Stretch")
+        app.buttons["Add to Today"].tap()
+
+        let otherDeck = app.buttons["today-project-tab-unassigned"]
+        XCTAssertTrue(otherDeck.waitForExistence(timeout: 5))
+        XCTAssertTrue(otherDeck.label.contains("Other"))
+    }
+
+    @MainActor
+    private func createSpace(in app: XCUIApplication, name: String) -> String {
+        app.buttons["today-project-add-button"].tap()
+        let saveButton = app.buttons["project-form-save-button"]
+        XCTAssertTrue(saveButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(saveButton.label.contains("Create Space"))
+        XCTAssertTrue(app.descendants(matching: .any)["project-custom-color-picker"].exists)
+        assertProjectIconControlsAreAbsent(in: app)
+
+        let nameField = app.textFields["project-form-name-field"]
+        XCTAssertTrue(nameField.waitForExistence(timeout: 5))
+        nameField.tap()
+        nameField.typeText(name)
+        app.buttons["project-color-option-olive"].tap()
+        saveButton.tap()
+
+        let editButton = app.buttons.matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "project-edit-")
+        ).firstMatch
+        XCTAssertTrue(editButton.waitForExistence(timeout: 5))
+        return editButton.identifier.replacingOccurrences(of: "project-edit-", with: "")
+    }
+
+    @MainActor
+    private func updateSpaceColor(
+        in app: XCUIApplication,
+        id: String,
+        color: String,
+        expectedName: String
+    ) {
+        app.buttons["project-edit-\(id)"].tap()
+        XCTAssertTrue(app.buttons["project-form-save-button"].waitForExistence(timeout: 5))
+        assertProjectIconControlsAreAbsent(in: app)
+        app.buttons["project-color-option-\(color)"].tap()
+        app.buttons["project-form-save-button"].tap()
+        let colorSwatch = app.descendants(matching: .any)["project-color-\(id)"]
+        XCTAssertTrue(colorSwatch.label.contains(expectedName))
+    }
+
+    @MainActor
+    private func deleteSpace(in app: XCUIApplication, id: String, name: String) {
+        app.buttons["project-delete-\(id)"].tap()
+        let deleteAlert = app.alerts["Delete \(name)?"]
+        XCTAssertTrue(deleteAlert.waitForExistence(timeout: 5))
+        deleteAlert.buttons["Cancel"].tap()
+        XCTAssertTrue(app.buttons["project-edit-\(id)"].exists)
+
+        app.buttons["project-delete-\(id)"].tap()
+        let confirmedDeleteAlert = app.alerts["Delete \(name)?"]
+        XCTAssertTrue(confirmedDeleteAlert.waitForExistence(timeout: 5))
+        XCTAssertTrue(
+            confirmedDeleteAlert.staticTexts[
+                "Its Activities move to Other. Plans and Focus history stay intact."
+            ].exists
+        )
+        confirmedDeleteAlert.buttons["Delete Space"].tap()
+        XCTAssertFalse(app.buttons["project-edit-\(id)"].exists)
+    }
+
+    @MainActor
+    private func launchPhase1Flow(in app: XCUIApplication) {
+        app.launchArguments.append("PHASE1_FLOW")
+        app.launch()
+    }
+
+    @MainActor
+    private func assertProjectIconControlsAreAbsent(in app: XCUIApplication) {
+        let iconControls = app.buttons.matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "project-icon-option-")
+        )
+        XCTAssertEqual(iconControls.count, 0)
+    }
+
+    @MainActor
     func testBeginningFocusRequiresConfirmationBeforeStarting() throws {
         let app = XCUIApplication()
         app.launchArguments.append(contentsOf: ["UI_TESTING", "SIGNED_IN"])

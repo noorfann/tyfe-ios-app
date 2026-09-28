@@ -1,16 +1,18 @@
 import Foundation
 
 struct LocalAppSnapshot: Codable, Hashable {
-    private static let currentSchemaVersion = 4
+    private static let currentSchemaVersion = 5
 
     var schemaVersion: Int
     var activities: [ActivityModel]
+    var projects: [ProjectModel]
     var dailyPlans: [DailyPlanModel]
     var customRewards: [RewardModel]
     var rewardClaims: [RewardClaimModel]
     var focusSessions: [FocusSessionModel]
     var creditLedger: RewardCreditLedger
     var nextActivityNumber: Int
+    var nextProjectNumber: Int
     var nextSessionNumber: Int
     var nextRewardNumber: Int
     var nextRewardClaimNumber: Int
@@ -18,6 +20,7 @@ struct LocalAppSnapshot: Codable, Hashable {
     private enum CodingKeys: String, CodingKey {
         case schemaVersion
         case activities
+        case projects
         case dailyPlans
         case dailyPlan
         case completedSessionCount
@@ -26,6 +29,7 @@ struct LocalAppSnapshot: Codable, Hashable {
         case focusSessions
         case creditLedger
         case nextActivityNumber
+        case nextProjectNumber
         case nextSessionNumber
         case nextRewardNumber
         case nextRewardClaimNumber
@@ -43,9 +47,11 @@ struct LocalAppSnapshot: Codable, Hashable {
     static var mock: Self {
         Self(
             activities: [ActivityModel.mock],
+            projects: [],
             dailyPlans: [],
             focusSessions: [],
             nextActivityNumber: 2,
+            nextProjectNumber: 1,
             nextSessionNumber: 1
         )
     }
@@ -85,8 +91,9 @@ struct LocalAppSnapshot: Codable, Hashable {
     }
 
     init(
-        schemaVersion: Int = 4,
+        schemaVersion: Int = 5,
         activities: [ActivityModel],
+        projects: [ProjectModel] = [],
         dailyPlan: DailyPlanModel? = nil,
         completedSessionCount: Int = 0,
         dailyPlans: [DailyPlanModel]? = nil,
@@ -95,18 +102,21 @@ struct LocalAppSnapshot: Codable, Hashable {
         focusSessions: [FocusSessionModel],
         creditLedger: RewardCreditLedger = RewardCreditLedger(),
         nextActivityNumber: Int,
+        nextProjectNumber: Int = 1,
         nextSessionNumber: Int,
         nextRewardNumber: Int = 1,
         nextRewardClaimNumber: Int = 1
     ) {
         self.schemaVersion = schemaVersion
         self.activities = activities
+        self.projects = projects
         self.dailyPlans = dailyPlans ?? dailyPlan.map { [$0] } ?? []
         self.customRewards = customRewards
         self.rewardClaims = rewardClaims
         self.focusSessions = focusSessions
         self.creditLedger = creditLedger
         self.nextActivityNumber = nextActivityNumber
+        self.nextProjectNumber = nextProjectNumber
         self.nextSessionNumber = nextSessionNumber
         self.nextRewardNumber = nextRewardNumber
         self.nextRewardClaimNumber = nextRewardClaimNumber
@@ -117,6 +127,7 @@ struct LocalAppSnapshot: Codable, Hashable {
         self.init(
             schemaVersion: Self.currentSchemaVersion,
             activities: try container.decode([ActivityModel].self, forKey: .activities),
+            projects: try container.decodeIfPresent([ProjectModel].self, forKey: .projects) ?? [],
             dailyPlan: try container.decodeIfPresent(DailyPlanModel.self, forKey: .dailyPlan),
             dailyPlans: try container.decodeIfPresent([DailyPlanModel].self, forKey: .dailyPlans),
             customRewards: try container.decodeIfPresent([RewardModel].self, forKey: .customRewards) ?? [],
@@ -125,6 +136,7 @@ struct LocalAppSnapshot: Codable, Hashable {
                 .map { try $0.migrated(at: Date()) },
             creditLedger: try container.decode(RewardCreditLedger.self, forKey: .creditLedger),
             nextActivityNumber: try container.decode(Int.self, forKey: .nextActivityNumber),
+            nextProjectNumber: try container.decodeIfPresent(Int.self, forKey: .nextProjectNumber) ?? 1,
             nextSessionNumber: try container.decode(Int.self, forKey: .nextSessionNumber),
             nextRewardNumber: try container.decodeIfPresent(Int.self, forKey: .nextRewardNumber) ?? 1,
             nextRewardClaimNumber: try container.decodeIfPresent(Int.self, forKey: .nextRewardClaimNumber) ?? 1
@@ -135,12 +147,14 @@ struct LocalAppSnapshot: Codable, Hashable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(Self.currentSchemaVersion, forKey: .schemaVersion)
         try container.encode(activities, forKey: .activities)
+        try container.encode(projects, forKey: .projects)
         try container.encode(dailyPlans, forKey: .dailyPlans)
         try container.encode(customRewards, forKey: .customRewards)
         try container.encode(rewardClaims, forKey: .rewardClaims)
         try container.encode(focusSessions, forKey: .focusSessions)
         try container.encode(creditLedger, forKey: .creditLedger)
         try container.encode(nextActivityNumber, forKey: .nextActivityNumber)
+        try container.encode(nextProjectNumber, forKey: .nextProjectNumber)
         try container.encode(nextSessionNumber, forKey: .nextSessionNumber)
         try container.encode(nextRewardNumber, forKey: .nextRewardNumber)
         try container.encode(nextRewardClaimNumber, forKey: .nextRewardClaimNumber)

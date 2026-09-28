@@ -324,6 +324,14 @@ struct CoreInteractor: GlobalInteractor {
         todayManager.activities
     }
 
+    var phase1Projects: [ProjectModel] {
+        todayManager.projects
+    }
+
+    var phase1SelectedProjectId: String? {
+        todayManager.selectedProjectId
+    }
+
     var phase1DailyPlan: DailyPlanModel? {
         todayManager.dailyPlan
     }
@@ -394,6 +402,10 @@ struct CoreInteractor: GlobalInteractor {
             name: name,
             category: category
         )
+    }
+
+    func setPhase1SelectedProjectId(_ projectId: String?) {
+        todayManager.setSelectedProjectId(projectId)
     }
 
     @discardableResult

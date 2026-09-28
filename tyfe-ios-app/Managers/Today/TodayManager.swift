@@ -12,6 +12,7 @@ final class TodayManager {
     @ObservationIgnored private let userDefaults: UserDefaults?
 
     private static let deckSwipeCoachmarkKey = "tyfe.today-deck-coachmark-seen"
+    private static let selectedProjectKey = "tyfe.today-selected-project-id"
 
     private(set) var hasSeenDeckSwipeCoachmark: Bool
 
@@ -40,6 +41,18 @@ final class TodayManager {
 
     var activities: [ActivityModel] {
         repository.snapshot.activities
+    }
+
+    var projects: [ProjectModel] {
+        repository.snapshot.projects
+    }
+
+    var selectedProjectId: String? {
+        guard let selectedProjectId = userDefaults?.string(forKey: Self.selectedProjectKey),
+              projects.contains(where: { $0.projectId == selectedProjectId }) else {
+            return nil
+        }
+        return selectedProjectId
     }
 
     var dailyPlan: DailyPlanModel? {
@@ -98,6 +111,131 @@ final class TodayManager {
     }
 
     @discardableResult
+    func createProject(
+        name: String,
+        colorToken: String = ProjectModel.defaultColorToken
+    ) -> ProjectModel? {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty,
+              !projects.contains(where: {
+                  normalizedProjectName($0.name) == normalizedProjectName(trimmedName)
+              }) else {
+            return nil
+        }
+
+        var createdProject: ProjectModel?
+        do {
+            try repository.transaction { snapshot in
+                guard !snapshot.projects.contains(where: {
+                    normalizedProjectName($0.name) == normalizedProjectName(trimmedName)
+                }) else { return }
+                let project = ProjectModel(
+                    projectId: "project-" + String(snapshot.nextProjectNumber),
+                    name: trimmedName,
+                    colorToken: colorToken
+                )
+                snapshot.nextProjectNumber += 1
+                snapshot.projects.append(project)
+                createdProject = project
+            }
+        } catch {
+            return nil
+        }
+        return createdProject
+    }
+
+    @discardableResult
+    func renameProject(
+        projectId: String,
+        name: String,
+        colorToken: String? = nil
+    ) -> ProjectModel? {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty,
+              let existingProject = projects.first(where: { $0.projectId == projectId }),
+              !projects.contains(where: {
+                  $0.projectId != projectId
+                      && normalizedProjectName($0.name) == normalizedProjectName(trimmedName)
+              }) else {
+            return nil
+        }
+
+        let updatedProject = ProjectModel(
+            projectId: existingProject.projectId,
+            name: trimmedName,
+            iconToken: existingProject.iconToken,
+            colorToken: colorToken ?? existingProject.colorToken ?? ProjectModel.defaultColorToken
+        )
+        var didUpdate = false
+        do {
+            try repository.transaction { snapshot in
+                guard let index = snapshot.projects.firstIndex(where: { $0.projectId == projectId }),
+                      !snapshot.projects.contains(where: {
+                          $0.projectId != projectId
+                              && normalizedProjectName($0.name) == normalizedProjectName(trimmedName)
+                      }) else { return }
+                snapshot.projects[index] = updatedProject
+                didUpdate = true
+            }
+        } catch {
+            return nil
+        }
+        return didUpdate ? updatedProject : nil
+    }
+
+    @discardableResult
+    func deleteProject(projectId: String) -> Bool {
+        guard projects.contains(where: { $0.projectId == projectId }) else { return false }
+
+        var didDelete = false
+        do {
+            try repository.transaction { snapshot in
+                guard snapshot.projects.contains(where: { $0.projectId == projectId }) else { return }
+                snapshot.projects.removeAll { $0.projectId == projectId }
+                for index in snapshot.activities.indices where snapshot.activities[index].projectId == projectId {
+                    snapshot.activities[index].projectId = nil
+                }
+                didDelete = true
+            }
+        } catch {
+            return false
+        }
+        if didDelete, userDefaults?.string(forKey: Self.selectedProjectKey) == projectId {
+            userDefaults?.removeObject(forKey: Self.selectedProjectKey)
+        }
+        return didDelete
+    }
+
+    @discardableResult
+    func assignActivity(activityId: String, to projectId: String?) -> Bool {
+        guard activities.contains(where: { $0.activityId == activityId }),
+              projectId == nil || projects.contains(where: { $0.projectId == projectId }) else {
+            return false
+        }
+
+        var didAssign = false
+        do {
+            try repository.transaction { snapshot in
+                guard let activityIndex = snapshot.activities.firstIndex(where: {
+                    $0.activityId == activityId
+                }), projectId == nil || snapshot.projects.contains(where: {
+                    $0.projectId == projectId
+                }) else { return }
+                snapshot.activities[activityIndex].projectId = projectId
+                didAssign = true
+            }
+        } catch {
+            return false
+        }
+        return didAssign
+    }
+
+    func setSelectedProjectId(_ projectId: String?) {
+        guard projectId == nil || projects.contains(where: { $0.projectId == projectId }) else { return }
+        userDefaults?.set(projectId, forKey: Self.selectedProjectKey)
+    }
+
+    @discardableResult
     func updateActivity(
         activityId: String,
         name: String,
@@ -115,6 +253,7 @@ final class TodayManager {
             category: category,
             iconToken: iconToken(for: category),
             colorToken: existingActivity.colorToken,
+            projectId: existingActivity.projectId,
             isArchived: existingActivity.isArchived,
             createdAt: existingActivity.createdAt
         )
@@ -357,6 +496,10 @@ final class TodayManager {
             result.append(id)
         }
         return result
+    }
+
+    private func normalizedProjectName(_ name: String) -> String {
+        name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
 
     private func iconToken(for category: ActivityCategory?) -> String {

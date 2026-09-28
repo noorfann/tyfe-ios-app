@@ -5,6 +5,8 @@ protocol TodayInteractor: GlobalInteractor {
     var activeFocusSession: FocusSessionModel? { get }
     var isRewardInProgress: Bool { get }
     var phase1Activities: [ActivityModel] { get }
+    var phase1Projects: [ProjectModel] { get }
+    var phase1SelectedProjectId: String? { get }
     var phase1DailyPlan: DailyPlanModel? { get }
     var phase1CurrentLocalDay: LocalDay { get }
     var phase1EarliestRecordedLocalDay: LocalDay? { get }
@@ -36,6 +38,24 @@ protocol TodayInteractor: GlobalInteractor {
         name: String,
         category: ActivityCategory?
     ) -> ActivityModel?
+
+    @discardableResult
+    func createPhase1Project(name: String, colorToken: String) -> ProjectModel?
+
+    @discardableResult
+    func renamePhase1Project(
+        projectId: String,
+        name: String,
+        colorToken: String
+    ) -> ProjectModel?
+
+    @discardableResult
+    func deletePhase1Project(projectId: String) -> Bool
+
+    @discardableResult
+    func assignPhase1Activity(activityId: String, to projectId: String?) -> Bool
+
+    func setPhase1SelectedProjectId(_ projectId: String?)
 
     @discardableResult
     func addPhase1ActivityToDailyPlan(

@@ -29,6 +29,7 @@ struct TodayView: View {
                     } else {
                         dayNavigator
                         if presenter.isViewingToday {
+                            projectTabs
                             emptyContent
                         } else {
                             TodayHistoricalEmptyView(completedSessionCount: presenter.completedSessionCount)
@@ -54,6 +55,8 @@ struct TodayView: View {
         ) {
             TodayAddActivitySheet(
                 initialSessionCount: presenter.addActivitySessionCount,
+                projects: presenter.projects,
+                initialProjectId: presenter.addActivityProjectId,
                 onSave: presenter.saveActivity
             )
         }
@@ -67,6 +70,7 @@ struct TodayView: View {
                     activity: activity,
                     initialSessionCount: item.plannedSessionCount,
                     completedSessionCount: presenter.completedCount(for: item),
+                    projects: presenter.projects,
                     onSave: presenter.saveActivityEdits,
                     onRemove: presenter.removeEditingActivityFromToday
                 )
@@ -152,12 +156,17 @@ struct TodayView: View {
                         .font(TyfeTypography.display)
                         .tracking(-1.6)
 
-                    Text("What would you like to make room for today?")
+                    Text(presenter.selectedProjectId == nil
+                        ? "What would you like to make room for today?"
+                        : "What would you like to make room for in \(presenter.selectedProjectTitle) today?"
+                    )
                         .font(TyfeTypography.interface)
                         .foregroundStyle(TyfeEditorialPalette.muted)
 
                     TyfeActionButtonView(
-                        title: "Add your first Activity",
+                        title: presenter.selectedProjectId == nil
+                            ? "Add your first Activity"
+                            : "Add Activity to \(presenter.selectedProjectTitle)",
                         systemImage: "plus",
                         onTap: presenter.onCreatePlanPressed
                     )
@@ -196,6 +205,7 @@ struct TodayView: View {
             }
 
             dayNavigator
+            projectTabs
             planDeck
 
             if !presenter.hasUnfinishedPlan {
@@ -213,6 +223,25 @@ struct TodayView: View {
         }
     }
 
+    private var projectTabs: some View {
+        VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+            Text("SPACES")
+                .font(TyfeTypography.eyebrow)
+                .tracking(1.1)
+                .foregroundStyle(TyfeEditorialPalette.muted)
+                .accessibilityAddTraits(.isHeader)
+
+            TodayProjectDeckTabsView(
+                projects: presenter.projects,
+                showsUnassigned: presenter.hasUnassignedPlannedActivities,
+                selectedProjectId: presenter.selectedProjectId,
+                isManagementEnabled: presenter.isViewingToday,
+                onSelect: presenter.selectProject,
+                onManage: presenter.onProjectManagementPressed
+            )
+        }
+    }
+
     private var dayNavigator: some View {
         TodayDateNavigatorView(
             title: presenter.selectedDayTitle,
@@ -226,35 +255,51 @@ struct TodayView: View {
 
     private var planDeck: some View {
         VStack(alignment: .leading, spacing: TyfeSpacing.small) {
-            Text(presenter.isViewingToday ? "TODAY’S ACTIVITIES" : "ACTIVITIES")
-                .font(TyfeTypography.eyebrow)
-                .tracking(1.2)
-                .foregroundStyle(TyfeEditorialPalette.muted)
-
-            ZStack(alignment: .top) {
-                TodayActivityDeckView(
-                    planItems: presenter.planItems,
-                    activities: presenter.activities,
-                    completedSessionCounts: presenter.completedSessionCounts,
-                    selectedPlanItemId: presenter.selectedPlanItemId,
-                    nextPlanItemId: presenter.isViewingToday ? presenter.nextPlanItem?.id : nil,
-                    isRewardInProgress: presenter.isRewardInProgress,
-                    isReadOnly: !presenter.isViewingToday,
-                    onStart: { _ in presenter.onStartFocusPressed() },
-                    onEdit: { presenter.onEditActivityPressed($0) },
-                    onNext: presenter.selectNextPlanItem,
-                    onPrevious: presenter.selectPreviousPlanItem
-                )
-                .id(presenter.selectedLocalDay)
-
-                if presenter.isViewingToday && presenter.isDeckSwipeCoachmarkPresented {
-                    deckSwipeCoachmark
-                }
+            if !presenter.isViewingToday {
+                Text("ACTIVITIES")
+                    .font(TyfeTypography.eyebrow)
+                    .tracking(1.2)
+                    .foregroundStyle(TyfeEditorialPalette.muted)
             }
-            .animation(
-                reduceMotion ? nil : TyfeMotion.normalAnimation,
-                value: presenter.isDeckSwipeCoachmarkPresented
-            )
+
+            if presenter.deckPlanItems.isEmpty {
+                TyfeSurfaceView(role: .paper) {
+                    VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+                        Text("No planned Activities in \(presenter.selectedProjectTitle).")
+                            .font(TyfeTypography.interfaceStrong)
+                        if presenter.isViewingToday {
+                            Text("Add an Activity to this deck to get started.")
+                                .font(TyfeTypography.interface)
+                                .foregroundStyle(TyfeEditorialPalette.muted)
+                        }
+                    }
+                }
+            } else {
+                ZStack(alignment: .top) {
+                    TodayActivityDeckView(
+                        planItems: presenter.deckPlanItems,
+                        activities: presenter.activities,
+                        completedSessionCounts: presenter.completedSessionCounts,
+                        selectedPlanItemId: presenter.selectedPlanItemId,
+                        nextPlanItemId: presenter.isViewingToday ? presenter.nextDeckPlanItem?.id : nil,
+                        isRewardInProgress: presenter.isRewardInProgress,
+                        isReadOnly: !presenter.isViewingToday,
+                        onStart: { _ in presenter.onStartFocusPressed() },
+                        onEdit: { presenter.onEditActivityPressed($0) },
+                        onNext: presenter.selectNextPlanItem,
+                        onPrevious: presenter.selectPreviousPlanItem
+                    )
+                    .id("\(presenter.selectedLocalDay.id)-\(presenter.selectedProjectId ?? "unassigned")")
+
+                    if presenter.isViewingToday && presenter.isDeckSwipeCoachmarkPresented {
+                        deckSwipeCoachmark
+                    }
+                }
+                .animation(
+                    reduceMotion ? nil : TyfeMotion.normalAnimation,
+                    value: presenter.isDeckSwipeCoachmarkPresented
+                )
+            }
         }
     }
 
@@ -387,47 +432,62 @@ struct TodayActivityDeckView: View {
 
     var body: some View {
         if let selectedIndex {
-            ZStack {
-                ForEach(visibleCards.reversed()) { card in
-                    cardView(card)
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: isReadOnly ? readOnlyDeckHeight : deckHeight)
-            .contentShape(Rectangle())
-            .gesture(
-                DeckSwipeGesture(
-                    onBegan: {
-                        isDeckDragging = true
-                    },
-                    onChanged: { translation in
-                        dragOffset = translation
-                    },
-                    onEnded: { translation, velocity in
-                        endDeckSwipe(translation: translation, velocity: velocity)
-                    },
-                    onCancelled: {
-                        isDeckDragging = false
-                        withAnimation(deckAnimation) {
-                            dragOffset = 0
-                        }
+            VStack(spacing: TyfeSpacing.small) {
+                ZStack {
+                    ForEach(visibleCards.reversed()) { card in
+                        cardView(card)
                     }
-                )
-            )
-            .onAppear { hasAppeared = true }
-            .accessibilityElement(children: .contain)
-            .accessibilityLabel(isReadOnly ? "Historical activities" : "Today activities")
-            .accessibilityValue("Activity \(selectedIndex + 1) of \(planItems.count)")
-            .accessibilityHint("Swipe left or right to switch activities.")
-            .accessibilityAdjustableAction { direction in
-                switch direction {
-                case .increment:
-                    onNext()
-                case .decrement:
-                    onPrevious()
-                @unknown default:
-                    break
                 }
+                .frame(maxWidth: .infinity)
+                .frame(height: isReadOnly ? readOnlyDeckHeight : deckHeight)
+                .contentShape(Rectangle())
+                .gesture(
+                    DeckSwipeGesture(
+                        onBegan: {
+                            isDeckDragging = true
+                        },
+                        onChanged: { translation in
+                            dragOffset = translation
+                        },
+                        onEnded: { translation, velocity in
+                            endDeckSwipe(translation: translation, velocity: velocity)
+                        },
+                        onCancelled: {
+                            isDeckDragging = false
+                            withAnimation(deckAnimation) {
+                                dragOffset = 0
+                            }
+                        }
+                    )
+                )
+                .onAppear { hasAppeared = true }
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel(isReadOnly ? "Historical activities" : "Activities")
+                .accessibilityValue("Activity \(selectedIndex + 1) of \(planItems.count)")
+                .accessibilityHint("Swipe left or right to switch activities.")
+                .accessibilityAdjustableAction { direction in
+                    switch direction {
+                    case .increment:
+                        onNext()
+                    case .decrement:
+                        onPrevious()
+                    @unknown default:
+                        break
+                    }
+                }
+
+                HStack(spacing: TyfeSpacing.small) {
+                    ForEach(planItems.indices, id: \.self) { index in
+                        Circle()
+                            .fill(index == selectedIndex
+                                  ? TyfeEditorialPalette.teal
+                                  : TyfeEditorialPalette.muted.opacity(0.45))
+                            .frame(width: 8, height: 8)
+                    }
+                }
+                .frame(minHeight: 24)
+                .accessibilityHidden(true)
+                .animation(deckAnimation, value: selectedIndex)
             }
         }
     }

@@ -8,6 +8,7 @@ final class TodayPresenter {
     private let router: TodayRouter
 
     private(set) var activities: [ActivityModel] = []
+    private(set) var projects: [ProjectModel] = []
     private(set) var dailyPlan: DailyPlanModel?
     private(set) var planItems: [DailyPlanItemModel] = []
     private(set) var completedSessionCount = 0
@@ -16,6 +17,7 @@ final class TodayPresenter {
     private(set) var activeFocusSession: FocusSessionModel?
     private(set) var currentLocalDay: LocalDay
     private(set) var selectedLocalDay: LocalDay
+    private(set) var selectedProjectId: String?
     private(set) var earliestRecordedLocalDay: LocalDay?
     var colorScheme: ColorScheme = .light
 
@@ -27,6 +29,7 @@ final class TodayPresenter {
     private(set) var addActivitySessionCount = 1
     private(set) var editingActivity: ActivityModel?
     private(set) var editingPlanItem: DailyPlanItemModel?
+    var addActivityProjectId: String?
 
     init(interactor: TodayInteractor, router: TodayRouter) {
         self.interactor = interactor
@@ -34,6 +37,7 @@ final class TodayPresenter {
         let currentLocalDay = interactor.phase1CurrentLocalDay
         self.currentLocalDay = currentLocalDay
         self.selectedLocalDay = currentLocalDay
+        self.selectedProjectId = interactor.phase1SelectedProjectId
         self.earliestRecordedLocalDay = interactor.phase1EarliestRecordedLocalDay
         self.colorScheme = interactor.colorScheme
     }
@@ -94,6 +98,25 @@ final class TodayPresenter {
         !planItems.isEmpty
     }
 
+    var selectedProject: ProjectModel? {
+        projects.first { $0.projectId == selectedProjectId }
+    }
+
+    var selectedProjectTitle: String {
+        selectedProject?.name ?? "Other"
+    }
+
+    var deckPlanItems: [DailyPlanItemModel] {
+        planItems.filter { activity(for: $0)?.projectId == selectedProjectId }
+    }
+
+    var hasUnassignedPlannedActivities: Bool {
+        planItems.contains { item in
+            guard let activity = activity(for: item) else { return false }
+            return activity.projectId == nil
+        }
+    }
+
     var hasUnfinishedPlan: Bool {
         planItems.contains { remainingSessionCount(for: $0) > 0 }
     }
@@ -108,6 +131,10 @@ final class TodayPresenter {
 
     var nextPlanItem: DailyPlanItemModel? {
         planItems.first { remainingSessionCount(for: $0) > 0 }
+    }
+
+    var nextDeckPlanItem: DailyPlanItemModel? {
+        deckPlanItems.first { remainingSessionCount(for: $0) > 0 }
     }
 
     var nextActivity: ActivityModel? {
@@ -152,6 +179,29 @@ final class TodayPresenter {
         interactor.trackEvent(event: Event.createPlan)
     }
 
+    func onProjectManagementPressed() {
+        guard isViewingToday else { return }
+        router.showProjectManagementView(
+            delegate: TodayProjectManagementDelegate(onProjectCreated: { [weak self] projectId in
+                guard let self else { return }
+                reload()
+                selectProject(projectId)
+            }, onProjectManagementChanged: { [weak self] in
+                self?.reload()
+            })
+        )
+        interactor.trackEvent(event: Event.openProjectManagement)
+    }
+
+    func selectProject(_ projectId: String?) {
+        guard projectId == nil || projects.contains(where: { $0.projectId == projectId }) else { return }
+        guard selectedProjectId != projectId else { return }
+        selectedProjectId = projectId
+        interactor.setPhase1SelectedProjectId(projectId)
+        selectFirstDeckItem()
+        interactor.trackEvent(event: Event.selectProject)
+    }
+
     func onAddActivityPressed() {
         guard isViewingToday else { return }
         presentAddActivityFlow(sessionCount: 1)
@@ -171,32 +221,38 @@ final class TodayPresenter {
 
     func saveActivity(
         name: String,
-        category: ActivityCategory,
-        sessionCount: Int
+        category: ActivityCategory?,
+        sessionCount: Int,
+        projectId: String?
     ) {
         guard isViewingToday else { return }
+        guard projectId == nil || projects.contains(where: { $0.projectId == projectId }) else { return }
         guard let activity = interactor.createPhase1Activity(
             name: name,
             category: category,
             colorToken: "teal"
         ) else { return }
+        guard interactor.assignPhase1Activity(activityId: activity.activityId, to: projectId) else { return }
         _ = interactor.addPhase1ActivityToDailyPlan(
             activityId: activity.activityId,
             sessionCount: max(sessionCount, 1)
         )
         isAddActivitySheetPresented = false
+        if selectedProjectId != projectId {
+            selectProject(projectId)
+        }
         reload()
         if let newItem = planItems.first(where: { $0.activityId == activity.activityId }) {
             selectedPlanItemId = newItem.id
         }
         pendingDeckCoachmark =
-            planItems.count >= 2 && !interactor.hasSeenDeckSwipeCoachmark
+            deckPlanItems.count >= 2 && !interactor.hasSeenDeckSwipeCoachmark
     }
 
     func onAddActivitySheetDismissed() {
         guard pendingDeckCoachmark else { return }
         pendingDeckCoachmark = false
-        guard planItems.count >= 2, !interactor.hasSeenDeckSwipeCoachmark else { return }
+        guard deckPlanItems.count >= 2, !interactor.hasSeenDeckSwipeCoachmark else { return }
         isDeckSwipeCoachmarkPresented = true
         interactor.trackEvent(event: Event.deckSwipeCoachmarkShown)
     }
@@ -220,7 +276,8 @@ final class TodayPresenter {
     func saveActivityEdits(
         name: String,
         category: ActivityCategory?,
-        sessionCount: Int
+        sessionCount: Int,
+        projectId: String?
     ) {
         guard isViewingToday else { return }
         guard let activity = editingActivity,
@@ -231,6 +288,7 @@ final class TodayPresenter {
             name: name,
             category: category
         ) != nil else { return }
+        guard interactor.assignPhase1Activity(activityId: activity.activityId, to: projectId) else { return }
 
         let minimumSessionCount = max(completedCount(for: item), 1)
         _ = interactor.updatePhase1DailyPlanItemCount(
@@ -238,6 +296,9 @@ final class TodayPresenter {
             sessionCount: max(sessionCount, minimumSessionCount)
         )
         dismissActivityDetailSheet()
+        if selectedProjectId != projectId {
+            selectProject(projectId)
+        }
         reload()
         interactor.trackEvent(event: Event.saveActivityDetail)
     }
@@ -355,6 +416,7 @@ final class TodayPresenter {
 
     private func presentAddActivityFlow(sessionCount: Int) {
         addActivitySessionCount = sessionCount
+        addActivityProjectId = selectedProjectId
         isAddActivitySheetPresented = true
     }
 
@@ -367,6 +429,13 @@ final class TodayPresenter {
     private func reload() {
         interactor.synchronizeRewardCreditDay()
         activities = interactor.phase1Activities
+        projects = interactor.phase1Projects
+        if let selectedProjectId, !projects.contains(where: { $0.projectId == selectedProjectId }) {
+            self.selectedProjectId = nil
+            interactor.setPhase1SelectedProjectId(nil)
+        } else if selectedProjectId == nil {
+            self.selectedProjectId = interactor.phase1SelectedProjectId
+        }
         earliestRecordedLocalDay = interactor.phase1EarliestRecordedLocalDay
         dailyPlan = interactor.phase1DailyPlan(for: selectedLocalDay)
         planItems = dailyPlan?.planItems ?? []
@@ -376,24 +445,28 @@ final class TodayPresenter {
         activeFocusSession = interactor.activeFocusSession
 
         if let selectedPlanItemId,
-           planItems.contains(where: { $0.id == selectedPlanItemId }) {
+           deckPlanItems.contains(where: { $0.id == selectedPlanItemId }) {
             return
         }
-        selectedPlanItemId = planItems.first(where: { remainingSessionCount(for: $0) > 0 })?.id
-            ?? planItems.first?.id
+        selectFirstDeckItem()
     }
 
     private func moveSelection(by offset: Int) {
-        guard !planItems.isEmpty else { return }
+        let deckPlanItems = deckPlanItems
+        guard !deckPlanItems.isEmpty else { return }
 
         guard let selectedPlanItemId,
-              let currentIndex = planItems.firstIndex(where: { $0.id == selectedPlanItemId }) else {
-            self.selectedPlanItemId = nextPlanItem?.id ?? planItems.first?.id
+              let currentIndex = deckPlanItems.firstIndex(where: { $0.id == selectedPlanItemId }) else {
+            self.selectedPlanItemId = nextDeckPlanItem?.id ?? deckPlanItems.first?.id
             return
         }
 
-        let nextIndex = (currentIndex + offset + planItems.count) % planItems.count
-        self.selectedPlanItemId = planItems[nextIndex].id
+        let nextIndex = (currentIndex + offset + deckPlanItems.count) % deckPlanItems.count
+        self.selectedPlanItemId = deckPlanItems[nextIndex].id
+    }
+
+    private func selectFirstDeckItem() {
+        selectedPlanItemId = nextDeckPlanItem?.id ?? deckPlanItems.first?.id
     }
 
     private var selectedTimeZone: TimeZone {
@@ -415,6 +488,8 @@ extension TodayPresenter {
         case startFocus
         case toggleAppearance
         case openStreak
+        case openProjectManagement
+        case selectProject
         case deckSwipeCoachmarkShown
         case viewPreviousDay
         case viewNextDay
@@ -432,6 +507,8 @@ extension TodayPresenter {
             case .startFocus: return "Today_StartFocus"
             case .toggleAppearance: return "Today_ToggleAppearance"
             case .openStreak: return "Today_Streak_Open"
+            case .openProjectManagement: return "Today_ProjectManagement_Open"
+            case .selectProject: return "Today_Project_Select"
             case .deckSwipeCoachmarkShown: return "Today_DeckSwipeCoachmark_Shown"
             case .viewPreviousDay: return "Today_ViewPreviousDay"
             case .viewNextDay: return "Today_ViewNextDay"
@@ -444,7 +521,8 @@ extension TodayPresenter {
                 return delegate.eventParameters
             case .createPlan, .addActivity, .editPlan, .openActivityDetail, .saveActivityDetail,
                     .removeActivityFromToday, .startFocus, .toggleAppearance, .openStreak,
-                    .deckSwipeCoachmarkShown, .viewPreviousDay, .viewNextDay:
+                    .openProjectManagement, .selectProject, .deckSwipeCoachmarkShown,
+                    .viewPreviousDay, .viewNextDay:
                 return nil
             }
         }
