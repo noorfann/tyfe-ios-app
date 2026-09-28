@@ -6,6 +6,9 @@ struct TodayProjectManagementView: View {
     @State private var presenter: TodayProjectManagementPresenter
     @State private var isProjectFormPresented = false
     @State private var editingProjectId: String?
+    @State private var draggingProjectId: String?
+    @State private var targetedProjectId: String?
+    @State private var lastReorderTargetId: String?
 
     @Environment(\.dismiss) private var dismiss
 
@@ -118,7 +121,34 @@ struct TodayProjectManagementView: View {
         }
     }
 
+    @ViewBuilder
     private func projectRow(_ project: ProjectModel, index: Int?) -> some View {
+        let row = projectRowContent(project, index: index)
+        if index != nil {
+            row
+                .frame(minHeight: 52)
+                .contentShape(Rectangle())
+                .background {
+                    if targetedProjectId == project.projectId {
+                        RoundedRectangle(cornerRadius: TyfeRadius.control)
+                            .fill(TyfeEditorialPalette.teal.opacity(0.14))
+                    }
+                }
+                .dropDestination(for: String.self) { draggedProjectIds, _ in
+                    guard draggedProjectIds.first == draggingProjectId else { return false }
+                    draggingProjectId = nil
+                    targetedProjectId = nil
+                    lastReorderTargetId = nil
+                    return true
+                } isTargeted: { isTargeted in
+                    updateDropTarget(isTargeted, projectId: project.projectId)
+                }
+        } else {
+            row.frame(minHeight: 52)
+        }
+    }
+
+    private func projectRowContent(_ project: ProjectModel, index: Int?) -> some View {
         HStack(spacing: TyfeSpacing.small) {
             if let index {
                 reorderHandle(project, index: index)
@@ -160,12 +190,6 @@ struct TodayProjectManagementView: View {
                 .accessibilityLabel("Delete \(project.name)")
                 .accessibilityIdentifier("project-delete-\(project.projectId)")
         }
-        .frame(minHeight: 52)
-        .background {
-            if let index {
-                projectDropDestination(index: index)
-            }
-        }
     }
 
     private func archiveButton(for project: ProjectModel) -> some View {
@@ -188,38 +212,41 @@ struct TodayProjectManagementView: View {
             .foregroundStyle(TyfeEditorialPalette.muted)
             .frame(width: 44, height: 44)
             .contentShape(Rectangle())
-            .draggable(project.projectId)
+            .onDrag {
+                draggingProjectId = project.projectId
+                lastReorderTargetId = nil
+                return NSItemProvider(object: project.projectId as NSString)
+            }
             .accessibilityLabel("Reorder \(project.name)")
             .accessibilityHint("Drag to change its position, or use Move up and Move down actions.")
             .accessibilityIdentifier("project-reorder-\(project.projectId)")
             .accessibilityAction(named: Text("Move up")) {
-                _ = presenter.reorderProject(projectId: project.projectId, toIndex: index - 1)
+                reorderProject(project.projectId, toIndex: index - 1)
             }
             .accessibilityAction(named: Text("Move down")) {
-                _ = presenter.reorderProject(projectId: project.projectId, toIndex: index + 1)
+                reorderProject(project.projectId, toIndex: index + 1)
             }
     }
 
-    private func projectDropDestination(index: Int) -> some View {
-        GeometryReader { geometry in
-            Color.clear
-                .contentShape(Rectangle())
-                .dropDestination(for: String.self) { draggedProjectIds, location in
-                    guard let draggedProjectId = draggedProjectIds.first,
-                          let draggedIndex = presenter.projects.firstIndex(where: {
-                              $0.projectId == draggedProjectId
-                          }) else {
-                        return false
-                    }
+    private func updateDropTarget(_ isTargeted: Bool, projectId: String) {
+        guard let draggingProjectId else { return }
+        if isTargeted {
+            targetedProjectId = projectId
+            guard lastReorderTargetId != projectId else { return }
+            lastReorderTargetId = projectId
+            guard draggingProjectId != projectId,
+                  let targetIndex = presenter.projects.firstIndex(where: {
+                      $0.projectId == projectId
+                  }) else { return }
+            reorderProject(draggingProjectId, toIndex: targetIndex)
+        } else if targetedProjectId == projectId {
+            targetedProjectId = nil
+        }
+    }
 
-                    let insertAfter = location.y >= geometry.size.height / 2
-                    let insertionIndex = index + (insertAfter ? 1 : 0)
-                    let destinationIndex = insertionIndex - (draggedIndex < insertionIndex ? 1 : 0)
-                    return presenter.reorderProject(
-                        projectId: draggedProjectId,
-                        toIndex: destinationIndex
-                    )
-                }
+    private func reorderProject(_ projectId: String, toIndex: Int) {
+        withAnimation(.easeInOut(duration: 0.2)) {
+            _ = presenter.reorderProject(projectId: projectId, toIndex: toIndex)
         }
     }
 
