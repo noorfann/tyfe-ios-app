@@ -268,7 +268,7 @@ struct FocusView: View {
     private var outcomeArtwork: some View {
         if presenter.session.state == .completed && !reduceMotion {
             LottieView(animation: .named("finish-session"))
-                .playing(loopMode: .playOnce)
+                .playing(loopMode: .loop)
                 .resizable()
                 .frame(width: 160, height: 160)
                 .accessibilityHidden(true)
