@@ -6,6 +6,7 @@ import Supabase
 final class SupabaseSocialService: SocialService {
     private let client: SupabaseClient
     private var presenceChannels: [String: RealtimeChannelV2] = [:]
+    private var latestPresencePayloadByCircle: [String: CirclePresencePayload] = [:]
 
     init(client: SupabaseClient) {
         self.client = client
@@ -232,8 +233,10 @@ final class SupabaseSocialService: SocialService {
     }
 
     func updateFocusStatus(_ status: CircleFocusStatus, userId: String, circleId: String) async {
+        let payload = CirclePresencePayload(userId: userId, status: status)
+        latestPresencePayloadByCircle[circleId] = payload
         guard let channel = presenceChannels[circleId] else { return }
-        try? await channel.track(CirclePresencePayload(userId: userId, status: status))
+        try? await channel.track(payload)
     }
 
     func focusStatusStream(circleId: String) -> AsyncStream<[CircleFocusStatusEntry]> {
@@ -253,7 +256,15 @@ final class SupabaseSocialService: SocialService {
                     continuation.yield(Self.sortedStatuses(statuses))
                 }
             }
-            let subscribeTask = Task { try? await channel.subscribeWithError() }
+            let subscribeTask = Task {
+                do {
+                    try await channel.subscribeWithError()
+                } catch {
+                    return
+                }
+                guard let payload = self.latestPresencePayloadByCircle[circleId] else { return }
+                try? await channel.track(payload)
+            }
             continuation.onTermination = { _ in
                 changesTask.cancel()
                 subscribeTask.cancel()
@@ -263,6 +274,7 @@ final class SupabaseSocialService: SocialService {
     }
 
     func stopFocusStatus(circleId: String) async {
+        latestPresencePayloadByCircle[circleId] = nil
         guard let channel = presenceChannels.removeValue(forKey: circleId) else { return }
         await channel.untrack()
         await client.realtimeV2.removeChannel(channel)

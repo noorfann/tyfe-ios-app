@@ -142,10 +142,10 @@ extension CoreInteractor {
             socialManager.stopRealtime()
             return
         }
-        if socialManager.circles.isEmpty, socialManager.hasMigratedToSocial {
+        if socialManager.circles.isEmpty {
             try? await socialManager.refreshCircles(for: userId)
         }
-        guard socialManager.hasMigratedToSocial || !socialManager.circles.isEmpty else {
+        guard !socialManager.circles.isEmpty else {
             socialManager.stopRealtime()
             return
         }
@@ -154,6 +154,7 @@ extension CoreInteractor {
             circleIds: socialManager.circles.map(\.circleId),
             recipientId: userId
         )
+        await updateSocialFocusStatus(activeFocusSession?.state == .running ? .focusing : .available)
     }
 
     func updateSocialFocusStatus(_ status: CircleFocusStatus) async {
