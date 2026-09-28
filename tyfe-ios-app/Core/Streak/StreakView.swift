@@ -10,6 +10,7 @@ struct StreakView: View {
     @State private var showCelebration = false
     @State private var celebrationTrigger = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let delegate: StreakDelegate
 
     init(presenter: StreakPresenter, delegate: StreakDelegate) {
@@ -29,17 +30,7 @@ struct StreakView: View {
                     state: presenter.heroState
                 )
 
-                TyfeStreakStatsView(
-                    longestStreak: presenter.longestStreak,
-                    totalStreakDays: presenter.totalStreakDays,
-                    bestChaseText: presenter.bestChaseText,
-                    lastActiveText: presenter.lastActiveText
-                )
-
-                TyfeStreakFreezeBankView(
-                    progress: presenter.freezeProgress,
-                    guidance: presenter.freezeGuidance
-                )
+                streakSummary
 
                 TyfeStreakWeekTrailView(days: presenter.recentDays)
 
@@ -75,6 +66,32 @@ struct StreakView: View {
         guard presenter.isMilestone else { return }
         celebrationTrigger += 1
         showCelebration = true
+    }
+
+    @ViewBuilder
+    private var streakSummary: some View {
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(spacing: TyfeSpacing.small) {
+                longestRunCard
+                freezeBankCard
+            }
+        } else {
+            HStack(alignment: .top, spacing: TyfeSpacing.small) {
+                longestRunCard
+                freezeBankCard
+            }
+        }
+    }
+
+    private var longestRunCard: some View {
+        TyfeStreakStatsView(longestStreak: presenter.longestStreak)
+    }
+
+    private var freezeBankCard: some View {
+        TyfeStreakFreezeBankView(
+            progress: presenter.freezeProgress,
+            guidance: presenter.freezeGuidance
+        )
     }
 }
 
@@ -139,19 +156,19 @@ struct StreakMonthCalendarView: View {
                 }
 
                 HStack(spacing: TyfeSpacing.control) {
-                    legendItem(title: "Focus day", color: TyfeEditorialPalette.success)
-                    legendItem(title: "Freeze", color: TyfeEditorialPalette.teal)
+                    legendItem(title: "Focus day", symbol: "flame.fill", color: TyfeEditorialPalette.warning)
+                    legendItem(title: "Freeze", symbol: "snowflake", color: TyfeEditorialPalette.teal)
                 }
             }
         }
         .accessibilityIdentifier("streak-activity-calendar")
     }
 
-    private func legendItem(title: String, color: Color) -> some View {
+    private func legendItem(title: String, symbol: String, color: Color) -> some View {
         HStack(spacing: TyfeSpacing.unit) {
-            Circle()
-                .fill(color)
-                .frame(width: 8, height: 8)
+            Image(systemName: symbol)
+                .foregroundStyle(color)
+                .accessibilityHidden(true)
             Text(title)
                 .font(TyfeTypography.caption)
                 .foregroundStyle(TyfeEditorialPalette.muted)
@@ -173,15 +190,18 @@ private struct StreakDayCell: View {
                 .background(backgroundColor)
                 .clipShape(Circle())
 
-            HStack(spacing: 2) {
+            HStack(spacing: TyfeSpacing.unit) {
                 if events.contains(where: { !$0.isFreeze }) {
-                    Circle().fill(TyfeEditorialPalette.success)
+                    Image(systemName: "flame.fill")
+                        .foregroundStyle(TyfeEditorialPalette.warning)
                 }
                 if events.contains(where: { $0.isFreeze }) {
-                    Circle().fill(TyfeEditorialPalette.teal)
+                    Image(systemName: "snowflake")
+                        .foregroundStyle(TyfeEditorialPalette.teal)
                 }
             }
-            .frame(width: 10, height: 4)
+            .font(.caption2.weight(.bold))
+            .frame(height: 14)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityLabel)
@@ -250,6 +270,39 @@ private struct StreakDayCell: View {
     return RouterView { router in
         builder.streakView(router: router, delegate: StreakDelegate())
     }
+}
+
+#Preview("Accessible Streak") {
+    let container = DevPreview.shared.container()
+    let streakData = CurrentStreakData.mockActive(currentStreak: 7, freezesAvailableCount: 2)
+    let streakManager = StreakManager(
+        services: MockStreakServices(streak: streakData),
+        configuration: StreakConfiguration.mockDefault()
+    )
+    container.register(StreakManager.self, key: Constants.streakKey, service: streakManager)
+    let builder = CoreBuilder(interactor: CoreInteractor(container: container))
+
+    return RouterView { router in
+        builder.streakView(router: router, delegate: StreakDelegate())
+    }
+    .environment(\.dynamicTypeSize, .accessibility2)
+}
+
+#Preview("Calendar activity icons") {
+    let calendar = Calendar.current
+    let monthStart = calendar.dateInterval(of: .month, for: Date())?.start ?? Date()
+    let focusDate = calendar.date(byAdding: .day, value: 4, to: monthStart) ?? monthStart
+    let freezeDate = calendar.date(byAdding: .day, value: 5, to: monthStart) ?? monthStart
+    let mixedDate = calendar.date(byAdding: .day, value: 6, to: monthStart) ?? monthStart
+
+    return StreakMonthCalendarView(recentEvents: [
+        StreakEvent.mock(dateCreated: focusDate),
+        StreakEvent.mock(dateCreated: freezeDate, isFreeze: true),
+        StreakEvent.mock(dateCreated: mixedDate),
+        StreakEvent.mock(dateCreated: mixedDate, isFreeze: true)
+    ])
+    .padding(TyfeSpacing.control)
+    .background(TyfeEditorialPalette.canvas)
 }
 
 extension CoreBuilder {

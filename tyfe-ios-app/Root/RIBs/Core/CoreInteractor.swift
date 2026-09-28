@@ -64,6 +64,10 @@ struct CoreInteractor: GlobalInteractor {
         focusManager.reconcileLiveActivity()
     }
 
+    func reconcileRewardLiveActivity() {
+        rewardManager.reconcileLiveActivity()
+    }
+
     // MARK: AuthManager
     
     var auth: UserAuthInfo? {

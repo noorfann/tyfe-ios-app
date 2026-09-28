@@ -24,9 +24,23 @@ class ModuleWrapperPresenter {
         }
 
         guard delegate.moduleId == Constants.tabbarModuleId,
-              components.scheme == "tyfe",
-              components.host == "focus",
-              let sessionId = components.queryItems?.first(where: { $0.name == "sessionId" })?.value,
+              components.scheme == "tyfe" else {
+            interactor.trackEvent(event: Event.deepLinkNoQueryItems)
+            return
+        }
+
+        switch components.host {
+        case "focus":
+            handleFocusDeepLink(components: components)
+        case "rewards":
+            handleRewardDeepLink(components: components)
+        default:
+            interactor.trackEvent(event: Event.deepLinkNoQueryItems)
+        }
+    }
+
+    private func handleFocusDeepLink(components: URLComponents) {
+        guard let sessionId = components.queryItems?.first(where: { $0.name == "sessionId" })?.value,
               let activeSession = interactor.activeFocusSession,
               activeSession.state == .running,
               activeSession.focusSessionId == sessionId else {
@@ -39,6 +53,23 @@ class ModuleWrapperPresenter {
             name: .focusLiveActivityNavigation,
             object: nil,
             userInfo: ["focusSessionId": sessionId]
+        )
+    }
+
+    private func handleRewardDeepLink(components: URLComponents) {
+        guard let claimId = components.queryItems?.first(where: { $0.name == "claimId" })?.value,
+              let activeClaim = interactor.activeRewardClaim,
+              activeClaim.state == .active,
+              activeClaim.rewardClaimId == claimId else {
+            interactor.trackEvent(event: Event.deepLinkNoQueryItems)
+            return
+        }
+
+        interactor.trackEvent(event: Event.deepLinkSuccess)
+        NotificationCenter.default.post(
+            name: .rewardLiveActivityNavigation,
+            object: nil,
+            userInfo: ["rewardClaimId": claimId]
         )
     }
 

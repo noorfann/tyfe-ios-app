@@ -91,7 +91,7 @@ struct PushManagerTests {
         await waitForRequestCount(1, service: service)
 
         #expect(service.scheduledRequests.first?.identifier == "tyfe.reward.reward-claim-test.expiry")
-        #expect(service.scheduledRequests.first?.soundFileName == nil)
+        #expect(service.scheduledRequests.first?.soundFileName == "finish.wav")
         assertCopyIsWarm(service.scheduledRequests)
     }
 

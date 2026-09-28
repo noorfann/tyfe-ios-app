@@ -9,6 +9,7 @@ final class RewardManager {
     private let clock: FocusClock
     private let calendar: Calendar
     private let notificationScheduler: LocalTimerNotificationScheduling?
+    private let liveActivityScheduler: RewardLiveActivityScheduling?
 
     private(set) var stateRevision = 0
 
@@ -16,12 +17,16 @@ final class RewardManager {
         repository: LocalAppRepository = MockLocalAppRepository(),
         clock: FocusClock = SystemFocusClock(),
         calendar: Calendar = .autoupdatingCurrent,
-        notificationScheduler: LocalTimerNotificationScheduling? = nil
+        notificationScheduler: LocalTimerNotificationScheduling? = nil,
+        liveActivityScheduler: RewardLiveActivityScheduling? = nil
     ) {
         self.repository = repository
         self.clock = clock
         self.calendar = calendar
         self.notificationScheduler = notificationScheduler
+        self.liveActivityScheduler = liveActivityScheduler
+
+        reconcileLiveActivity()
     }
 
     var rewards: [RewardModel] {
@@ -47,6 +52,25 @@ final class RewardManager {
 
     var currentLocalDay: LocalDay {
         LocalDay(containing: clock.now, calendar: calendar)
+    }
+
+    func reconcileLiveActivity() {
+        guard let claim = activeRewardClaim,
+              claim.state == .active,
+              let endsAt = claim.endsAt,
+              clock.now < endsAt else {
+            liveActivityScheduler?.reconcile(activeClaim: nil, rewardTitle: nil)
+            return
+        }
+
+        liveActivityScheduler?.reconcile(
+            activeClaim: claim,
+            rewardTitle: rewardTitle(for: claim)
+        )
+    }
+
+    private func rewardTitle(for claim: RewardClaimModel) -> String {
+        rewards.first { $0.rewardId == claim.rewardId }?.name ?? "Reward"
     }
 
     @discardableResult
@@ -187,6 +211,7 @@ final class RewardManager {
 
         try replace(active)
         notificationScheduler?.scheduleRewardExpiry(for: active)
+        liveActivityScheduler?.start(for: active, rewardTitle: rewardTitle(for: active))
         return active
     }
 
@@ -211,6 +236,7 @@ final class RewardManager {
 
         try replace(expired)
         notificationScheduler?.cancelRewardExpiry(rewardClaimId: expired.rewardClaimId)
+        liveActivityScheduler?.end(for: expired, reason: .expired)
         return expired
     }
 

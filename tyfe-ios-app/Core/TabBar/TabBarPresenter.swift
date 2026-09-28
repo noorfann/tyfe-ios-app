@@ -166,6 +166,17 @@ class TabBarPresenter {
         )
     }
 
+    func onRewardLiveActivityNavigation(notification: Notification, delegate: TabBarDelegate) {
+        guard let claimId = notification.userInfo?["rewardClaimId"] as? String,
+              let activeClaim = interactor.activeRewardClaim,
+              activeClaim.state == .active,
+              activeClaim.rewardClaimId == claimId,
+              let rewardsTab = tabs.first(where: { $0.title == "Rewards" }) else { return }
+
+        interactor.trackEvent(event: Event.rewardLiveActivityOpened(delegate: delegate))
+        selectedTab = rewardsTab.id
+    }
+
     func syncProgressTicker() {
         refreshProgressState()
         if progressStatusKind != nil {
@@ -239,6 +250,7 @@ extension TabBarPresenter {
         case rewardStatusPressed(delegate: TabBarDelegate)
         case focusStatusPressed(session: FocusSessionModel, delegate: TabBarDelegate)
         case focusLiveActivityOpened(delegate: TabBarDelegate)
+        case rewardLiveActivityOpened(delegate: TabBarDelegate)
 
         var eventName: String {
             switch self {
@@ -249,6 +261,7 @@ extension TabBarPresenter {
             case .rewardStatusPressed:      return "TabBar_RewardStatusPressed"
             case .focusStatusPressed:       return "TabBar_FocusStatusPressed"
             case .focusLiveActivityOpened:  return "TabBar_FocusLiveActivityOpened"
+            case .rewardLiveActivityOpened: return "TabBar_RewardLiveActivityOpened"
             }
         }
 
@@ -267,6 +280,8 @@ extension TabBarPresenter {
                 params.merge(delegate.eventParameters)
                 return params
             case .focusLiveActivityOpened(delegate: let delegate):
+                return delegate.eventParameters
+            case .rewardLiveActivityOpened(delegate: let delegate):
                 return delegate.eventParameters
             }
         }

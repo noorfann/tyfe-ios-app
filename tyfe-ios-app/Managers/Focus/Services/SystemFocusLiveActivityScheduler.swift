@@ -75,12 +75,7 @@ final class SystemFocusLiveActivityScheduler: FocusLiveActivityScheduling {
         }
         let endsAt = session.focusEndsAt ?? session.startedAt
         let content = content(phase: phase, startedAt: session.startedAt, endsAt: endsAt)
-        let dismissalPolicy: ActivityUIDismissalPolicy = switch reason {
-        case .completed:
-            .after(Date.now.addingTimeInterval(15 * 60))
-        case .abandoned:
-            .immediate
-        }
+        let dismissalPolicy: ActivityUIDismissalPolicy = .immediate
 
         for activity in activities(for: session.focusSessionId) {
             Task { @MainActor [activity] in

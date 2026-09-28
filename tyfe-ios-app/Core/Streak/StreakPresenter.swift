@@ -41,10 +41,6 @@ extension StreakPresenter {
         currentStreakData.longestStreak ?? 0
     }
 
-    var totalStreakDays: Int {
-        currentStreakData.totalEvents ?? 0
-    }
-
     var heroState: StreakHeroState {
         if currentStreak <= 0 { return .start }
         if currentStreakData.isGoalMet { return .secured }
@@ -53,36 +49,14 @@ extension StreakPresenter {
     }
 
     var freezeProgress: StreakFreezeProgress {
-        let interval = StreakFreezePolicy.milestoneInterval
-        let remainder = currentStreak % interval
-        let daysUntilNextFreeze = remainder == 0 ? interval : interval - remainder
-
         return StreakFreezeProgress(
             available: currentStreakData.freezesAvailableCount ?? 0,
-            maximum: StreakFreezePolicy.maximumAvailableFreezes,
-            daysUntilNextFreeze: daysUntilNextFreeze
+            maximum: StreakFreezePolicy.maximumAvailableFreezes
         )
     }
 
     var isMilestone: Bool {
         currentStreak > 0 && currentStreak % StreakFreezePolicy.milestoneInterval == 0
-    }
-
-    var bestChaseText: String? {
-        guard longestStreak > 0 else { return nil }
-
-        if currentStreak >= longestStreak {
-            return "This is your longest run so far."
-        }
-
-        let remaining = longestStreak - currentStreak
-        let dayWord = remaining == 1 ? "day" : "days"
-        return "\(remaining) \(dayWord) from your best of \(longestStreak)."
-    }
-
-    var lastActiveText: String? {
-        guard let dateLastEvent = currentStreakData.dateLastEvent else { return nil }
-        return "Last active \(dateLastEvent.formatted(date: .abbreviated, time: .omitted))"
     }
 
     var recentDays: [StreakDay] {
@@ -167,18 +141,6 @@ enum StreakHeroState: Equatable {
 struct StreakFreezeProgress: Equatable {
     let available: Int
     let maximum: Int
-    let daysUntilNextFreeze: Int
-
-    var isAtCap: Bool {
-        available >= maximum
-    }
-
-    var statusText: String {
-        if isAtCap {
-            return "Freeze bank full at \(maximum)."
-        }
-        return daysUntilNextFreeze == 1 ? "Next freeze in 1 day." : "Next freeze in \(daysUntilNextFreeze) days."
-    }
 }
 
 enum StreakDayMark: Equatable {

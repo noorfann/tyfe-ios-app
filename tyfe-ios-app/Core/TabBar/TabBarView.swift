@@ -127,6 +127,9 @@ struct TabBarView: View {
         .onNotificationReceived(name: .focusLiveActivityNavigation) { notification in
             presenter.onFocusLiveActivityNavigation(notification: notification, delegate: delegate)
         }
+        .onNotificationReceived(name: .rewardLiveActivityNavigation) { notification in
+            presenter.onRewardLiveActivityNavigation(notification: notification, delegate: delegate)
+        }
     }
 }
 

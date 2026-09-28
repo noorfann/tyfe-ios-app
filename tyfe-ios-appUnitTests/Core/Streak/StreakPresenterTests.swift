@@ -45,25 +45,16 @@ struct StreakPresenterTests {
         #expect(presenter.heroState == .rebuild)
     }
 
-    @Test func freezeProgressCountsDownToNextMilestone() async throws {
-        let atStart = try await makePresenter(streakData: makeStreakData(currentStreak: 0))
-        #expect(atStart.freezeProgress.daysUntilNextFreeze == 7)
-
-        let almostThere = try await makePresenter(streakData: makeStreakData(currentStreak: 6))
-        #expect(almostThere.freezeProgress.daysUntilNextFreeze == 1)
-        #expect(almostThere.freezeProgress.statusText == "Next freeze in 1 day.")
-
-        let justEarned = try await makePresenter(
+    @Test func freezeProgressShowsAvailableBalance() async throws {
+        let presenter = try await makePresenter(
             streakData: makeStreakData(currentStreak: 7, freezesAvailableCount: 1)
         )
-        #expect(justEarned.freezeProgress.daysUntilNextFreeze == 7)
-        #expect(justEarned.freezeProgress.isAtCap == false)
 
-        let midCycle = try await makePresenter(streakData: makeStreakData(currentStreak: 8))
-        #expect(midCycle.freezeProgress.daysUntilNextFreeze == 6)
+        #expect(presenter.freezeProgress.available == 1)
+        #expect(presenter.freezeProgress.maximum == StreakFreezePolicy.maximumAvailableFreezes)
     }
 
-    @Test func freezeProgressReportsWhenBankIsFull() async throws {
+    @Test func freezeProgressShowsFullBank() async throws {
         let presenter = try await makePresenter(
             streakData: makeStreakData(
                 currentStreak: 14,
@@ -71,8 +62,7 @@ struct StreakPresenterTests {
             )
         )
 
-        #expect(presenter.freezeProgress.isAtCap)
-        #expect(presenter.freezeProgress.statusText == "Freeze bank full at 3.")
+        #expect(presenter.freezeProgress.available == presenter.freezeProgress.maximum)
     }
 
     @Test func milestoneFiresOnEverySeventhDay() async throws {
@@ -87,40 +77,12 @@ struct StreakPresenterTests {
         #expect(noStreak.isMilestone == false)
     }
 
-    @Test func bestChaseIsHiddenWithoutARecord() async throws {
-        let presenter = try await makePresenter(
-            streakData: makeStreakData(currentStreak: 0, longestStreak: 0)
-        )
-
-        #expect(presenter.bestChaseText == nil)
-    }
-
-    @Test func bestChaseCountsDaysToTheRecord() async throws {
+    @Test func longestRunUsesHistoricalBest() async throws {
         let presenter = try await makePresenter(
             streakData: makeStreakData(currentStreak: 5, longestStreak: 12)
         )
-        #expect(presenter.bestChaseText == "7 days from your best of 12.")
 
-        let oneDayAway = try await makePresenter(
-            streakData: makeStreakData(currentStreak: 11, longestStreak: 12)
-        )
-        #expect(oneDayAway.bestChaseText == "1 day from your best of 12.")
-    }
-
-    @Test func bestChaseCelebratesAMatchedRecord() async throws {
-        let presenter = try await makePresenter(
-            streakData: makeStreakData(currentStreak: 12, longestStreak: 12)
-        )
-
-        #expect(presenter.bestChaseText == "This is your longest run so far.")
-    }
-
-    @Test func lastActiveIsHiddenWithoutEvents() async throws {
-        let presenter = try await makePresenter(
-            streakData: makeStreakData(currentStreak: 0, dateLastEvent: nil)
-        )
-
-        #expect(presenter.lastActiveText == nil)
+        #expect(presenter.longestStreak == 12)
     }
 
     @Test func recentDaysMarksFocusFreezeAndOpenToday() async throws {

@@ -40,6 +40,74 @@ struct ModuleWrapperPresenterTests {
         #expect(recorder.sessionId == session.focusSessionId)
     }
 
+    @Test func matchingRewardDeepLinkPostsNavigationForTheActiveClaim() throws {
+        let dependencies = Dependencies(
+            config: .mock(isSignedIn: true, addLogging: false),
+            snapshotOverride: .rewardFlowMock
+        )
+        let interactor = CoreInteractor(container: dependencies.container)
+        let rewardManager = try #require(dependencies.container.resolve(RewardManager.self))
+        let claim = try rewardManager.createRewardClaim(
+            rewardId: "reward-starter-social",
+            durationTier: .tenMinutes
+        )
+        _ = try rewardManager.startRewardClaim(rewardClaimId: claim.rewardClaimId)
+
+        let recorder = NotificationRecorder()
+        NotificationCenter.default.addObserver(
+            recorder,
+            selector: #selector(NotificationRecorder.receive(_:)),
+            name: .rewardLiveActivityNavigation,
+            object: nil
+        )
+        defer { NotificationCenter.default.removeObserver(recorder) }
+
+        let presenter = ModuleWrapperPresenter(
+            interactor: interactor,
+            router: RecordingModuleWrapperRouter()
+        )
+        let url = try #require(
+            URL(string: "tyfe://rewards?claimId=\(claim.rewardClaimId)")
+        )
+
+        presenter.handleDeepLink(
+            url: url,
+            delegate: ModuleWrapperDelegate(moduleId: Constants.tabbarModuleId)
+        )
+
+        #expect(recorder.claimId == claim.rewardClaimId)
+    }
+
+    @Test func staleAndMissingRewardDeepLinksAreIgnored() throws {
+        let dependencies = Dependencies(
+            config: .mock(isSignedIn: true, addLogging: false),
+            snapshotOverride: .rewardFlowMock
+        )
+        let interactor = CoreInteractor(container: dependencies.container)
+
+        let recorder = NotificationRecorder()
+        NotificationCenter.default.addObserver(
+            recorder,
+            selector: #selector(NotificationRecorder.receive(_:)),
+            name: .rewardLiveActivityNavigation,
+            object: nil
+        )
+        defer { NotificationCenter.default.removeObserver(recorder) }
+
+        let presenter = ModuleWrapperPresenter(
+            interactor: interactor,
+            router: RecordingModuleWrapperRouter()
+        )
+        let delegate = ModuleWrapperDelegate(moduleId: Constants.tabbarModuleId)
+
+        let staleURL = try #require(URL(string: "tyfe://rewards?claimId=missing"))
+        presenter.handleDeepLink(url: staleURL, delegate: delegate)
+        let missingClaimURL = try #require(URL(string: "tyfe://rewards"))
+        presenter.handleDeepLink(url: missingClaimURL, delegate: delegate)
+
+        #expect(recorder.claimId == nil)
+    }
+
     @Test func staleMissingAndNonActiveFocusDeepLinksAreIgnored() throws {
         let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
         let interactor = CoreInteractor(container: dependencies.container)
@@ -85,8 +153,10 @@ private final class RecordingModuleWrapperRouter: ModuleWrapperRouter {
 
 private final class NotificationRecorder: NSObject {
     private(set) var sessionId: String?
+    private(set) var claimId: String?
 
     @objc func receive(_ notification: Notification) {
         sessionId = notification.userInfo?["focusSessionId"] as? String
+        claimId = notification.userInfo?["rewardClaimId"] as? String
     }
 }

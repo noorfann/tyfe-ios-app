@@ -2,72 +2,64 @@ import ActivityKit
 import SwiftUI
 import WidgetKit
 
-@main
-struct TyfeLiveActivityBundle: WidgetBundle {
-    var body: some Widget {
-        FocusLiveActivityWidget()
-        RewardLiveActivityWidget()
-    }
-}
-
-struct FocusLiveActivityWidget: Widget {
+struct RewardLiveActivityWidget: Widget {
     var body: some WidgetConfiguration {
-        ActivityConfiguration(for: FocusLiveActivityAttributes.self) { context in
-            FocusLiveActivityLockScreenView(context: context)
-                .widgetURL(FocusLiveActivityRoute.url(sessionId: context.attributes.focusSessionId))
+        ActivityConfiguration(for: RewardLiveActivityAttributes.self) { context in
+            RewardLiveActivityLockScreenView(context: context)
+                .widgetURL(RewardLiveActivityRoute.url(claimId: context.attributes.rewardClaimId))
                 .activityBackgroundTint(Color(.systemBackground))
                 .activitySystemActionForegroundColor(.primary)
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    FocusLiveActivityBrandView()
+                    RewardLiveActivityBrandView()
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     HStack(spacing: 6) {
-                        FocusLiveActivityProgressRingView(state: context.state)
+                        RewardLiveActivityProgressRingView(state: context.state)
                             .frame(width: 22, height: 22)
-                        FocusLiveActivityTimerView(state: context.state)
+                        RewardLiveActivityTimerView(state: context.state)
                     }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     VStack(alignment: .leading, spacing: 2) {
-                        FocusLiveActivityTitleView(title: context.attributes.activityTitle)
-                        FocusLiveActivityStatusView(state: context.state)
+                        RewardLiveActivityTitleView(title: context.attributes.rewardTitle)
+                        RewardLiveActivityStatusView(state: context.state)
                             .font(.subheadline)
                     }
                 }
             } compactLeading: {
-                FocusLiveActivityProgressRingView(state: context.state)
+                RewardLiveActivityProgressRingView(state: context.state)
                     .frame(width: 20, height: 20)
             } compactTrailing: {
-                FocusLiveActivityTimerView(state: context.state)
+                RewardLiveActivityTimerView(state: context.state)
             } minimal: {
-                FocusLiveActivityLogoView()
+                RewardLiveActivityLogoView()
             }
-            .widgetURL(FocusLiveActivityRoute.url(sessionId: context.attributes.focusSessionId))
+            .widgetURL(RewardLiveActivityRoute.url(claimId: context.attributes.rewardClaimId))
         }
     }
 }
 
-private struct FocusLiveActivityLockScreenView: View {
-    let context: ActivityViewContext<FocusLiveActivityAttributes>
+private struct RewardLiveActivityLockScreenView: View {
+    let context: ActivityViewContext<RewardLiveActivityAttributes>
 
     var body: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
-                    FocusLiveActivityLogoView()
-                    FocusLiveActivityTitleView(title: context.attributes.activityTitle)
+                    RewardLiveActivityLogoView()
+                    RewardLiveActivityTitleView(title: context.attributes.rewardTitle)
                 }
-                FocusLiveActivityStatusView(state: context.state)
+                RewardLiveActivityStatusView(state: context.state)
                     .font(.subheadline)
             }
 
             Spacer(minLength: 8)
             HStack(spacing: 8) {
-                FocusLiveActivityProgressRingView(state: context.state)
+                RewardLiveActivityProgressRingView(state: context.state)
                     .frame(width: 28, height: 28)
-                FocusLiveActivityTimerView(state: context.state)
+                RewardLiveActivityTimerView(state: context.state)
                     .font(.title3.monospacedDigit())
                     .fontWeight(.semibold)
             }
@@ -76,10 +68,10 @@ private struct FocusLiveActivityLockScreenView: View {
     }
 }
 
-private struct FocusLiveActivityBrandView: View {
+private struct RewardLiveActivityBrandView: View {
     var body: some View {
         HStack(spacing: 6) {
-            FocusLiveActivityLogoView()
+            RewardLiveActivityLogoView()
             Text("Tyfe")
                 .font(.headline)
                 .fontWeight(.semibold)
@@ -87,7 +79,7 @@ private struct FocusLiveActivityBrandView: View {
     }
 }
 
-private struct FocusLiveActivityTitleView: View {
+private struct RewardLiveActivityTitleView: View {
     let title: String
 
     var body: some View {
@@ -100,7 +92,7 @@ private struct FocusLiveActivityTitleView: View {
     }
 }
 
-private struct FocusLiveActivityLogoView: View {
+private struct RewardLiveActivityLogoView: View {
     var body: some View {
         Image("TyfeLogo", bundle: .main)
             .resizable()
@@ -110,11 +102,11 @@ private struct FocusLiveActivityLogoView: View {
     }
 }
 
-private struct FocusLiveActivityProgressRingView: View {
-    let state: FocusLiveActivityAttributes.ContentState
+private struct RewardLiveActivityProgressRingView: View {
+    let state: RewardLiveActivityAttributes.ContentState
 
     var body: some View {
-        if state.phase == .running {
+        if state.phase == .active {
             ProgressView(
                 timerInterval: state.startedAt...state.endsAt,
                 countsDown: true,
@@ -122,18 +114,18 @@ private struct FocusLiveActivityProgressRingView: View {
                 currentValueLabel: { EmptyView() }
             )
             .progressViewStyle(.circular)
-            .tint(FocusLiveActivityPalette.accent)
-            .accessibilityLabel("Focus progress")
+            .tint(RewardLiveActivityPalette.accent)
+            .accessibilityLabel("Reward progress")
         }
     }
 }
 
-private enum FocusLiveActivityPalette {
-    static let accent = Color(red: 0.4, green: 0.75, blue: 0.74)
+private enum RewardLiveActivityPalette {
+    static let accent = Color(red: 0.867, green: 0.631, blue: 0.227)
 }
 
-private struct FocusLiveActivityTimerView: View {
-    let state: FocusLiveActivityAttributes.ContentState
+private struct RewardLiveActivityTimerView: View {
+    let state: RewardLiveActivityAttributes.ContentState
 
     var body: some View {
         Text(
@@ -145,8 +137,8 @@ private struct FocusLiveActivityTimerView: View {
     }
 }
 
-private struct FocusLiveActivityStatusView: View {
-    let state: FocusLiveActivityAttributes.ContentState
+private struct RewardLiveActivityStatusView: View {
+    let state: RewardLiveActivityAttributes.ContentState
 
     var body: some View {
         Text(statusTitle)
@@ -154,19 +146,18 @@ private struct FocusLiveActivityStatusView: View {
 
     private var statusTitle: String {
         switch state.phase {
-        case .running: "Focusing"
-        case .completed: "Session complete"
-        case .abandoned: "Session ended"
+        case .active: "Reward time"
+        case .expired: "Reward complete"
         }
     }
 }
 
-private enum FocusLiveActivityRoute {
-    static func url(sessionId: String) -> URL {
+private enum RewardLiveActivityRoute {
+    static func url(claimId: String) -> URL {
         var components = URLComponents()
         components.scheme = "tyfe"
-        components.host = "focus"
-        components.queryItems = [URLQueryItem(name: "sessionId", value: sessionId)]
+        components.host = "rewards"
+        components.queryItems = [URLQueryItem(name: "claimId", value: claimId)]
         return components.url ?? URL(fileURLWithPath: "/")
     }
 }

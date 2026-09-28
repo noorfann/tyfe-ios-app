@@ -53,6 +53,8 @@ struct RewardsView: View {
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
                 presenter.onSceneBecameActive()
+            } else {
+                presenter.onSceneBecameInactive()
             }
         }
     }

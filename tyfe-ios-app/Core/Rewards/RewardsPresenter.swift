@@ -16,6 +16,7 @@ final class RewardsPresenter {
     var isCreateSheetPresented = false
 
     private var tickerTask: Task<Void, Never>?
+    private var isSceneActive = false
 
     init(interactor: RewardsInteractor, router: RewardsRouter) {
         self.interactor = interactor
@@ -43,18 +44,29 @@ final class RewardsPresenter {
 
     func onViewAppear(delegate: RewardsDelegate) {
         interactor.trackScreenEvent(event: Event.onAppear(delegate: delegate))
+        interactor.prepareSoundEffect(sound: .start, simultaneousPlayers: 1)
+        interactor.prepareSoundEffect(sound: .finish, simultaneousPlayers: 1)
+        isSceneActive = true
         refresh()
         startTickerIfNeeded()
     }
 
     func onViewDisappear(delegate: RewardsDelegate) {
         stopTicker()
+        isSceneActive = false
+        interactor.tearDownSoundEffect(sound: .start)
+        interactor.tearDownSoundEffect(sound: .finish)
         interactor.trackEvent(event: Event.onDisappear(delegate: delegate))
     }
 
     func onSceneBecameActive() {
+        isSceneActive = true
         refresh()
         startTickerIfNeeded()
+    }
+
+    func onSceneBecameInactive() {
+        isSceneActive = false
     }
 
     func onSelectReward(_ reward: RewardModel) {
@@ -74,6 +86,7 @@ final class RewardsPresenter {
         guard let claim = activeClaim, claim.state == .ready else { return }
         do {
             activeClaim = try interactor.startRewardClaim(rewardClaimId: claim.rewardClaimId)
+            interactor.playSoundEffect(sound: .start)
             interactor.trackEvent(event: Event.startClaim(claim: claim))
             refresh()
             startTickerIfNeeded()
@@ -135,6 +148,7 @@ final class RewardsPresenter {
             )
             if startNow {
                 claim = try interactor.startRewardClaim(rewardClaimId: claim.rewardClaimId)
+                interactor.playSoundEffect(sound: .start)
             }
             activeClaim = claim
             finishedClaim = nil
@@ -148,7 +162,8 @@ final class RewardsPresenter {
         }
     }
 
-    private func refresh() {
+    private func refresh(playCompletionSound: Bool = false) {
+        let wasActive = activeClaim?.state == .active
         interactor.synchronizeRewardCreditDay()
         do {
             let refreshed = try interactor.refreshRewardClaim()
@@ -161,6 +176,12 @@ final class RewardsPresenter {
                 activeClaim = nil
                 finishedClaim = refreshed ?? interactor.rewardClaims.last { $0.state == .expired }
                 remainingClaimSeconds = 0
+            }
+
+            if playCompletionSound,
+               wasActive,
+               finishedClaim?.state == .expired {
+                interactor.playSoundEffect(sound: .finish)
             }
 
             rewards = interactor.rewards
@@ -186,9 +207,13 @@ final class RewardsPresenter {
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(1))
                 guard !Task.isCancelled else { return }
-                self?.refresh()
+                self?.onTimerTick()
             }
         }
+    }
+
+    private func onTimerTick() {
+        refresh(playCompletionSound: isSceneActive)
     }
 
     private func stopTicker() {

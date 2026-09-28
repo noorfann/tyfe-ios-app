@@ -21,6 +21,7 @@ protocol AppViewInteractor: GlobalInteractor {
     func discardPendingReceivedCheers()
     func synchronizeRewardCreditDay()
     func reconcileFocusLiveActivity()
+    func reconcileRewardLiveActivity()
 }
 
 extension CoreInteractor: AppViewInteractor { }

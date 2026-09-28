@@ -115,80 +115,27 @@ private struct TyfeStreakGrowthTilesView: View {
 
 struct TyfeStreakStatsView: View {
     let longestStreak: Int
-    let totalStreakDays: Int
-    let bestChaseText: String?
-    let lastActiveText: String?
 
     var body: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
-                if let bestChaseText {
-                    HStack(spacing: TyfeSpacing.small) {
-                        Image(systemName: "trophy.fill")
-                            .imageScale(.small)
-                            .foregroundStyle(TyfeEditorialPalette.saffron)
-                            .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+                Text("Longest run")
+                    .font(TyfeTypography.eyebrow)
+                    .textCase(.uppercase)
+                    .foregroundStyle(TyfeEditorialPalette.muted)
 
-                        Text(bestChaseText)
-                            .font(TyfeTypography.interface)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                }
-
-                HStack(alignment: .top, spacing: TyfeSpacing.control) {
-                    TyfeStreakStatItem(title: "Longest", value: String(longestStreak), detail: "days")
-                    TyfeStreakStatItem(title: "All time", value: String(totalStreakDays), detail: "days")
-                }
-
-                if let lastActiveText {
-                    Rectangle()
-                        .fill(TyfeEditorialPalette.border)
-                        .frame(height: TyfeStroke.hairline)
-
-                    HStack(spacing: TyfeSpacing.small) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .imageScale(.small)
-                            .foregroundStyle(TyfeEditorialPalette.success)
-                            .accessibilityHidden(true)
-
-                        Text(lastActiveText)
-                            .font(TyfeTypography.caption)
-                            .foregroundStyle(TyfeEditorialPalette.muted)
-                    }
-                }
-            }
-        }
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("streak-stats")
-    }
-}
-
-private struct TyfeStreakStatItem: View {
-    let title: String
-    let value: String
-    let detail: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.unit) {
-            Text(title)
-                .font(TyfeTypography.eyebrow)
-                .textCase(.uppercase)
-                .foregroundStyle(TyfeEditorialPalette.muted)
-
-            HStack(alignment: .firstTextBaseline, spacing: TyfeSpacing.unit) {
-                Text(value)
+                Text("\(longestStreak) days")
                     .font(TyfeTypography.displayCompact)
                     .monospacedDigit()
-
-                Text(detail)
-                    .font(TyfeTypography.caption)
-                    .foregroundStyle(TyfeEditorialPalette.muted)
+                    .minimumScaleFactor(0.7)
+                    .lineLimit(1)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(title)
-        .accessibilityValue("\(value) \(detail)")
+        .accessibilityLabel("Longest run")
+        .accessibilityValue("\(longestStreak) days")
+        .accessibilityIdentifier("streak-stats")
     }
 }
 
@@ -200,25 +147,27 @@ struct TyfeStreakFreezeBankView: View {
 
     var body: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.small) {
                 Text("Freeze bank")
                     .font(TyfeTypography.eyebrow)
                     .textCase(.uppercase)
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
-                HStack(spacing: TyfeSpacing.small) {
+                Text("\(progress.available) / \(progress.maximum)")
+                    .font(TyfeTypography.displayCompact)
+                    .monospacedDigit()
+
+                HStack(spacing: TyfeSpacing.unit) {
                     ForEach(0..<progress.maximum, id: \.self) { index in
                         freezeToken(isFilled: index < progress.available)
                     }
                 }
-
-                Text(progress.statusText)
-                    .font(TyfeTypography.interface)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .topLeading)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Freeze bank")
-        .accessibilityValue("\(progress.available) of \(progress.maximum) available. \(progress.statusText)")
+        .accessibilityValue("\(progress.available) of \(progress.maximum) available")
         .accessibilityHint(guidance)
         .accessibilityIdentifier("streak-freeze-bank")
     }
@@ -226,7 +175,7 @@ struct TyfeStreakFreezeBankView: View {
     private func freezeToken(isFilled: Bool) -> some View {
         RoundedRectangle(cornerRadius: TyfeRadius.control)
             .fill(isFilled ? TyfeEditorialPalette.teal : .clear)
-            .frame(width: 40, height: 40)
+            .frame(width: 24, height: 24)
             .overlay {
                 RoundedRectangle(cornerRadius: TyfeRadius.control)
                     .stroke(
@@ -236,7 +185,7 @@ struct TyfeStreakFreezeBankView: View {
             }
             .overlay {
                 Image(systemName: "snowflake")
-                    .font(.headline.weight(.black))
+                    .font(.caption.weight(.black))
                     .foregroundStyle(
                         isFilled
                             ? TyfeEditorialPalette.onAccent
@@ -367,19 +316,29 @@ private struct TyfeStreakDayTile: View {
     return ScrollView {
         VStack(alignment: .leading, spacing: TyfeSpacing.section) {
             TyfeStreakHeroView(streakCount: 7, state: .secured)
-            TyfeStreakStatsView(
-                longestStreak: 12,
-                totalStreakDays: 34,
-                bestChaseText: "5 days from your best of 12.",
-                lastActiveText: "Last active 3 Sep 2026"
-            )
-            TyfeStreakFreezeBankView(
-                progress: StreakFreezeProgress(available: 2, maximum: 3, daysUntilNextFreeze: 4),
-                guidance: StreakFreezePolicy.guidance
-            )
+            HStack(alignment: .top, spacing: TyfeSpacing.small) {
+                TyfeStreakStatsView(longestStreak: 12)
+                TyfeStreakFreezeBankView(
+                    progress: StreakFreezeProgress(available: 2, maximum: 3),
+                    guidance: StreakFreezePolicy.guidance
+                )
+            }
             TyfeStreakWeekTrailView(days: days)
         }
         .padding(TyfeSpacing.control)
     }
+    .background(TyfeEditorialPalette.canvas)
+}
+
+#Preview("Narrow streak cards") {
+    HStack(alignment: .top, spacing: TyfeSpacing.small) {
+        TyfeStreakStatsView(longestStreak: 120)
+        TyfeStreakFreezeBankView(
+            progress: StreakFreezeProgress(available: 2, maximum: 3),
+            guidance: StreakFreezePolicy.guidance
+        )
+    }
+    .padding(TyfeSpacing.control)
+    .frame(width: 320)
     .background(TyfeEditorialPalette.canvas)
 }

@@ -48,7 +48,7 @@ struct AppPresenterTests {
         #expect(context.manager.pendingReceivedCheers.isEmpty)
     }
 
-    @Test func enteringTheForegroundReconcilesTheFocusLiveActivity() {
+    @Test func enteringTheForegroundReconcilesTheLiveActivities() {
         let interactor = RecordingAppViewInteractor()
         let presenter = AppPresenter(interactor: interactor)
 
@@ -57,6 +57,7 @@ struct AppPresenterTests {
         presenter.onScenePhaseChanged(.active)
 
         #expect(interactor.focusLiveActivityReconciliationCount == 2)
+        #expect(interactor.rewardLiveActivityReconciliationCount == 2)
     }
 
     private func makeContext() -> AppPresenterTestContext {
@@ -112,6 +113,7 @@ private final class RecordingAppViewInteractor: AppViewInteractor {
     let colorScheme: ColorScheme = .light
     let pendingReceivedCheerCount = 0
     private(set) var focusLiveActivityReconciliationCount = 0
+    private(set) var rewardLiveActivityReconciliationCount = 0
 
     func toggleColorScheme() {}
 
@@ -133,6 +135,10 @@ private final class RecordingAppViewInteractor: AppViewInteractor {
 
     func reconcileFocusLiveActivity() {
         focusLiveActivityReconciliationCount += 1
+    }
+
+    func reconcileRewardLiveActivity() {
+        rewardLiveActivityReconciliationCount += 1
     }
 
     func trackEvent(eventName: String, parameters: [String: Any]?, type: LogType) {}

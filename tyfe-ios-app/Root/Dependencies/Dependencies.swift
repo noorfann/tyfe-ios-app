@@ -23,6 +23,7 @@ struct Dependencies {
         let logManager: LogManager
         let pushManager: PushManager
         let liveActivityScheduler: FocusLiveActivityScheduling
+        let rewardLiveActivityScheduler: RewardLiveActivityScheduling
         let hapticManager: HapticManager
         let soundEffectManager: SoundEffectManager
         let streakManager: StreakManager
@@ -123,6 +124,7 @@ struct Dependencies {
                 logManager: logManager
             )
             liveActivityScheduler = MockFocusLiveActivityScheduler()
+            rewardLiveActivityScheduler = MockRewardLiveActivityScheduler()
         case .dev, .prod:
             pushManager = PushManager(
                 service: SystemLocalNotificationService(),
@@ -130,6 +132,7 @@ struct Dependencies {
                 userDefaults: .standard
             )
             liveActivityScheduler = SystemFocusLiveActivityScheduler()
+            rewardLiveActivityScheduler = SystemRewardLiveActivityScheduler()
         }
         soundEffectManager = SoundEffectManager(logger: logManager)
         switch config {
@@ -161,7 +164,8 @@ struct Dependencies {
         )
         rewardManager = RewardManager(
             repository: repository,
-            notificationScheduler: pushManager
+            notificationScheduler: pushManager,
+            liveActivityScheduler: rewardLiveActivityScheduler
         )
         
         let container = DependencyContainer()

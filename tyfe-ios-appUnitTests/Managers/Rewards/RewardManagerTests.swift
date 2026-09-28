@@ -21,13 +21,15 @@ struct RewardManagerTests {
     private func makeManager(
         repository: LocalAppRepository? = nil,
         clock: FocusClock? = nil,
-        scheduler: LocalTimerNotificationScheduling? = nil
+        scheduler: LocalTimerNotificationScheduling? = nil,
+        liveActivityScheduler: RewardLiveActivityScheduling? = nil
     ) -> RewardManager {
         RewardManager(
             repository: repository ?? MockLocalAppRepository(snapshot: Self.seededSnapshot),
             clock: clock ?? TestFocusClock(),
             calendar: utcCalendar(),
-            notificationScheduler: scheduler
+            notificationScheduler: scheduler,
+            liveActivityScheduler: liveActivityScheduler
         )
     }
 
@@ -302,6 +304,85 @@ struct RewardManagerTests {
         _ = try manager.startRewardClaim(rewardClaimId: claim.rewardClaimId)
 
         #expect(scheduler.scheduledRewardClaims.map(\.rewardClaimId) == [claim.rewardClaimId])
+    }
+
+    @Test func startingClaimStartsOneRewardLiveActivityWithRewardTitle() throws {
+        let liveActivityScheduler = RecordingRewardLiveActivityScheduler()
+        let manager = makeManager(liveActivityScheduler: liveActivityScheduler)
+        let claim = try manager.createRewardClaim(
+            rewardId: "reward-starter-social",
+            durationTier: .tenMinutes
+        )
+
+        #expect(liveActivityScheduler.startedClaims.isEmpty)
+
+        _ = try manager.startRewardClaim(rewardClaimId: claim.rewardClaimId)
+
+        #expect(liveActivityScheduler.startedClaims.map(\.rewardClaimId) == [claim.rewardClaimId])
+        #expect(liveActivityScheduler.startedRewardTitles == ["Scroll social media"])
+    }
+
+    @Test func refreshExpiryEndsRewardLiveActivity() throws {
+        let clock = TestFocusClock()
+        let liveActivityScheduler = RecordingRewardLiveActivityScheduler()
+        let manager = makeManager(clock: clock, liveActivityScheduler: liveActivityScheduler)
+        let claim = try manager.createRewardClaim(
+            rewardId: "reward-starter-social",
+            durationTier: .tenMinutes
+        )
+        _ = try manager.startRewardClaim(rewardClaimId: claim.rewardClaimId)
+
+        clock.advance(by: TimeInterval(RewardDurationTier.tenMinutes.durationMinutes * 60))
+        _ = try manager.refreshRewardClaim()
+
+        #expect(liveActivityScheduler.endedClaims.count == 1)
+        #expect(liveActivityScheduler.endedClaims.first?.claim.rewardClaimId == claim.rewardClaimId)
+        #expect(liveActivityScheduler.endedClaims.first?.reason == .expired)
+    }
+
+    @Test func activeClaimIsReconciledWhenRewardManagerIsRecreated() throws {
+        let clock = TestFocusClock()
+        let repository = MockLocalAppRepository(snapshot: Self.seededSnapshot)
+        let firstLiveActivityScheduler = RecordingRewardLiveActivityScheduler()
+        let firstManager = makeManager(
+            repository: repository,
+            clock: clock,
+            liveActivityScheduler: firstLiveActivityScheduler
+        )
+        let claim = try firstManager.createRewardClaim(
+            rewardId: "reward-starter-social",
+            durationTier: .tenMinutes
+        )
+        _ = try firstManager.startRewardClaim(rewardClaimId: claim.rewardClaimId)
+
+        let secondLiveActivityScheduler = RecordingRewardLiveActivityScheduler()
+        _ = RewardManager(
+            repository: repository,
+            clock: clock,
+            calendar: utcCalendar(),
+            liveActivityScheduler: secondLiveActivityScheduler
+        )
+
+        #expect(
+            secondLiveActivityScheduler.reconciledClaims.compactMap { $0 }.last?.rewardClaimId
+                == claim.rewardClaimId
+        )
+    }
+
+    @Test func expiredClaimIsNotRecreatedWhenTheAppReturnsToTheForeground() throws {
+        let clock = TestFocusClock()
+        let liveActivityScheduler = RecordingRewardLiveActivityScheduler()
+        let manager = makeManager(clock: clock, liveActivityScheduler: liveActivityScheduler)
+        let claim = try manager.createRewardClaim(
+            rewardId: "reward-starter-social",
+            durationTier: .tenMinutes
+        )
+        _ = try manager.startRewardClaim(rewardClaimId: claim.rewardClaimId)
+        clock.advance(by: TimeInterval(RewardDurationTier.tenMinutes.durationMinutes * 60))
+
+        manager.reconcileLiveActivity()
+
+        #expect(liveActivityScheduler.reconciledClaims.compactMap { $0 }.last == nil)
     }
 
     @Test func refreshExpiryCancelsNotification() throws {

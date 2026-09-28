@@ -70,6 +70,10 @@ final class OnboardingPresenter {
 
     private func goToStarterActivity() {
         interactor.trackEvent(event: Event.flowComplete)
+        Task {
+            let isAuthorized = await interactor.requestNotificationAuthorizationIfNeeded()
+            interactor.trackEvent(event: Event.notificationPermissionResolved(isAuthorized: isAuthorized))
+        }
         router.showStarterActivityView(
             delegate: StarterActivityDelegate(
                 onComplete: { [weak self] in
@@ -88,6 +92,7 @@ extension OnboardingPresenter {
         case onDisappear(delegate: OnboardingDelegate)
         case pageViewed(index: Int)
         case flowComplete
+        case notificationPermissionResolved(isAuthorized: Bool)
 
         var eventName: String {
             switch self {
@@ -95,6 +100,7 @@ extension OnboardingPresenter {
             case .onDisappear: return "OnboardingView_Disappear"
             case .pageViewed: return "OnboardingView_PageViewed"
             case .flowComplete: return "OnboardingView_FlowComplete"
+            case .notificationPermissionResolved: return "OnboardingView_NotificationPermission"
             }
         }
 
@@ -106,6 +112,8 @@ extension OnboardingPresenter {
                 return ["page_index": index]
             case .flowComplete:
                 return nil
+            case .notificationPermissionResolved(isAuthorized: let isAuthorized):
+                return ["push_is_authorized": isAuthorized]
             }
         }
 

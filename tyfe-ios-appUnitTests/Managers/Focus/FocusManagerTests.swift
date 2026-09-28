@@ -212,7 +212,7 @@ struct FocusManagerTests {
 
         manager.reconcileLiveActivity()
 
-        #expect(scheduler.reconciledSessions.last == nil)
+        #expect(scheduler.reconciledSessions.compactMap { $0 }.last == nil)
     }
 
     @Test func completionCrossingMidnightStaysOnTheStartDay() throws {

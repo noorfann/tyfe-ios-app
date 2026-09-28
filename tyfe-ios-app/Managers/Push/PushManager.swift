@@ -151,7 +151,8 @@ final class PushManager: LocalTimerNotificationScheduling {
                 identifier: identifier,
                 title: "Reward time is complete",
                 body: "Hope the break helped. Come back whenever you’re ready.",
-                deliveryDate: endsAt
+                deliveryDate: endsAt,
+                soundFileName: SoundEffectFile.finish.fileName
             )]
         setDesiredGroup(
             PendingLocalNotificationGroup(
