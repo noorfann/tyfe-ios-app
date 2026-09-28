@@ -71,6 +71,57 @@ struct TodayProjectManagementPresenterTests {
         #expect(interactor.phase1Activities.first?.projectId == nil)
         #expect(presenter.projects.isEmpty)
     }
+
+    @Test func reorderingSpacesRefreshesManagementOrder() throws {
+        let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
+        let interactor = CoreInteractor(container: dependencies.container)
+        var changeCount = 0
+        let presenter = TodayProjectManagementPresenter(
+            interactor: interactor,
+            router: RecordingProjectManagementRouter(),
+            delegate: TodayProjectManagementDelegate(
+                onProjectCreated: { _ in },
+                onProjectManagementChanged: { changeCount += 1 }
+            )
+        )
+        let first = try #require(interactor.createPhase1Project(name: "First", colorToken: "teal"))
+        let second = try #require(interactor.createPhase1Project(name: "Second", colorToken: "teal"))
+        let third = try #require(interactor.createPhase1Project(name: "Third", colorToken: "teal"))
+        presenter.onViewAppear()
+
+        #expect(presenter.reorderProject(projectId: first.projectId, toIndex: 2))
+
+        let expectedOrder = [second.projectId, third.projectId, first.projectId]
+        #expect(presenter.projects.map(\.projectId) == expectedOrder)
+        #expect(interactor.phase1Projects.map(\.projectId) == expectedOrder)
+        #expect(changeCount == 1)
+    }
+
+    @Test func archivingAndRestoringMovesSpaceBetweenSections() throws {
+        let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
+        let interactor = CoreInteractor(container: dependencies.container)
+        var changeCount = 0
+        let presenter = TodayProjectManagementPresenter(
+            interactor: interactor,
+            router: RecordingProjectManagementRouter(),
+            delegate: TodayProjectManagementDelegate(
+                onProjectCreated: { _ in },
+                onProjectManagementChanged: { changeCount += 1 }
+            )
+        )
+        let project = try #require(interactor.createPhase1Project(name: "Writing", colorToken: "teal"))
+        presenter.onViewAppear()
+
+        presenter.setProjectArchived(project, isArchived: true)
+        #expect(presenter.activeProjects.isEmpty)
+        #expect(presenter.archivedProjects.map(\.projectId) == [project.projectId])
+        #expect(changeCount == 1)
+
+        presenter.setProjectArchived(try #require(presenter.archivedProjects.first), isArchived: false)
+        #expect(presenter.activeProjects.map(\.projectId) == [project.projectId])
+        #expect(presenter.archivedProjects.isEmpty)
+        #expect(changeCount == 2)
+    }
 }
 
 @MainActor

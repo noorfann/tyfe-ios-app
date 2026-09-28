@@ -26,6 +26,16 @@ extension CoreInteractor {
     }
 
     @discardableResult
+    func setPhase1ProjectArchived(projectId: String, isArchived: Bool) -> Bool {
+        todayManager.setProjectArchived(projectId: projectId, isArchived: isArchived)
+    }
+
+    @discardableResult
+    func reorderPhase1Project(projectId: String, toIndex: Int) -> Bool {
+        todayManager.reorderProject(projectId: projectId, toIndex: toIndex)
+    }
+
+    @discardableResult
     func assignPhase1Activity(activityId: String, to projectId: String?) -> Bool {
         todayManager.assignActivity(activityId: activityId, to: projectId)
     }

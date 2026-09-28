@@ -32,6 +32,25 @@ struct HomeInteractorTests {
         #expect(interactor.startFocusFromHome() == nil)
     }
 
+    @Test func archivedSpaceIsExcludedFromDashboardAndNewFocus() throws {
+        let interactor = makeInteractor()
+        let activity = try #require(interactor.todayManager.activities.first)
+        let project = try #require(interactor.todayManager.createProject(name: "Writing"))
+        #expect(interactor.todayManager.assignActivity(activityId: activity.activityId, to: project.projectId))
+        _ = interactor.todayManager.addActivityToDailyPlan(activityId: activity.activityId, sessionCount: 2)
+        #expect(interactor.todayManager.setProjectArchived(projectId: project.projectId, isArchived: true))
+
+        #expect(interactor.dashboardState.plannedSessionCount == 0)
+        #expect(interactor.dashboardState.completedSessionCount == 0)
+        #expect(interactor.dashboardState.nextActivity == nil)
+        #expect(interactor.startFocusFromHome() == nil)
+        #expect(interactor.focusManager.startFocusSession(activityId: activity.activityId) == nil)
+
+        #expect(interactor.todayManager.setProjectArchived(projectId: project.projectId, isArchived: false))
+        #expect(interactor.dashboardState.plannedSessionCount == 2)
+        #expect(interactor.dashboardState.nextActivity?.activityId == activity.activityId)
+    }
+
     @Test func homeStartsAndReusesTheSameActiveSession() throws {
         let interactor = makeInteractor()
         let activityId = ActivityModel.mock.activityId
@@ -47,6 +66,20 @@ struct HomeInteractorTests {
         #expect(interactor.focusManager.focusSessions.count == 1)
         #expect(interactor.dashboardState.activeFocusSession?.focusSessionId == firstSession.focusSessionId)
         #expect(interactor.dashboardState.activeFocusActivity?.activityId == activityId)
+    }
+
+    @Test func runningFocusRemainsResumableAfterArchivingItsSpace() throws {
+        let interactor = makeInteractor()
+        let activity = try #require(interactor.todayManager.activities.first)
+        let project = try #require(interactor.todayManager.createProject(name: "Writing"))
+        #expect(interactor.todayManager.assignActivity(activityId: activity.activityId, to: project.projectId))
+        _ = interactor.todayManager.addActivityToDailyPlan(activityId: activity.activityId, sessionCount: 1)
+        let session = try #require(interactor.startFocusFromHome())
+
+        #expect(interactor.todayManager.setProjectArchived(projectId: project.projectId, isArchived: true))
+        #expect(interactor.dashboardState.nextActivity == nil)
+        #expect(interactor.dashboardState.activeFocusSession?.focusSessionId == session.focusSessionId)
+        #expect(interactor.startFocusFromHome()?.focusSessionId == session.focusSessionId)
     }
 
 #if MOCK

@@ -17,6 +17,14 @@ final class TodayProjectManagementPresenter {
 
     private(set) var projects: [ProjectModel] = []
 
+    var activeProjects: [ProjectModel] {
+        projects.filter { !$0.isArchived }
+    }
+
+    var archivedProjects: [ProjectModel] {
+        projects.filter(\.isArchived)
+    }
+
     init(
         interactor: TodayInteractor,
         router: TodayProjectManagementRouter,
@@ -76,6 +84,27 @@ final class TodayProjectManagementPresenter {
         }
     }
 
+    func setProjectArchived(_ project: ProjectModel, isArchived: Bool) {
+        guard interactor.setPhase1ProjectArchived(
+            projectId: project.projectId,
+            isArchived: isArchived
+        ) else { return }
+        reload()
+        delegate.onProjectManagementChanged()
+        interactor.trackEvent(event: isArchived ? Event.archiveProject : Event.restoreProject)
+    }
+
+    @discardableResult
+    func reorderProject(projectId: String, toIndex: Int) -> Bool {
+        guard let currentIndex = projects.firstIndex(where: { $0.projectId == projectId }) else { return false }
+        guard currentIndex != toIndex else { return true }
+        guard interactor.reorderPhase1Project(projectId: projectId, toIndex: toIndex) else { return false }
+        reload()
+        delegate.onProjectManagementChanged()
+        interactor.trackEvent(event: Event.reorderProject)
+        return true
+    }
+
     private func reload() {
         projects = interactor.phase1Projects
     }
@@ -96,6 +125,9 @@ extension TodayProjectManagementPresenter {
         case createProject
         case updateProject
         case deleteProject
+        case archiveProject
+        case restoreProject
+        case reorderProject
 
         var eventName: String {
             switch self {
@@ -104,6 +136,9 @@ extension TodayProjectManagementPresenter {
             case .createProject: return "Today_Project_Create"
             case .updateProject: return "Today_Project_Rename"
             case .deleteProject: return "Today_Project_Delete"
+            case .archiveProject: return "Today_Project_Archive"
+            case .restoreProject: return "Today_Project_Restore"
+            case .reorderProject: return "Today_Project_Reorder"
             }
         }
 
@@ -111,7 +146,8 @@ extension TodayProjectManagementPresenter {
             switch self {
             case .onAppear(delegate: let delegate), .onDisappear(delegate: let delegate):
                 return delegate.eventParameters
-            case .createProject, .updateProject, .deleteProject:
+            case .createProject, .updateProject, .deleteProject, .archiveProject,
+                    .restoreProject, .reorderProject:
                 return nil
             }
         }

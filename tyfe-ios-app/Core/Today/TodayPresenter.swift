@@ -144,7 +144,10 @@ final class TodayPresenter {
 
     var planProgressLabel: String {
         guard let dailyPlan else { return "No plan yet" }
-        return "\(completedSessionCount) of \(dailyPlan.intendedSessionCount)"
+        let plannedCount = isViewingToday
+            ? planItems.reduce(0) { $0 + $1.plannedSessionCount }
+            : dailyPlan.intendedSessionCount
+        return "\(completedSessionCount) of \(plannedCount)"
     }
 
     func activity(for item: DailyPlanItemModel) -> ActivityModel? {
@@ -429,7 +432,7 @@ final class TodayPresenter {
     private func reload() {
         interactor.synchronizeRewardCreditDay()
         activities = interactor.phase1Activities
-        projects = interactor.phase1Projects
+        projects = interactor.phase1Projects.filter { !isViewingToday || !$0.isArchived }
         if let selectedProjectId, !projects.contains(where: { $0.projectId == selectedProjectId }) {
             self.selectedProjectId = nil
             interactor.setPhase1SelectedProjectId(nil)
@@ -438,8 +441,8 @@ final class TodayPresenter {
         }
         earliestRecordedLocalDay = interactor.phase1EarliestRecordedLocalDay
         dailyPlan = interactor.phase1DailyPlan(for: selectedLocalDay)
-        planItems = dailyPlan?.planItems ?? []
-        completedSessionCount = interactor.phase1CompletedSessionCount(on: selectedLocalDay)
+        planItems = interactor.phase1VisiblePlanItems(on: selectedLocalDay)
+        completedSessionCount = interactor.phase1VisibleCompletedSessionCount(on: selectedLocalDay)
         completedSessionCounts = interactor.phase1CompletedSessionCounts(on: selectedLocalDay)
         rewardCredits = interactor.phase1RewardCredits
         activeFocusSession = interactor.activeFocusSession

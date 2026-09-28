@@ -22,6 +22,9 @@ struct TodayProjectManagementView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: TyfeSpacing.section) {
                         projectListSection
+                        if !presenter.archivedProjects.isEmpty {
+                            archivedProjectListSection
+                        }
                     }
                     .padding(.horizontal, TyfeSpacing.control)
                     .padding(.top, TyfeSpacing.control)
@@ -74,15 +77,18 @@ struct TodayProjectManagementView: View {
                     .tracking(1.1)
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
-                if presenter.projects.isEmpty {
+                if presenter.activeProjects.isEmpty {
                     Text("Create a Space to group Activities into a deck.")
                         .font(TyfeTypography.interface)
                         .foregroundStyle(TyfeEditorialPalette.muted)
                 }
 
-                ForEach(presenter.projects) { project in
-                    projectRow(project)
-                    if project.id != presenter.projects.last?.id {
+                ForEach(Array(presenter.activeProjects.enumerated()), id: \.element.projectId) { index, project in
+                    projectRow(
+                        project,
+                        index: presenter.projects.firstIndex(where: { $0.projectId == project.projectId })
+                    )
+                    if index < presenter.activeProjects.count - 1 {
                         Rectangle()
                             .fill(TyfeEditorialPalette.controlBorder.opacity(0.35))
                             .frame(height: TyfeStroke.hairline)
@@ -92,8 +98,31 @@ struct TodayProjectManagementView: View {
         }
     }
 
-    private func projectRow(_ project: ProjectModel) -> some View {
+    private var archivedProjectListSection: some View {
+        TyfeSurfaceView(role: .paper) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+                Text("ARCHIVED")
+                    .font(TyfeTypography.eyebrow)
+                    .tracking(1.1)
+                    .foregroundStyle(TyfeEditorialPalette.muted)
+
+                ForEach(Array(presenter.archivedProjects.enumerated()), id: \.element.projectId) { index, project in
+                    projectRow(project, index: nil)
+                    if index < presenter.archivedProjects.count - 1 {
+                        Rectangle()
+                            .fill(TyfeEditorialPalette.controlBorder.opacity(0.35))
+                            .frame(height: TyfeStroke.hairline)
+                    }
+                }
+            }
+        }
+    }
+
+    private func projectRow(_ project: ProjectModel, index: Int?) -> some View {
         HStack(spacing: TyfeSpacing.small) {
+            if let index {
+                reorderHandle(project, index: index)
+            }
             RoundedRectangle(cornerRadius: 3)
                 .fill(ProjectColorOption.color(for: project.resolvedColorToken))
                 .frame(width: 14, height: 14)
@@ -117,6 +146,8 @@ struct TodayProjectManagementView: View {
                 .accessibilityLabel("Edit \(project.name)")
                 .accessibilityIdentifier("project-edit-\(project.projectId)")
 
+            archiveButton(for: project)
+
             Image(systemName: "trash")
                 .font(.headline.weight(.semibold))
                 .foregroundStyle(TyfeEditorialPalette.onError)
@@ -130,6 +161,66 @@ struct TodayProjectManagementView: View {
                 .accessibilityIdentifier("project-delete-\(project.projectId)")
         }
         .frame(minHeight: 52)
+        .background {
+            if let index {
+                projectDropDestination(index: index)
+            }
+        }
+    }
+
+    private func archiveButton(for project: ProjectModel) -> some View {
+        Image(systemName: project.isArchived ? "arrow.uturn.backward" : "archivebox")
+            .font(.headline.weight(.semibold))
+            .foregroundStyle(TyfeEditorialPalette.ink)
+            .frame(width: 44, height: 44)
+            .background(TyfeEditorialPalette.canvas)
+            .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
+            .asButton(.press) {
+                presenter.setProjectArchived(project, isArchived: !project.isArchived)
+            }
+            .accessibilityLabel("\(project.isArchived ? "Restore" : "Archive") \(project.name)")
+            .accessibilityIdentifier("project-archive-\(project.projectId)")
+    }
+
+    private func reorderHandle(_ project: ProjectModel, index: Int) -> some View {
+        Image(systemName: "line.3.horizontal")
+            .font(.headline.weight(.semibold))
+            .foregroundStyle(TyfeEditorialPalette.muted)
+            .frame(width: 44, height: 44)
+            .contentShape(Rectangle())
+            .draggable(project.projectId)
+            .accessibilityLabel("Reorder \(project.name)")
+            .accessibilityHint("Drag to change its position, or use Move up and Move down actions.")
+            .accessibilityIdentifier("project-reorder-\(project.projectId)")
+            .accessibilityAction(named: Text("Move up")) {
+                _ = presenter.reorderProject(projectId: project.projectId, toIndex: index - 1)
+            }
+            .accessibilityAction(named: Text("Move down")) {
+                _ = presenter.reorderProject(projectId: project.projectId, toIndex: index + 1)
+            }
+    }
+
+    private func projectDropDestination(index: Int) -> some View {
+        GeometryReader { geometry in
+            Color.clear
+                .contentShape(Rectangle())
+                .dropDestination(for: String.self) { draggedProjectIds, location in
+                    guard let draggedProjectId = draggedProjectIds.first,
+                          let draggedIndex = presenter.projects.firstIndex(where: {
+                              $0.projectId == draggedProjectId
+                          }) else {
+                        return false
+                    }
+
+                    let insertAfter = location.y >= geometry.size.height / 2
+                    let insertionIndex = index + (insertAfter ? 1 : 0)
+                    let destinationIndex = insertionIndex - (draggedIndex < insertionIndex ? 1 : 0)
+                    return presenter.reorderProject(
+                        projectId: draggedProjectId,
+                        toIndex: destinationIndex
+                    )
+                }
+        }
     }
 
     private var addProjectButton: some View {

@@ -22,7 +22,9 @@ protocol TodayInteractor: GlobalInteractor {
     func synchronizeRewardCreditDay()
 
     func phase1DailyPlan(for localDay: LocalDay) -> DailyPlanModel?
+    func phase1VisiblePlanItems(on localDay: LocalDay) -> [DailyPlanItemModel]
     func phase1CompletedSessionCount(on localDay: LocalDay) -> Int
+    func phase1VisibleCompletedSessionCount(on localDay: LocalDay) -> Int
     func phase1CompletedSessionCounts(on localDay: LocalDay) -> [String: Int]
 
     @discardableResult
@@ -51,6 +53,12 @@ protocol TodayInteractor: GlobalInteractor {
 
     @discardableResult
     func deletePhase1Project(projectId: String) -> Bool
+
+    @discardableResult
+    func setPhase1ProjectArchived(projectId: String, isArchived: Bool) -> Bool
+
+    @discardableResult
+    func reorderPhase1Project(projectId: String, toIndex: Int) -> Bool
 
     @discardableResult
     func assignPhase1Activity(activityId: String, to projectId: String?) -> Bool

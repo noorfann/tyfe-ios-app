@@ -94,13 +94,15 @@ final class FocusManager {
     @discardableResult
     func startFocusSession(activityId: String) -> FocusSessionModel? {
         let snapshot = repository.snapshot
-        guard snapshot.activities.contains(where: { $0.activityId == activityId && !$0.isArchived }) else {
-            return nil
-        }
-
         if let activeFocusSession {
             return activeFocusSession.activityId == activityId ? activeFocusSession : nil
         }
+
+        guard let activity = snapshot.activities.first(where: {
+            $0.activityId == activityId && !$0.isArchived
+        }), activity.projectId == nil || snapshot.projects.contains(where: {
+            $0.projectId == activity.projectId && !$0.isArchived
+        }) else { return nil }
 
         let plan = snapshot.dailyPlans.last { $0.localDay == currentLocalDay }
         let plannedItem = plan?.planItems.first { item in

@@ -47,9 +47,13 @@ final class TodayManager {
         repository.snapshot.projects
     }
 
+    var activeProjects: [ProjectModel] {
+        projects.filter { !$0.isArchived }
+    }
+
     var selectedProjectId: String? {
         guard let selectedProjectId = userDefaults?.string(forKey: Self.selectedProjectKey),
-              projects.contains(where: { $0.projectId == selectedProjectId }) else {
+              activeProjects.contains(where: { $0.projectId == selectedProjectId }) else {
             return nil
         }
         return selectedProjectId
@@ -82,10 +86,12 @@ final class TodayManager {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty else { return nil }
         guard !activities.contains(where: {
-            $0.name.localizedCaseInsensitiveCompare(trimmedName) == .orderedSame && !$0.isArchived
+            $0.name.localizedCaseInsensitiveCompare(trimmedName) == .orderedSame
+                && isActivityAvailable($0)
         }) else {
             return activities.first(where: {
-                $0.name.localizedCaseInsensitiveCompare(trimmedName) == .orderedSame && !$0.isArchived
+                $0.name.localizedCaseInsensitiveCompare(trimmedName) == .orderedSame
+                    && isActivityAvailable($0)
             })
         }
 
@@ -164,7 +170,8 @@ final class TodayManager {
             projectId: existingProject.projectId,
             name: trimmedName,
             iconToken: existingProject.iconToken,
-            colorToken: colorToken ?? existingProject.colorToken ?? ProjectModel.defaultColorToken
+            colorToken: colorToken ?? existingProject.colorToken ?? ProjectModel.defaultColorToken,
+            isArchived: existingProject.isArchived
         )
         var didUpdate = false
         do {
@@ -207,9 +214,33 @@ final class TodayManager {
     }
 
     @discardableResult
+    func reorderProject(projectId: String, toIndex: Int) -> Bool {
+        guard let sourceIndex = projects.firstIndex(where: { $0.projectId == projectId }),
+              projects.indices.contains(toIndex) else {
+            return false
+        }
+        guard sourceIndex != toIndex else { return true }
+
+        var didReorder = false
+        do {
+            try repository.transaction { snapshot in
+                guard let currentSourceIndex = snapshot.projects.firstIndex(where: {
+                    $0.projectId == projectId
+                }), snapshot.projects.indices.contains(toIndex) else { return }
+                let project = snapshot.projects.remove(at: currentSourceIndex)
+                snapshot.projects.insert(project, at: min(toIndex, snapshot.projects.count))
+                didReorder = true
+            }
+        } catch {
+            return false
+        }
+        return didReorder
+    }
+
+    @discardableResult
     func assignActivity(activityId: String, to projectId: String?) -> Bool {
         guard activities.contains(where: { $0.activityId == activityId }),
-              projectId == nil || projects.contains(where: { $0.projectId == projectId }) else {
+              projectId == nil || activeProjects.contains(where: { $0.projectId == projectId }) else {
             return false
         }
 
@@ -219,7 +250,7 @@ final class TodayManager {
                 guard let activityIndex = snapshot.activities.firstIndex(where: {
                     $0.activityId == activityId
                 }), projectId == nil || snapshot.projects.contains(where: {
-                    $0.projectId == projectId
+                    $0.projectId == projectId && !$0.isArchived
                 }) else { return }
                 snapshot.activities[activityIndex].projectId = projectId
                 didAssign = true
@@ -231,7 +262,7 @@ final class TodayManager {
     }
 
     func setSelectedProjectId(_ projectId: String?) {
-        guard projectId == nil || projects.contains(where: { $0.projectId == projectId }) else { return }
+        guard projectId == nil || activeProjects.contains(where: { $0.projectId == projectId }) else { return }
         userDefaults?.set(projectId, forKey: Self.selectedProjectKey)
     }
 
@@ -287,7 +318,7 @@ final class TodayManager {
     ) -> DailyPlanModel {
         let validActivityIds = uniqueActivityIds(from: activityIds)
         let selectedActivityIds = validActivityIds.isEmpty
-            ? activities.first(where: { !$0.isArchived }).map { [$0.activityId] } ?? []
+            ? activities.first(where: isActivityAvailable).map { [$0.activityId] } ?? []
             : validActivityIds
         let count = max(intendedSessionCount, 1)
         let normalizedTimeBlocks = timeBlocks?.map {
@@ -328,7 +359,7 @@ final class TodayManager {
         activityId: String,
         sessionCount: Int
     ) -> DailyPlanModel? {
-        guard activities.contains(where: { $0.activityId == activityId && !$0.isArchived }) else {
+        guard activities.contains(where: { $0.activityId == activityId && isActivityAvailable($0) }) else {
             return dailyPlan
         }
 
@@ -490,7 +521,9 @@ final class TodayManager {
     private func uniqueActivityIds(from ids: [String]) -> [String] {
         var result: [String] = []
         for id in ids {
-            guard !result.contains(id), activities.contains(where: { $0.activityId == id && !$0.isArchived }) else {
+            guard !result.contains(id), activities.contains(where: {
+                $0.activityId == id && isActivityAvailable($0)
+            }) else {
                 continue
             }
             result.append(id)
@@ -509,5 +542,60 @@ final class TodayManager {
         case .home: return "house.fill"
         case .personal, .none: return "sparkles"
         }
+    }
+}
+
+extension TodayManager {
+    func isActivityAvailable(_ activity: ActivityModel) -> Bool {
+        guard !activity.isArchived else { return false }
+        guard let projectId = activity.projectId else { return true }
+        return activeProjects.contains { $0.projectId == projectId }
+    }
+
+    func visiblePlanItems(on localDay: LocalDay) -> [DailyPlanItemModel] {
+        guard let plan = dailyPlan(for: localDay) else { return [] }
+        guard localDay == currentLocalDay else { return plan.planItems }
+        return plan.planItems.filter { item in
+            activities.contains { $0.activityId == item.activityId && isActivityAvailable($0) }
+        }
+    }
+
+    func visibleCompletedSessionCount(on localDay: LocalDay) -> Int {
+        guard localDay == currentLocalDay else { return completedSessionCount(on: localDay) }
+        let visibleActivityIds = Set(activities.filter(isActivityAvailable).map(\.activityId))
+        return repository.snapshot.focusSessions.filter {
+            $0.localDay == localDay && $0.state == .completed
+                && visibleActivityIds.contains($0.activityId)
+        }.count
+    }
+
+    @discardableResult
+    func setProjectArchived(projectId: String, isArchived: Bool) -> Bool {
+        guard let project = projects.first(where: { $0.projectId == projectId }),
+              project.isArchived != isArchived else { return false }
+
+        var didUpdate = false
+        do {
+            try repository.transaction { snapshot in
+                guard let index = snapshot.projects.firstIndex(where: { $0.projectId == projectId }) else {
+                    return
+                }
+                let current = snapshot.projects[index]
+                snapshot.projects[index] = ProjectModel(
+                    projectId: current.projectId,
+                    name: current.name,
+                    iconToken: current.iconToken,
+                    colorToken: current.colorToken,
+                    isArchived: isArchived
+                )
+                didUpdate = true
+            }
+        } catch {
+            return false
+        }
+        if didUpdate, isArchived, userDefaults?.string(forKey: Self.selectedProjectKey) == projectId {
+            userDefaults?.removeObject(forKey: Self.selectedProjectKey)
+        }
+        return didUpdate
     }
 }

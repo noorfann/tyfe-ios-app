@@ -8,6 +8,11 @@ struct ProjectModel: Identifiable, Codable, Hashable {
     let name: String
     let iconToken: String?
     let colorToken: String?
+    let isArchived: Bool
+
+    private enum CodingKeys: String, CodingKey {
+        case projectId, name, iconToken, colorToken, isArchived
+    }
 
     var id: String {
         projectId
@@ -17,12 +22,25 @@ struct ProjectModel: Identifiable, Codable, Hashable {
         projectId: String,
         name: String,
         iconToken: String? = ProjectModel.defaultIconToken,
-        colorToken: String? = ProjectModel.defaultColorToken
+        colorToken: String? = ProjectModel.defaultColorToken,
+        isArchived: Bool = false
     ) {
         self.projectId = projectId
         self.name = name
         self.iconToken = iconToken
         self.colorToken = colorToken
+        self.isArchived = isArchived
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            projectId: try container.decode(String.self, forKey: .projectId),
+            name: try container.decode(String.self, forKey: .name),
+            iconToken: try container.decodeIfPresent(String.self, forKey: .iconToken),
+            colorToken: try container.decodeIfPresent(String.self, forKey: .colorToken),
+            isArchived: try container.decodeIfPresent(Bool.self, forKey: .isArchived) ?? false
+        )
     }
 
     var resolvedIconToken: String {

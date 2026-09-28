@@ -83,6 +83,62 @@ struct TodayManagerTests {
         #expect(manager.renameProject(projectId: project.projectId, name: "  Writing  ")?.name == "Writing")
     }
 
+    @Test func legacyProjectDecodesAsActiveAndArchiveStateRoundTrips() throws {
+        let legacyData = Data(#"{"projectId":"project-legacy","name":"Legacy","iconToken":"folder.fill","colorToken":"teal"}"#.utf8)
+        let legacy = try JSONDecoder().decode(ProjectModel.self, from: legacyData)
+        #expect(!legacy.isArchived)
+
+        let archived = ProjectModel(
+            projectId: legacy.projectId,
+            name: legacy.name,
+            iconToken: legacy.iconToken,
+            colorToken: legacy.colorToken,
+            isArchived: true
+        )
+        let reloaded = try JSONDecoder().decode(ProjectModel.self, from: JSONEncoder().encode(archived))
+        #expect(reloaded.isArchived)
+    }
+
+    @Test func archivingKeepsAssignmentsPlansAndHistoryUntilRestored() throws {
+        let suiteName = "TodayManagerTests.archivedProject.\(UUID().uuidString)"
+        let userDefaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { userDefaults.removePersistentDomain(forName: suiteName) }
+        let repository = MockLocalAppRepository()
+        let manager = TodayManager(repository: repository, userDefaults: userDefaults)
+        let project = try #require(manager.createProject(name: "Writing"))
+        let activity = try #require(manager.activities.first)
+        #expect(manager.assignActivity(activityId: activity.activityId, to: project.projectId))
+        let plan = try #require(manager.addActivityToDailyPlan(activityId: activity.activityId, sessionCount: 2))
+        let session = FocusSessionModel(
+            focusSessionId: "archived-project-session",
+            activityId: activity.activityId,
+            state: .completed,
+            startedAt: Date(),
+            localDay: manager.currentLocalDay,
+            completedAt: Date()
+        )
+        try repository.transaction { $0.focusSessions.append(session) }
+        manager.setSelectedProjectId(project.projectId)
+
+        #expect(manager.setProjectArchived(projectId: project.projectId, isArchived: true))
+        #expect(manager.selectedProjectId == nil)
+        #expect(manager.activeProjects.isEmpty)
+        #expect(manager.activities.first?.projectId == project.projectId)
+        #expect(manager.dailyPlan == plan)
+        #expect(manager.completedSessionCount(on: manager.currentLocalDay) == 1)
+        #expect(manager.visibleCompletedSessionCount(on: manager.currentLocalDay) == 0)
+        #expect(manager.visiblePlanItems(on: manager.currentLocalDay).isEmpty)
+        #expect(!manager.assignActivity(activityId: activity.activityId, to: project.projectId))
+        #expect(manager.renameProject(projectId: project.projectId, name: "Writing Archive")?.isArchived == true)
+
+        let reloaded = TodayManager(repository: repository, userDefaults: userDefaults)
+        #expect(reloaded.projects.first?.isArchived == true)
+        #expect(reloaded.setProjectArchived(projectId: project.projectId, isArchived: false))
+        #expect(reloaded.visiblePlanItems(on: reloaded.currentLocalDay) == plan.planItems)
+        #expect(reloaded.visibleCompletedSessionCount(on: reloaded.currentLocalDay) == 1)
+        #expect(reloaded.activities.first?.projectId == project.projectId)
+    }
+
     @Test func projectAppearanceCanBeCreatedAndUpdated() throws {
         let manager = TodayManager(repository: MockLocalAppRepository())
         let project = try #require(manager.createProject(
@@ -131,6 +187,30 @@ struct TodayManagerTests {
 
         #expect(manager.renameProject(projectId: reading.projectId, name: "  WRITING ") == nil)
         #expect(manager.projects == [writing, reading])
+    }
+
+    @Test func reorderingProjectsPersistsAndRoundTripsInSnapshotOrder() throws {
+        let first = ProjectModel(projectId: "project-first", name: "First")
+        let second = ProjectModel(projectId: "project-second", name: "Second")
+        let third = ProjectModel(projectId: "project-third", name: "Third")
+        var snapshot = LocalAppSnapshot.mock
+        snapshot.projects = [first, second, third]
+        let repository = MockLocalAppRepository(snapshot: snapshot)
+        let suiteName = "TodayManagerTests.projectOrder.\(UUID().uuidString)"
+        let userDefaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { userDefaults.removePersistentDomain(forName: suiteName) }
+        let manager = TodayManager(repository: repository, userDefaults: userDefaults)
+        manager.setSelectedProjectId(first.projectId)
+
+        #expect(manager.reorderProject(projectId: first.projectId, toIndex: 2))
+        #expect(manager.projects.map(\.projectId) == [second.projectId, third.projectId, first.projectId])
+        #expect(manager.selectedProjectId == first.projectId)
+        #expect(!manager.reorderProject(projectId: first.projectId, toIndex: 3))
+        #expect(!manager.reorderProject(projectId: "missing-project", toIndex: 0))
+
+        let encodedSnapshot = try JSONEncoder().encode(repository.snapshot)
+        let decodedSnapshot = try JSONDecoder().decode(LocalAppSnapshot.self, from: encodedSnapshot)
+        #expect(decodedSnapshot.projects.map(\.projectId) == [second.projectId, third.projectId, first.projectId])
     }
 
     @Test func assigningActivityRequiresExistingProject() throws {

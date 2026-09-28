@@ -572,6 +572,45 @@ struct TodayPresenterTests {
 }
 
 @MainActor
+extension TodayPresenterTests {
+    @Test func archivedSpaceIsHiddenTodayButRemainsInPastDayDeck() throws {
+        let fixture = projectHistoryFixture()
+        let dependencies = Dependencies(
+            config: .mock(isSignedIn: true, addLogging: false),
+            snapshotOverride: fixture.snapshot
+        )
+        let manager = try #require(dependencies.container.resolve(TodayManager.self))
+        let presenter = TodayPresenter(
+            interactor: CoreInteractor(container: dependencies.container),
+            router: RecordingTodayRouter()
+        )
+        presenter.onViewAppear(delegate: TodayDelegate())
+        presenter.selectProject(fixture.project.projectId)
+
+        #expect(manager.setProjectArchived(projectId: fixture.project.projectId, isArchived: true))
+        presenter.onViewAppear(delegate: TodayDelegate())
+        #expect(presenter.projects.isEmpty)
+        #expect(presenter.planItems.isEmpty)
+        #expect(presenter.selectedProjectId == nil)
+        #expect(presenter.planProgressLabel == "0 of 0")
+
+        presenter.onPreviousDayPressed()
+        #expect(presenter.projects.first?.projectId == fixture.project.projectId)
+        presenter.selectProject(fixture.project.projectId)
+        #expect(presenter.deckPlanItems.map(\.activityId) == [fixture.secondActivity.activityId])
+        #expect(presenter.planProgressLabel == "0 of 1")
+
+        presenter.onNextDayPressed()
+        #expect(presenter.projects.isEmpty)
+        #expect(presenter.planItems.isEmpty)
+        #expect(manager.setProjectArchived(projectId: fixture.project.projectId, isArchived: false))
+        presenter.onViewAppear(delegate: TodayDelegate())
+        #expect(presenter.projects.first?.projectId == fixture.project.projectId)
+        #expect(presenter.planItems.count == 2)
+    }
+}
+
+@MainActor
 private final class RecordingTodayRouter: TodayRouter {
     var router: AnyRouter { fatalError("Router storage is unused by this recording test double") }
     private(set) var didShowStreak = false

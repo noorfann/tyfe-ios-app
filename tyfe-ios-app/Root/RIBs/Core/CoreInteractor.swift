@@ -363,6 +363,14 @@ struct CoreInteractor: GlobalInteractor {
         todayManager.completedSessionCount(on: localDay)
     }
 
+    func phase1VisiblePlanItems(on localDay: LocalDay) -> [DailyPlanItemModel] {
+        todayManager.visiblePlanItems(on: localDay)
+    }
+
+    func phase1VisibleCompletedSessionCount(on localDay: LocalDay) -> Int {
+        todayManager.visibleCompletedSessionCount(on: localDay)
+    }
+
     func phase1CompletedSessionCounts(on localDay: LocalDay) -> [String: Int] {
         guard let dailyPlan = todayManager.dailyPlan(for: localDay) else { return [:] }
         return Dictionary(uniqueKeysWithValues: dailyPlan.planItems.map { item in
@@ -479,8 +487,9 @@ struct CoreInteractor: GlobalInteractor {
 
         return HomeDashboardState(
             nextActivity: nextHomeActivity,
-            plannedSessionCount: todayManager.dailyPlan?.intendedSessionCount ?? 0,
-            completedSessionCount: todayManager.completedSessionCount,
+            plannedSessionCount: todayManager.visiblePlanItems(on: todayManager.currentLocalDay)
+                .reduce(0) { $0 + $1.plannedSessionCount },
+            completedSessionCount: todayManager.visibleCompletedSessionCount(on: todayManager.currentLocalDay),
             rewardCredits: todayManager.rewardCredits,
             activeFocusSession: activeFocusSession,
             activeFocusActivity: activeFocusActivity
@@ -500,9 +509,7 @@ struct CoreInteractor: GlobalInteractor {
     }
 
     private var nextHomeActivity: ActivityModel? {
-        guard let dailyPlan = todayManager.dailyPlan else { return nil }
-
-        return dailyPlan.planItems.compactMap { item -> ActivityModel? in
+        return todayManager.visiblePlanItems(on: todayManager.currentLocalDay).compactMap { item -> ActivityModel? in
             guard todayManager.completedSessionCount(for: item.activityId) < item.plannedSessionCount else {
                 return nil
             }
