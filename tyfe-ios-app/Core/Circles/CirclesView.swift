@@ -192,7 +192,7 @@ struct CirclesView: View {
                     isViewerOwner: presenter.isSelectedCircleOwner,
                     sentKinds: presenter.sentCheerKinds(to: member.userId),
                     onCheer: { presenter.onSendCheer($0, to: member.userId) },
-                    onRemove: { presenter.onRemoveMember(member.userId) }
+                    onRemove: { presenter.onRemoveMemberTapped(member.userId) }
                 )
             }
 

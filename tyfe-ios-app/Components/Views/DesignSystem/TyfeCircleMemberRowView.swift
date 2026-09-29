@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftfulUI
 
 struct TyfeCircleMemberRowView: View {
     let member: CircleMemberModel
@@ -16,14 +17,14 @@ struct TyfeCircleMemberRowView: View {
                 header
                 progressText
                 if !isSelf {
-                    actions
+                    cheerRow
                 }
             }
         }
     }
 
     private var header: some View {
-        HStack {
+        HStack(spacing: TyfeSpacing.small) {
             Text(isSelf ? "Me" : member.displayName)
                 .font(TyfeTypography.interfaceStrong)
             if member.role == .owner {
@@ -33,7 +34,20 @@ struct TyfeCircleMemberRowView: View {
             if let focusStatus {
                 TyfeFocusStatusPillView(status: focusStatus)
             }
+            if isViewerOwner && !isSelf {
+                removeButton
+            }
         }
+    }
+
+    private var removeButton: some View {
+        Image(systemName: "trash")
+            .font(TyfeTypography.interfaceStrong)
+            .foregroundStyle(TyfeEditorialPalette.muted)
+            .frame(width: 44, height: 44)
+            .contentShape(Rectangle())
+            .asButton(.press, action: onRemove)
+            .accessibilityLabel("Remove \(member.displayName)")
     }
 
     @ViewBuilder
@@ -45,44 +59,45 @@ struct TyfeCircleMemberRowView: View {
         }
     }
 
-    private var actions: some View {
+    private var cheerRow: some View {
         HStack(spacing: TyfeSpacing.small) {
-            cheerMenu
-            if isViewerOwner {
-                Button("Remove", role: .destructive, action: onRemove)
-                    .font(TyfeTypography.caption)
+            ForEach(CheerKind.allCases, id: \.self) { kind in
+                cheerButton(for: kind)
             }
         }
     }
 
-    private var cheerMenu: some View {
-        Menu {
-            ForEach(CheerKind.allCases, id: \.self) { kind in
-                if sentKinds.contains(kind) {
-                    Button {} label: {
-                        Label("\(kind.displayName) · Sent", systemImage: "checkmark")
-                    }
-                    .disabled(true)
-                } else {
-                    Button {
-                        onCheer(kind)
-                    } label: {
-                        Label(kind.displayName, systemImage: kind.symbolName)
-                    }
+    private func cheerButton(for kind: CheerKind) -> some View {
+        let isSent = sentKinds.contains(kind)
+        return Text(kind.emoji)
+            .font(.system(size: 22))
+            .opacity(isSent ? 0.45 : 1)
+            .frame(width: 44, height: 44)
+            .background(TyfeEditorialPalette.canvas)
+            .clipShape(Circle())
+            .overlay {
+                Circle()
+                    .stroke(
+                        isSent ? TyfeEditorialPalette.border : TyfeEditorialPalette.controlBorder,
+                        lineWidth: TyfeStroke.standard
+                    )
+            }
+            .overlay(alignment: .bottomTrailing) {
+                if isSent {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 14))
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(TyfeEditorialPalette.onAccent, TyfeEditorialPalette.focus)
+                        .offset(x: -2, y: -2)
                 }
             }
-        } label: {
-            Label(cheerMenuTitle, systemImage: cheerMenuSymbolName)
-                .font(TyfeTypography.caption)
-        }
-        .disabled(sentKinds.count == CheerKind.allCases.count)
-    }
-
-    private var cheerMenuTitle: String {
-        sentKinds.count == CheerKind.allCases.count ? "Cheered" : "Cheer"
-    }
-
-    private var cheerMenuSymbolName: String {
-        sentKinds.count == CheerKind.allCases.count ? "checkmark.circle.fill" : "hands.clap"
+            .contentShape(Circle())
+            .asButton(.press) {
+                guard !isSent else { return }
+                onCheer(kind)
+            }
+            .disabled(isSent)
+            .accessibilityLabel(isSent ? "\(kind.displayName), sent" : "Cheer with \(kind.displayName)")
+            .accessibilityAddTraits(.isButton)
     }
 }

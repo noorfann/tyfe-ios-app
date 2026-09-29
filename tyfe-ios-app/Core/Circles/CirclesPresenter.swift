@@ -250,7 +250,34 @@ final class CirclesPresenter {
         }
     }
 
-    func onRemoveMember(_ userId: String) {
+    func onRemoveMemberTapped(_ userId: String) {
+        guard isSelectedCircleOwner,
+              let member = members.first(where: { $0.userId == userId }) else { return }
+        let circleName = selectedCircle?.name ?? "this Circle"
+        router.showAlert(
+            .alert,
+            title: "Remove \(member.displayName)?",
+            subtitle: "They'll be removed from \(circleName). You can invite them again later.",
+            buttons: {
+                AnyView(
+                    Group {
+                        Button("Remove", role: .destructive) {
+                            self.onRemoveMemberConfirmed(userId)
+                        }
+                        Button("Cancel", role: .cancel) { }
+                    }
+                )
+            }
+        )
+    }
+
+    func onDismissError() {
+        errorMessage = nil
+    }
+
+    // MARK: Private
+
+    private func onRemoveMemberConfirmed(_ userId: String) {
         Task {
             guard let circleId = selectedCircleId else { return }
             do {
@@ -261,12 +288,6 @@ final class CirclesPresenter {
             }
         }
     }
-
-    func onDismissError() {
-        errorMessage = nil
-    }
-
-    // MARK: Private
 
     private func refresh() async {
         guard let userId = interactor.currentAuthUserId else {
