@@ -350,7 +350,7 @@ struct TodayPlanCardView: View {
         Group {
             if isChecklistScrollable {
                 Capsule()
-                    .fill(TyfeEditorialPalette.muted.opacity(0.6))
+                    .fill(TyfeEditorialPalette.focus)
                     .frame(width: 3, height: checklistThumbHeight)
                     .padding(.top, checklistThumbOffset)
                     .padding(.trailing, 2)

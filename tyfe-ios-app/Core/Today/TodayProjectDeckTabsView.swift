@@ -73,7 +73,7 @@ struct TodayProjectDeckTabsView: View {
         .overlay {
             if isSelected {
                 Capsule()
-                    .strokeBorder(TyfeEditorialPalette.ink, lineWidth: TyfeStroke.hairline)
+                    .strokeBorder(projectColor, lineWidth: TyfeStroke.hairline)
                     .overlay {
                         Capsule()
                             .inset(by: TyfeStroke.hairline)
