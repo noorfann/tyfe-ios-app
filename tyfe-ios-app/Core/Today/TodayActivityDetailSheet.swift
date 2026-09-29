@@ -19,6 +19,7 @@ struct TodayActivityDetailSheet: View {
     @State private var sessionCount: Int
     @State private var selectedProjectId: String?
     @State private var itemDrafts: [ChecklistItemDraft]
+    @State private var repeatDraft: ActivityRepeatDraft
 
     init(
         activity: ActivityModel,
@@ -51,10 +52,12 @@ struct TodayActivityDetailSheet: View {
                 ChecklistItemDraft(itemId: $0.itemId, title: $0.title, creditValue: $0.creditValue)
             }
         )
+        _repeatDraft = State(initialValue: ActivityRepeatDraft(recurrence: activity.recurrence))
     }
 
     private var canSave: Bool {
         !activityName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && repeatDraft.isValid
     }
 
     var body: some View {
@@ -65,6 +68,7 @@ struct TodayActivityDetailSheet: View {
             } else {
                 durationPicker
             }
+            ActivityRepeatPickerView(draft: $repeatDraft)
             TyfeActionButtonView(
                 title: "Save Changes",
                 systemImage: "checkmark",
@@ -210,7 +214,10 @@ struct TodayActivityDetailSheet: View {
                 type: selectedType,
                 checklistItems: itemDrafts,
                 sessionCount: max(sessionCount, completedUnitCount, 1),
-                projectId: selectedProjectId
+                projectId: selectedProjectId,
+                recurrence: repeatDraft.recurrence(
+                    defaultSessionCount: max(sessionCount, completedUnitCount, 1)
+                )
             )
         )
     }

@@ -17,7 +17,7 @@ protocol TodayInteractor: GlobalInteractor {
 
     func toggleColorScheme()
     func markDeckSwipeCoachmarkSeen()
-    func synchronizeRewardCreditDay()
+    func synchronizeCurrentDay()
 
     func phase1DailyPlan(for localDay: LocalDay) -> DailyPlanModel?
     func phase1VisiblePlanItems(on localDay: LocalDay) -> [DailyPlanItemModel]
@@ -44,6 +44,12 @@ protocol TodayInteractor: GlobalInteractor {
         activityId: String,
         name: String,
         category: ActivityCategory?
+    ) -> ActivityModel?
+
+    @discardableResult
+    func setPhase1ActivityRecurrence(
+        activityId: String,
+        recurrence: ActivityRecurrenceModel?
     ) -> ActivityModel?
 
     @discardableResult

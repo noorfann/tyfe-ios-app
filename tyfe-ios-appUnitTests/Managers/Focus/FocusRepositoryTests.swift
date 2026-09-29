@@ -46,6 +46,30 @@ struct FocusRepositoryTests {
         #expect(project.resolvedColorToken == ProjectModel.defaultColorToken)
     }
 
+    @Test func recurrenceAndMaterializationMarkerRoundTrip() throws {
+        var snapshot = LocalAppSnapshot.mock
+        snapshot.activities[0].recurrence = ActivityRecurrenceModel(
+            kind: .weekly,
+            weekdays: [2, 4],
+            defaultSessionCount: 3
+        )
+        snapshot.lastMaterializedLocalDay = LocalDay(
+            year: 2026,
+            month: 3,
+            day: 2,
+            timeZoneIdentifier: "GMT"
+        )
+
+        let restored = try JSONDecoder().decode(
+            LocalAppSnapshot.self,
+            from: JSONEncoder().encode(snapshot)
+        )
+
+        #expect(restored.schemaVersion == 7)
+        #expect(restored.activities[0].recurrence == snapshot.activities[0].recurrence)
+        #expect(restored.lastMaterializedLocalDay == snapshot.lastMaterializedLocalDay)
+    }
+
     @Test func versionOneSnapshotMigratesSingularPlanAndLegacySessionFields() throws {
         let plan = DailyPlanModel.mock
         let session = FocusSessionModel.readyMock
@@ -83,7 +107,7 @@ struct FocusRepositoryTests {
         let data = try JSONSerialization.data(withJSONObject: object)
         let migrated = try JSONDecoder().decode(LocalAppSnapshot.self, from: data)
 
-        #expect(migrated.schemaVersion == 6)
+        #expect(migrated.schemaVersion == 7)
         #expect(migrated.dailyPlans.count == 1)
         #expect(migrated.focusSessions.count == 1)
         #expect(migrated.creditLedger.balance == currentSnapshot.creditLedger.balance)
@@ -133,7 +157,7 @@ struct FocusRepositoryTests {
         let migratedData = try JSONSerialization.data(withJSONObject: object)
         let migrated = try JSONDecoder().decode(LocalAppSnapshot.self, from: migratedData)
 
-        #expect(migrated.schemaVersion == 6)
+        #expect(migrated.schemaVersion == 7)
         #expect(migrated.customRewards.first?.durationTier == .thirtyMinutes)
         #expect(migrated.rewardClaims.first?.durationTier == .sixtyMinutes)
     }
@@ -154,7 +178,7 @@ struct FocusRepositoryTests {
         let data = try JSONSerialization.data(withJSONObject: object)
         let migrated = try JSONDecoder().decode(LocalAppSnapshot.self, from: data)
 
-        #expect(migrated.schemaVersion == 6)
+        #expect(migrated.schemaVersion == 7)
         #expect(migrated.projects.isEmpty)
         #expect(migrated.nextProjectNumber == 1)
         #expect(migrated.activities.first?.projectId == nil)

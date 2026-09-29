@@ -408,6 +408,14 @@ struct CoreInteractor: GlobalInteractor {
         )
     }
 
+    @discardableResult
+    func setPhase1ActivityRecurrence(
+        activityId: String,
+        recurrence: ActivityRecurrenceModel?
+    ) -> ActivityModel? {
+        todayManager.setActivityRecurrence(activityId: activityId, recurrence: recurrence)
+    }
+
     func setPhase1SelectedProjectId(_ projectId: String?) {
         todayManager.setSelectedProjectId(projectId)
     }
@@ -532,6 +540,11 @@ struct CoreInteractor: GlobalInteractor {
 
     func synchronizeRewardCreditDay() {
         rewardManager.synchronizeCreditDay()
+    }
+
+    func synchronizeCurrentDay() {
+        rewardManager.synchronizeCreditDay()
+        todayManager.materializeCurrentDay()
     }
 
     var activeRewardClaim: RewardClaimModel? {

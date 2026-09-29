@@ -66,7 +66,7 @@ struct TodayActivityDeckView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: isReadOnly ? readOnlyDeckHeight : deckHeight)
+                .frame(minHeight: isReadOnly ? readOnlyDeckHeight : deckHeight)
                 .contentShape(Rectangle())
                 .gesture(
                     DeckSwipeGesture(
@@ -199,6 +199,7 @@ struct TodayPlanCardView: View {
     @State private var checklistScrollOffset: CGFloat = 0
     @State private var checklistContentHeight: CGFloat = 0
     @State private var checklistViewportHeight: CGFloat = 0
+    @ScaledMetric(relativeTo: .body) private var checklistMinimumHeight: CGFloat = 84
 
     private var isChecklist: Bool {
         activity.type == .checklist
@@ -237,6 +238,14 @@ struct TodayPlanCardView: View {
                     .tracking(-0.8)
                     .lineLimit(2)
                     .minimumScaleFactor(0.6)
+
+                if let recurrence = activity.recurrence {
+                    Label(recurrence.displaySummary, systemImage: "repeat")
+                        .font(TyfeTypography.caption)
+                        .foregroundStyle(
+                            isComplete ? TyfeEditorialPalette.disabledInk : TyfeEditorialPalette.muted
+                        )
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -310,7 +319,10 @@ struct TodayPlanCardView: View {
                         checklistContentHeight = height
                     }
                 }
-                .frame(maxHeight: 140)
+                .frame(
+                    minHeight: checklistMinimumHeight,
+                    maxHeight: max(140, checklistMinimumHeight)
+                )
                 .scrollIndicators(.hidden)
                 .onGeometryChange(for: CGFloat.self) { proxy in
                     proxy.size.height

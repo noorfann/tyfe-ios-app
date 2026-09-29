@@ -19,7 +19,7 @@ protocol AppViewInteractor: GlobalInteractor {
     func syncSocialRealtime() async
     func consumePendingReceivedCheers() -> [CheerModel]
     func discardPendingReceivedCheers()
-    func synchronizeRewardCreditDay()
+    func synchronizeCurrentDay()
     func reconcileFocusLiveActivity()
     func reconcileRewardLiveActivity()
 }

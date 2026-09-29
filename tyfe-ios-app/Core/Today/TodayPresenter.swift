@@ -274,6 +274,12 @@ final class TodayPresenter {
         guard interactor.assignPhase1Activity(activityId: activity.activityId, to: draft.projectId) else {
             return
         }
+        if let recurrence = draft.recurrence {
+            _ = interactor.setPhase1ActivityRecurrence(
+                activityId: activity.activityId,
+                recurrence: recurrence
+            )
+        }
 
         if draft.type == .checklist {
             addChecklistItems(activityId: activity.activityId, drafts: draft.checklistItems)
@@ -341,6 +347,10 @@ final class TodayPresenter {
         guard interactor.assignPhase1Activity(activityId: activity.activityId, to: draft.projectId) else {
             return
         }
+        _ = interactor.setPhase1ActivityRecurrence(
+            activityId: activity.activityId,
+            recurrence: draft.recurrence
+        )
 
         if draft.type == .checklist {
             syncChecklistItems(activityId: activity.activityId, drafts: draft.checklistItems)
@@ -494,7 +504,7 @@ final class TodayPresenter {
     }
 
     private func reload() {
-        interactor.synchronizeRewardCreditDay()
+        interactor.synchronizeCurrentDay()
         activities = interactor.phase1Activities
         projects = interactor.phase1Projects.filter { !isViewingToday || !$0.isArchived }
         if let selectedProjectId, !projects.contains(where: { $0.projectId == selectedProjectId }) {

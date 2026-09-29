@@ -291,6 +291,7 @@ extension TodayManager {
             iconToken: activity.iconToken,
             colorToken: activity.colorToken,
             projectId: activity.projectId,
+            recurrence: activity.recurrence,
             isArchived: activity.isArchived,
             createdAt: activity.createdAt
         )

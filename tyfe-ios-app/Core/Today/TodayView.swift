@@ -51,6 +51,7 @@ struct TodayView: View {
         .toolbar(.hidden, for: .navigationBar)
         .tyfeBottomSheet(
             isPresented: $presenter.isAddActivitySheetPresented,
+            detents: [.large],
             title: "Add to Today"
         ) {
             TodayAddActivitySheet(
@@ -62,6 +63,7 @@ struct TodayView: View {
         }
         .tyfeBottomSheet(
             isPresented: $presenter.isActivityDetailSheetPresented,
+            detents: [.large],
             title: "Activity Details"
         ) {
             if let activity = presenter.editingActivity,

@@ -26,4 +26,5 @@ struct ActivitySheetDraft {
     let checklistItems: [ChecklistItemDraft]
     let sessionCount: Int
     let projectId: String?
+    let recurrence: ActivityRecurrenceModel?
 }

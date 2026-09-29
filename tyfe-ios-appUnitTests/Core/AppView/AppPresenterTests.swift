@@ -131,7 +131,7 @@ private final class RecordingAppViewInteractor: AppViewInteractor {
 
     func discardPendingReceivedCheers() {}
 
-    func synchronizeRewardCreditDay() {}
+    func synchronizeCurrentDay() {}
 
     func reconcileFocusLiveActivity() {
         focusLiveActivityReconciliationCount += 1

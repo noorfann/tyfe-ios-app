@@ -12,6 +12,7 @@ struct TodayAddActivitySheet: View {
     @State private var sessionCount: Int
     @State private var selectedProjectId: String?
     @State private var checklistItems: [ChecklistItemDraft] = []
+    @State private var repeatDraft = ActivityRepeatDraft(recurrence: nil)
 
     init(
         initialSessionCount: Int,
@@ -29,6 +30,7 @@ struct TodayAddActivitySheet: View {
 
     private var canSave: Bool {
         !activityName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && repeatDraft.isValid
     }
 
     private var plannedItemCount: Int {
@@ -45,6 +47,7 @@ struct TodayAddActivitySheet: View {
             } else {
                 sessionCountPicker
             }
+            ActivityRepeatPickerView(draft: $repeatDraft)
             TyfeActionButtonView(
                 title: "Add to Today",
                 systemImage: "checkmark",
@@ -164,7 +167,8 @@ struct TodayAddActivitySheet: View {
                 type: selectedType,
                 checklistItems: checklistItems,
                 sessionCount: selectedType == .session ? sessionCount : plannedItemCount,
-                projectId: selectedProjectId
+                projectId: selectedProjectId,
+                recurrence: repeatDraft.recurrence(defaultSessionCount: max(sessionCount, 1))
             )
         )
     }
