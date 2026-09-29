@@ -358,13 +358,10 @@ struct FocusView: View {
     }
 
     private var outcomeMessage: String {
-        if let completion = presenter.completion, presenter.session.state == .completed {
-            return "You earned +\(completion.rewardCreditsAwarded) Reward Credit."
-        }
         if presenter.session.state == .completed {
-            return "Your Reward Credit is ready."
+            return "Focus Session complete. Rest or begin another when you are ready."
         }
-        return "No Reward Credit earned. You can begin again whenever you are ready."
+        return "Session ended early. You can begin again whenever you are ready."
     }
 
     private func enterFocusChamber() {

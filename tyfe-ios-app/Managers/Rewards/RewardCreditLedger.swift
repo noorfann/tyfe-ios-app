@@ -11,8 +11,8 @@ struct RewardCreditLedger: Codable, Hashable {
         self.entries = entries
     }
 
-    var balance: Int {
-        entries.reduce(0) { total, entry in total + entry.amount }
+    var balance: Decimal {
+        entries.reduce(Decimal.zero) { total, entry in total + entry.amount }
     }
 
     mutating func apply(_ entry: RewardCreditLedgerEntry) throws {
@@ -46,17 +46,20 @@ struct RewardCreditLedger: Codable, Hashable {
         )
     }
 
-    func priorDayBalance(for localDay: LocalDay) -> Int {
+    func priorDayBalance(for localDay: LocalDay) -> Decimal {
         entries
             .filter { $0.recordedAt < localDay.startDate }
-            .reduce(0) { $0 + $1.amount }
+            .reduce(Decimal.zero) { $0 + $1.amount }
     }
 
     static func dayResetKey(for localDay: LocalDay) -> String {
         "credit-day-reset-" + localDay.id
     }
 
-    static func openingBalance(amount: Int, recordedAt: Date = Date(timeIntervalSince1970: 0)) -> RewardCreditLedger {
+    static func openingBalance(
+        amount: Decimal,
+        recordedAt: Date = Date(timeIntervalSince1970: 0)
+    ) -> RewardCreditLedger {
         RewardCreditLedger(entries: [
             RewardCreditLedgerEntry(
                 ledgerEntryId: "opening-balance",

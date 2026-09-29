@@ -46,7 +46,7 @@ final class RewardManager {
         observableSnapshot.rewardClaims
     }
 
-    var rewardCredits: Int {
+    var rewardCredits: Decimal {
         observableSnapshot.creditLedger.balance
     }
 
@@ -101,7 +101,7 @@ final class RewardManager {
         if activeRewardClaim != nil {
             return .unavailable
         }
-        return observableSnapshot.creditLedger.balance >= reward.durationTier.creditCost
+        return observableSnapshot.creditLedger.balance >= Decimal(reward.durationTier.creditCost)
             ? .available
             : .insufficientBalance
     }
@@ -150,7 +150,7 @@ final class RewardManager {
         guard activeRewardClaim == nil else {
             throw RewardManagerError.activeClaimExists
         }
-        guard snapshot.creditLedger.balance >= durationTier.creditCost else {
+        guard snapshot.creditLedger.balance >= Decimal(durationTier.creditCost) else {
             throw RewardManagerError.insufficientCredits
         }
 
@@ -165,7 +165,7 @@ final class RewardManager {
             ledgerEntryId: claim.rewardClaimId + "-spend",
             source: .rewardClaim,
             sourceId: claim.rewardClaimId,
-            amount: -durationTier.creditCost,
+            amount: -Decimal(durationTier.creditCost),
             recordedAt: clock.now,
             idempotencyKey: claim.rewardClaimId + "-spend"
         )

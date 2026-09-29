@@ -19,9 +19,35 @@ struct HomeInteractorTests {
         #expect(state.nextActivity?.activityId == activityId)
         #expect(state.plannedSessionCount == 2)
         #expect(state.completedSessionCount == 0)
-        #expect(state.rewardCredits == 0)
+        #expect(state.plannedChecklistItemCount == 0)
+        #expect(state.completedChecklistItemCount == 0)
         #expect(state.activeFocusSession == nil)
         #expect(state.activeFocusActivity == nil)
+    }
+
+    @Test func checklistActivityAppearsOnHomeButCannotStartFocus() throws {
+        let interactor = makeInteractor()
+        let activity = try #require(
+            interactor.todayManager.createActivity(
+                name: "Reset kitchen",
+                category: nil,
+                colorToken: nil,
+                type: .checklist
+            )
+        )
+        _ = interactor.todayManager.addChecklistItem(
+            activityId: activity.activityId,
+            title: "Take out trash",
+            creditValue: .oneCredit
+        )
+        _ = interactor.todayManager.addActivityToDailyPlan(activityId: activity.activityId, sessionCount: 1)
+
+        let state = interactor.dashboardState
+        #expect(state.nextActivity?.activityId == activity.activityId)
+        #expect(state.plannedChecklistItemCount == 1)
+        #expect(state.completedChecklistItemCount == 0)
+        #expect(state.plannedSessionCount == 0)
+        #expect(interactor.startFocusFromHome() == nil)
     }
 
     @Test func emptyPlanDoesNotStartFocus() {

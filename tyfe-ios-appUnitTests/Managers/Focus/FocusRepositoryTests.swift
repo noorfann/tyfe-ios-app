@@ -83,7 +83,7 @@ struct FocusRepositoryTests {
         let data = try JSONSerialization.data(withJSONObject: object)
         let migrated = try JSONDecoder().decode(LocalAppSnapshot.self, from: data)
 
-        #expect(migrated.schemaVersion == 5)
+        #expect(migrated.schemaVersion == 6)
         #expect(migrated.dailyPlans.count == 1)
         #expect(migrated.focusSessions.count == 1)
         #expect(migrated.creditLedger.balance == currentSnapshot.creditLedger.balance)
@@ -133,7 +133,7 @@ struct FocusRepositoryTests {
         let migratedData = try JSONSerialization.data(withJSONObject: object)
         let migrated = try JSONDecoder().decode(LocalAppSnapshot.self, from: migratedData)
 
-        #expect(migrated.schemaVersion == 5)
+        #expect(migrated.schemaVersion == 6)
         #expect(migrated.customRewards.first?.durationTier == .thirtyMinutes)
         #expect(migrated.rewardClaims.first?.durationTier == .sixtyMinutes)
     }
@@ -154,7 +154,7 @@ struct FocusRepositoryTests {
         let data = try JSONSerialization.data(withJSONObject: object)
         let migrated = try JSONDecoder().decode(LocalAppSnapshot.self, from: data)
 
-        #expect(migrated.schemaVersion == 5)
+        #expect(migrated.schemaVersion == 6)
         #expect(migrated.projects.isEmpty)
         #expect(migrated.nextProjectNumber == 1)
         #expect(migrated.activities.first?.projectId == nil)

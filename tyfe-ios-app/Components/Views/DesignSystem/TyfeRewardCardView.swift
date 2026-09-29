@@ -3,7 +3,7 @@ import SwiftUI
 struct TyfeRewardCardView: View {
 
     let reward: RewardModel
-    let balance: Int
+    let balance: Decimal
     var blockingMessage: String?
     let onTap: () -> Void
 

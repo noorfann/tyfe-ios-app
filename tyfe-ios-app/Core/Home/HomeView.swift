@@ -136,7 +136,11 @@ struct HomeView: View {
                 }
                 .shadow(color: TyfeEditorialPalette.onAccent, radius: 0, x: 3, y: 3)
                 .asButton(.press) {
-                    presenter.onStartFocusPressed()
+                    if presenter.isNextActivityChecklist {
+                        presenter.onOpenTodayPressed()
+                    } else {
+                        presenter.onStartFocusPressed()
+                    }
                 }
                 .disabled(!presenter.canStartFocus)
                 .accessibilityLabel(presenter.focusActionAccessibilityLabel)
@@ -203,19 +207,27 @@ struct HomeView: View {
                 color: TyfeEditorialPalette.lavender
             )
 
-            EditorialMetricCard(
-                label: "CREDITS",
-                value: "\(presenter.rewardCredits)",
-                detail: "Reward Credits",
-                color: TyfeEditorialPalette.amber
-            )
+            if presenter.hasChecklistItems {
+                EditorialMetricCard(
+                    label: "CHECKLIST",
+                    value: "\(presenter.completedChecklistItemCount)/\(presenter.plannedChecklistItemCount)",
+                    detail: "items done",
+                    color: TyfeEditorialPalette.sage
+                )
+            }
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Today progress")
-        .accessibilityValue(
-            "\(presenter.planCompleted) of \(presenter.planTotal) sessions complete, "
-                + "\(presenter.rewardCredits) Reward Credits"
-        )
+        .accessibilityValue(progressAccessibilityValue)
+    }
+
+    private var progressAccessibilityValue: String {
+        var value = "\(presenter.planCompleted) of \(presenter.planTotal) sessions complete"
+        if presenter.hasChecklistItems {
+            value += ", \(presenter.completedChecklistItemCount) of "
+                + "\(presenter.plannedChecklistItemCount) checklist items done"
+        }
+        return value
     }
 
     private var circleSnapshot: some View {

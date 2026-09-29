@@ -11,9 +11,13 @@ final class TodayPresenter {
     private(set) var projects: [ProjectModel] = []
     private(set) var dailyPlan: DailyPlanModel?
     private(set) var planItems: [DailyPlanItemModel] = []
-    private(set) var completedSessionCount = 0
-    private(set) var completedSessionCounts: [String: Int] = [:]
-    private(set) var rewardCredits = 0
+    private(set) var completedUnitCounts: [String: Int] = [:]
+    private(set) var checklistItemsByActivity: [String: [ChecklistItemModel]] = [:]
+    private(set) var tickedItemIds: Set<String> = []
+    private(set) var plannedSessionUnitCount = 0
+    private(set) var completedSessionUnitCount = 0
+    private(set) var plannedChecklistUnitCount = 0
+    private(set) var completedChecklistUnitCount = 0
     private(set) var activeFocusSession: FocusSessionModel?
     private(set) var currentLocalDay: LocalDay
     private(set) var selectedLocalDay: LocalDay
@@ -118,7 +122,7 @@ final class TodayPresenter {
     }
 
     var hasUnfinishedPlan: Bool {
-        planItems.contains { remainingSessionCount(for: $0) > 0 }
+        planItems.contains { remainingUnitCount(for: $0) > 0 }
     }
 
     var hasActiveFocusSession: Bool {
@@ -130,11 +134,11 @@ final class TodayPresenter {
     }
 
     var nextPlanItem: DailyPlanItemModel? {
-        planItems.first { remainingSessionCount(for: $0) > 0 }
+        planItems.first { remainingUnitCount(for: $0) > 0 }
     }
 
     var nextDeckPlanItem: DailyPlanItemModel? {
-        deckPlanItems.first { remainingSessionCount(for: $0) > 0 }
+        deckPlanItems.first { remainingUnitCount(for: $0) > 0 }
     }
 
     var nextActivity: ActivityModel? {
@@ -142,23 +146,55 @@ final class TodayPresenter {
         return activity(for: nextPlanItem)
     }
 
-    var planProgressLabel: String {
-        guard let dailyPlan else { return "No plan yet" }
-        let plannedCount = isViewingToday
-            ? planItems.reduce(0) { $0 + $1.plannedSessionCount }
-            : dailyPlan.intendedSessionCount
-        return "\(completedSessionCount) of \(plannedCount)"
+    var sessionProgressLabel: String {
+        "\(completedSessionUnitCount) of \(plannedSessionUnitCount)"
+    }
+
+    var taskProgressLabel: String {
+        "\(completedChecklistUnitCount) of \(plannedChecklistUnitCount)"
+    }
+
+    var showsTasksMetric: Bool {
+        plannedChecklistUnitCount > 0 || completedChecklistUnitCount > 0
+    }
+
+    var planHasPlannedUnits: Bool {
+        plannedSessionUnitCount > 0 || plannedChecklistUnitCount > 0
     }
 
     func activity(for item: DailyPlanItemModel) -> ActivityModel? {
         activities.first { $0.activityId == item.activityId }
     }
 
-    func completedCount(for item: DailyPlanItemModel) -> Int {
-        completedSessionCounts[item.activityId, default: 0]
+    func checklistItems(for item: DailyPlanItemModel) -> [ChecklistItemModel] {
+        checklistItemsByActivity[item.activityId] ?? []
     }
 
-    func remainingSessionCount(for item: DailyPlanItemModel) -> Int {
+    func isChecklistItemTicked(_ itemId: String) -> Bool {
+        tickedItemIds.contains(itemId)
+    }
+
+    func completedCount(for item: DailyPlanItemModel) -> Int {
+        completedUnitCounts[item.activityId, default: 0]
+    }
+
+    func canConvertEditingActivity(to type: ActivityType) -> Bool {
+        guard let activity = editingActivity else { return false }
+        guard type != activity.type else { return true }
+        switch (activity.type, type) {
+        case (.session, .checklist):
+            return !interactor.phase1HasStartedFocusActivityToday(activityId: activity.activityId)
+        case (.checklist, .session):
+            return interactor.phase1CompletedChecklistItemCount(
+                for: activity.activityId,
+                on: interactor.phase1CurrentLocalDay
+            ) == 0
+        case (.session, .session), (.checklist, .checklist):
+            return true
+        }
+    }
+
+    func remainingUnitCount(for item: DailyPlanItemModel) -> Int {
         max(item.plannedSessionCount - completedCount(for: item), 0)
     }
 
@@ -169,10 +205,12 @@ final class TodayPresenter {
         }
         currentLocalDay = latestLocalDay
         reload()
+        interactor.prepareSoundEffect(sound: .checklist, simultaneousPlayers: 1)
         interactor.trackScreenEvent(event: Event.onAppear(delegate: delegate))
     }
 
     func onViewDisappear(delegate: TodayDelegate) {
+        interactor.tearDownSoundEffect(sound: .checklist)
         interactor.trackEvent(event: Event.onDisappear(delegate: delegate))
     }
 
@@ -222,27 +260,32 @@ final class TodayPresenter {
         interactor.trackEvent(event: Event.editPlan)
     }
 
-    func saveActivity(
-        name: String,
-        category: ActivityCategory?,
-        sessionCount: Int,
-        projectId: String?
-    ) {
+    func saveActivity(_ draft: ActivitySheetDraft) {
         guard isViewingToday else { return }
-        guard projectId == nil || projects.contains(where: { $0.projectId == projectId }) else { return }
+        guard draft.projectId == nil || projects.contains(where: { $0.projectId == draft.projectId }) else {
+            return
+        }
         guard let activity = interactor.createPhase1Activity(
-            name: name,
-            category: category,
-            colorToken: "teal"
+            name: draft.name,
+            category: draft.category,
+            colorToken: "teal",
+            type: draft.type
         ) else { return }
-        guard interactor.assignPhase1Activity(activityId: activity.activityId, to: projectId) else { return }
+        guard interactor.assignPhase1Activity(activityId: activity.activityId, to: draft.projectId) else {
+            return
+        }
+
+        if draft.type == .checklist {
+            addChecklistItems(activityId: activity.activityId, drafts: draft.checklistItems)
+        }
+
         _ = interactor.addPhase1ActivityToDailyPlan(
             activityId: activity.activityId,
-            sessionCount: max(sessionCount, 1)
+            sessionCount: draft.sessionCount
         )
         isAddActivitySheetPresented = false
-        if selectedProjectId != projectId {
-            selectProject(projectId)
+        if selectedProjectId != draft.projectId {
+            selectProject(draft.projectId)
         }
         reload()
         if let newItem = planItems.first(where: { $0.activityId == activity.activityId }) {
@@ -276,31 +319,41 @@ final class TodayPresenter {
         interactor.trackEvent(event: Event.openActivityDetail)
     }
 
-    func saveActivityEdits(
-        name: String,
-        category: ActivityCategory?,
-        sessionCount: Int,
-        projectId: String?
-    ) {
+    func saveActivityEdits(_ draft: ActivitySheetDraft) {
         guard isViewingToday else { return }
         guard let activity = editingActivity,
               let item = editingPlanItem,
               activity.activityId == item.activityId else { return }
+        guard draft.projectId == nil || projects.contains(where: { $0.projectId == draft.projectId }) else {
+            return
+        }
+
+        if draft.type != activity.type {
+            guard interactor.convertPhase1Activity(activityId: activity.activityId, to: draft.type) != nil else {
+                return
+            }
+        }
         guard interactor.updatePhase1Activity(
             activityId: activity.activityId,
-            name: name,
-            category: category
+            name: draft.name,
+            category: draft.category
         ) != nil else { return }
-        guard interactor.assignPhase1Activity(activityId: activity.activityId, to: projectId) else { return }
+        guard interactor.assignPhase1Activity(activityId: activity.activityId, to: draft.projectId) else {
+            return
+        }
 
-        let minimumSessionCount = max(completedCount(for: item), 1)
-        _ = interactor.updatePhase1DailyPlanItemCount(
-            activityId: item.activityId,
-            sessionCount: max(sessionCount, minimumSessionCount)
-        )
+        if draft.type == .checklist {
+            syncChecklistItems(activityId: activity.activityId, drafts: draft.checklistItems)
+        } else {
+            let minimumUnitCount = completedCount(for: item)
+            _ = interactor.updatePhase1DailyPlanItemCount(
+                activityId: item.activityId,
+                sessionCount: max(draft.sessionCount, minimumUnitCount)
+            )
+        }
         dismissActivityDetailSheet()
-        if selectedProjectId != projectId {
-            selectProject(projectId)
+        if selectedProjectId != draft.projectId {
+            selectProject(draft.projectId)
         }
         reload()
         interactor.trackEvent(event: Event.saveActivityDetail)
@@ -314,6 +367,17 @@ final class TodayPresenter {
         dismissActivityDetailSheet()
         reload()
         interactor.trackEvent(event: Event.removeActivityFromToday)
+    }
+
+    func onChecklistItemToggled(_ checklistItem: ChecklistItemModel) {
+        guard isViewingToday else { return }
+        if tickedItemIds.contains(checklistItem.itemId) {
+            _ = interactor.uncompletePhase1ChecklistItem(itemId: checklistItem.itemId)
+        } else if interactor.completePhase1ChecklistItem(itemId: checklistItem.itemId) != nil {
+            interactor.playSoundEffect(sound: .checklist)
+        }
+        reload()
+        interactor.trackEvent(event: Event.toggleChecklistItem)
     }
 
     func onActivityDetailSheetDismissed() {
@@ -343,7 +407,7 @@ final class TodayPresenter {
         guard !isRewardInProgress else { return }
 
         selectedPlanItemId = item.id
-        guard let activity = activity(for: item) else { return }
+        guard let activity = activity(for: item), activity.type == .session else { return }
 
         if let activeFocusSession = interactor.activeFocusSession {
             if activeFocusSession.state == .ready,
@@ -369,7 +433,7 @@ final class TodayPresenter {
             }
         }
 
-        guard remainingSessionCount(for: item) > 0,
+        guard remainingUnitCount(for: item) > 0,
               let session = interactor.startPhase1FocusSession(activityId: activity.activityId) else {
             return
         }
@@ -442,9 +506,25 @@ final class TodayPresenter {
         earliestRecordedLocalDay = interactor.phase1EarliestRecordedLocalDay
         dailyPlan = interactor.phase1DailyPlan(for: selectedLocalDay)
         planItems = interactor.phase1VisiblePlanItems(on: selectedLocalDay)
-        completedSessionCount = interactor.phase1VisibleCompletedSessionCount(on: selectedLocalDay)
-        completedSessionCounts = interactor.phase1CompletedSessionCounts(on: selectedLocalDay)
-        rewardCredits = interactor.phase1RewardCredits
+        completedUnitCounts = interactor.phase1CompletedUnitCounts(on: selectedLocalDay)
+        plannedSessionUnitCount = interactor.phase1PlannedUnitCount(.session, on: selectedLocalDay)
+        plannedChecklistUnitCount = interactor.phase1PlannedUnitCount(.checklist, on: selectedLocalDay)
+        completedSessionUnitCount = interactor.phase1VisibleCompletedSessionCount(on: selectedLocalDay)
+        completedChecklistUnitCount = interactor.phase1VisibleCompletedChecklistItemCount(on: selectedLocalDay)
+        var checklistItemsByActivity: [String: [ChecklistItemModel]] = [:]
+        var tickedItemIds: Set<String> = []
+        for item in planItems {
+            let checklistItems = interactor.phase1ChecklistItems(for: item.activityId)
+            checklistItemsByActivity[item.activityId] = checklistItems
+            for checklistItem in checklistItems where interactor.phase1IsChecklistItemTicked(
+                itemId: checklistItem.itemId,
+                on: selectedLocalDay
+            ) {
+                tickedItemIds.insert(checklistItem.itemId)
+            }
+        }
+        self.checklistItemsByActivity = checklistItemsByActivity
+        self.tickedItemIds = tickedItemIds
         activeFocusSession = interactor.activeFocusSession
 
         if let selectedPlanItemId,
@@ -479,6 +559,43 @@ final class TodayPresenter {
 
 extension TodayPresenter {
 
+    private func addChecklistItems(activityId: String, drafts: [ChecklistItemDraft]) {
+        for draft in drafts {
+            let trimmedTitle = draft.title.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmedTitle.isEmpty else { continue }
+            _ = interactor.addPhase1ChecklistItem(
+                activityId: activityId,
+                title: trimmedTitle,
+                creditValue: draft.creditValue
+            )
+        }
+    }
+
+    private func syncChecklistItems(activityId: String, drafts: [ChecklistItemDraft]) {
+        let existingItems = checklistItemsByActivity[activityId] ?? []
+        let draftItemIds = Set(drafts.compactMap(\.itemId))
+        for item in existingItems where !draftItemIds.contains(item.itemId) {
+            _ = interactor.deletePhase1ChecklistItem(itemId: item.itemId)
+        }
+        for draft in drafts {
+            let trimmedTitle = draft.title.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmedTitle.isEmpty else { continue }
+            if let itemId = draft.itemId {
+                _ = interactor.updatePhase1ChecklistItem(
+                    itemId: itemId,
+                    title: trimmedTitle,
+                    creditValue: draft.creditValue
+                )
+            } else {
+                _ = interactor.addPhase1ChecklistItem(
+                    activityId: activityId,
+                    title: trimmedTitle,
+                    creditValue: draft.creditValue
+                )
+            }
+        }
+    }
+
     enum Event: LoggableEvent {
         case onAppear(delegate: TodayDelegate)
         case onDisappear(delegate: TodayDelegate)
@@ -488,6 +605,7 @@ extension TodayPresenter {
         case openActivityDetail
         case saveActivityDetail
         case removeActivityFromToday
+        case toggleChecklistItem
         case startFocus
         case toggleAppearance
         case openStreak
@@ -507,6 +625,7 @@ extension TodayPresenter {
             case .openActivityDetail: return "Today_ActivityDetail_Open"
             case .saveActivityDetail: return "Today_ActivityDetail_Save"
             case .removeActivityFromToday: return "Today_Activity_Remove"
+            case .toggleChecklistItem: return "Today_ChecklistItem_Toggle"
             case .startFocus: return "Today_StartFocus"
             case .toggleAppearance: return "Today_ToggleAppearance"
             case .openStreak: return "Today_Streak_Open"
@@ -523,8 +642,8 @@ extension TodayPresenter {
             case .onAppear(delegate: let delegate), .onDisappear(delegate: let delegate):
                 return delegate.eventParameters
             case .createPlan, .addActivity, .editPlan, .openActivityDetail, .saveActivityDetail,
-                    .removeActivityFromToday, .startFocus, .toggleAppearance, .openStreak,
-                    .openProjectManagement, .selectProject, .deckSwipeCoachmarkShown,
+                    .removeActivityFromToday, .toggleChecklistItem, .startFocus, .toggleAppearance,
+                    .openStreak, .openProjectManagement, .selectProject, .deckSwipeCoachmarkShown,
                     .viewPreviousDay, .viewNextDay:
                 return nil
             }

@@ -3,7 +3,7 @@ import SwiftUI
 @MainActor
 protocol RewardsInteractor: GlobalInteractor {
     var rewards: [RewardModel] { get }
-    var rewardCredits: Int { get }
+    var rewardCredits: Decimal { get }
     var activeRewardClaim: RewardClaimModel? { get }
     var rewardClaims: [RewardClaimModel] { get }
     var hasLiveFocusSession: Bool { get }

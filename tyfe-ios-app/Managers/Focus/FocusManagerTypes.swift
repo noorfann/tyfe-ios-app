@@ -3,7 +3,7 @@ import Foundation
 struct FocusCompletionResult: Equatable, Codable {
     let focusSessionId: String
     let rewardCreditsAwarded: Int
-    let rewardCreditBalance: Int
+    let rewardCreditBalance: Decimal
 }
 
 struct FocusSessionRefresh: Equatable {

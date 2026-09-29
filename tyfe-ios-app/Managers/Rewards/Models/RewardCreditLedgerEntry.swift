@@ -4,7 +4,7 @@ struct RewardCreditLedgerEntry: Identifiable, Codable, Hashable {
     let ledgerEntryId: String
     let source: RewardCreditSource
     let sourceId: String
-    let amount: Int
+    let amount: Decimal
     let recordedAt: Date
     let idempotencyKey: String
 

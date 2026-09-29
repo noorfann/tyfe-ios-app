@@ -12,6 +12,7 @@ import Foundation
 enum SoundEffectFile: String, Equatable {
     case start
     case finish
+    case checklist
     
     var fileName: String {
         switch self {
@@ -19,6 +20,8 @@ enum SoundEffectFile: String, Equatable {
             return "start.wav"
         case .finish:
             return "finish.wav"
+        case .checklist:
+            return "checklist.wav"
         }
     }
     

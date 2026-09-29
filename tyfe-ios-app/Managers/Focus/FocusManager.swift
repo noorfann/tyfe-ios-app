@@ -48,7 +48,7 @@ final class FocusManager {
         focusSessions.filter { $0.state == .completed }.count
     }
 
-    var rewardCredits: Int {
+    var rewardCredits: Decimal {
         observableSnapshot.creditLedger.balance
     }
 
@@ -99,7 +99,7 @@ final class FocusManager {
         }
 
         guard let activity = snapshot.activities.first(where: {
-            $0.activityId == activityId && !$0.isArchived
+            $0.activityId == activityId && !$0.isArchived && $0.type == .session
         }), activity.projectId == nil || snapshot.projects.contains(where: {
             $0.projectId == activity.projectId && !$0.isArchived
         }) else { return nil }

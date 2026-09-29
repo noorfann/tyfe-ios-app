@@ -5,37 +5,52 @@ struct TodayActivityDetailSheet: View {
 
     let activity: ActivityModel
     let initialSessionCount: Int
-    let completedSessionCount: Int
+    let completedUnitCount: Int
+    let checklistItems: [ChecklistItemModel]
+    let tickedItemIds: Set<String>
+    let canConvertToChecklist: Bool
+    let canConvertToSession: Bool
     let projects: [ProjectModel]
-    let onSave: (_ name: String, _ category: ActivityCategory?, _ sessionCount: Int, _ projectId: String?) -> Void
+    let onSave: (ActivitySheetDraft) -> Void
     let onRemove: (() -> Void)?
 
     @State private var activityName: String
+    @State private var selectedType: ActivityType
     @State private var sessionCount: Int
     @State private var selectedProjectId: String?
+    @State private var itemDrafts: [ChecklistItemDraft]
 
     init(
         activity: ActivityModel,
         initialSessionCount: Int,
-        completedSessionCount: Int,
+        completedUnitCount: Int,
+        checklistItems: [ChecklistItemModel],
+        tickedItemIds: Set<String>,
+        canConvertToChecklist: Bool,
+        canConvertToSession: Bool,
         projects: [ProjectModel],
-        onSave: @escaping (_ name: String, _ category: ActivityCategory?, _ sessionCount: Int, _ projectId: String?) -> Void,
+        onSave: @escaping (ActivitySheetDraft) -> Void,
         onRemove: (() -> Void)?
     ) {
-        let minimumSessionCount = max(completedSessionCount, 1)
         self.activity = activity
         self.initialSessionCount = initialSessionCount
-        self.completedSessionCount = completedSessionCount
+        self.completedUnitCount = completedUnitCount
+        self.checklistItems = checklistItems
+        self.tickedItemIds = tickedItemIds
+        self.canConvertToChecklist = canConvertToChecklist
+        self.canConvertToSession = canConvertToSession
         self.projects = projects
         self.onSave = onSave
         self.onRemove = onRemove
         _activityName = State(initialValue: activity.name)
-        _sessionCount = State(initialValue: max(initialSessionCount, minimumSessionCount))
+        _selectedType = State(initialValue: activity.type)
+        _sessionCount = State(initialValue: max(initialSessionCount, completedUnitCount))
         _selectedProjectId = State(initialValue: activity.projectId)
-    }
-
-    private var minimumSessionCount: Int {
-        max(completedSessionCount, 1)
+        _itemDrafts = State(
+            initialValue: checklistItems.map {
+                ChecklistItemDraft(itemId: $0.itemId, title: $0.title, creditValue: $0.creditValue)
+            }
+        )
     }
 
     private var canSave: Bool {
@@ -45,7 +60,11 @@ struct TodayActivityDetailSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: TyfeSpacing.section) {
             activityForm
-            durationPicker
+            if selectedType == .checklist {
+                ChecklistItemsEditorView(items: $itemDrafts, lockedItemIds: tickedItemIds)
+            } else {
+                durationPicker
+            }
             TyfeActionButtonView(
                 title: "Save Changes",
                 systemImage: "checkmark",
@@ -53,7 +72,7 @@ struct TodayActivityDetailSheet: View {
                 onTap: save
             )
 
-            if completedSessionCount == 0, let onRemove {
+            if completedUnitCount == 0, let onRemove {
                 TyfeActionButtonView(
                     title: "Remove from Today",
                     systemImage: "trash",
@@ -61,6 +80,10 @@ struct TodayActivityDetailSheet: View {
                     onTap: onRemove
                 )
             }
+        }
+        .onChange(of: selectedType) { _, newType in
+            guard newType == .session else { return }
+            sessionCount = max(initialSessionCount, completedUnitCount, 1)
         }
     }
 
@@ -96,8 +119,20 @@ struct TodayActivityDetailSheet: View {
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
                 TyfeTextFieldView(placeholder: "Name your activity", text: $activityName)
+                ActivityTypePickerView(
+                    selection: $selectedType,
+                    isOptionEnabled: isTypeOptionEnabled
+                )
                 projectPicker
             }
+        }
+    }
+
+    private func isTypeOptionEnabled(_ type: ActivityType) -> Bool {
+        guard type != activity.type else { return true }
+        switch type {
+        case .session: return canConvertToSession
+        case .checklist: return canConvertToChecklist
         }
     }
 
@@ -113,7 +148,7 @@ struct TodayActivityDetailSheet: View {
                     counterButton(
                         systemImage: "minus",
                         label: "Fewer sessions",
-                        isEnabled: sessionCount > minimumSessionCount
+                        isEnabled: sessionCount > max(completedUnitCount, 1)
                     ) {
                         sessionCount -= 1
                     }
@@ -125,7 +160,7 @@ struct TodayActivityDetailSheet: View {
                         Text("\(sessionCount * FocusSessionModel.durationMinutes) minutes planned")
                             .font(TyfeTypography.caption)
                             .foregroundStyle(TyfeEditorialPalette.muted)
-                        Text("\(completedSessionCount) completed")
+                        Text("\(completedUnitCount) completed")
                             .font(TyfeTypography.caption)
                             .foregroundStyle(TyfeEditorialPalette.muted)
                     }
@@ -168,7 +203,16 @@ struct TodayActivityDetailSheet: View {
     }
 
     private func save() {
-        onSave(activityName, activity.category, sessionCount, selectedProjectId)
+        onSave(
+            ActivitySheetDraft(
+                name: activityName,
+                category: activity.category,
+                type: selectedType,
+                checklistItems: itemDrafts,
+                sessionCount: max(sessionCount, completedUnitCount, 1),
+                projectId: selectedProjectId
+            )
+        )
     }
 }
 
@@ -176,35 +220,45 @@ struct TodayActivityDetailSheet: View {
     TodayActivityDetailSheet(
         activity: .mock,
         initialSessionCount: 3,
-        completedSessionCount: 0,
+        completedUnitCount: 0,
+        checklistItems: [],
+        tickedItemIds: [],
+        canConvertToChecklist: true,
+        canConvertToSession: true,
         projects: ProjectModel.mocks,
-        onSave: { _, _, _, _ in },
+        onSave: { _ in },
         onRemove: { }
     )
     .padding()
     .background(TyfeEditorialPalette.canvas)
 }
 
-#Preview("Activity detail — partially completed") {
+#Preview("Activity detail — checklist") {
     TodayActivityDetailSheet(
-        activity: .mock,
-        initialSessionCount: 3,
-        completedSessionCount: 1,
-        projects: ProjectModel.mocks,
-        onSave: { _, _, _, _ in },
-        onRemove: nil
-    )
-    .padding()
-    .background(TyfeEditorialPalette.canvas)
-}
-
-#Preview("Activity detail — completed") {
-    TodayActivityDetailSheet(
-        activity: .mock,
+        activity: .checklistMock,
         initialSessionCount: 2,
-        completedSessionCount: 2,
+        completedUnitCount: 1,
+        checklistItems: [
+            ChecklistItemModel(
+                itemId: "checklist-item-1",
+                activityId: ActivityModel.checklistMock.activityId,
+                title: "Wipe counters",
+                creditValue: .halfCredit,
+                createdAt: Date()
+            ),
+            ChecklistItemModel(
+                itemId: "checklist-item-2",
+                activityId: ActivityModel.checklistMock.activityId,
+                title: "Take out trash",
+                creditValue: .oneCredit,
+                createdAt: Date()
+            )
+        ],
+        tickedItemIds: ["checklist-item-1"],
+        canConvertToChecklist: true,
+        canConvertToSession: false,
         projects: ProjectModel.mocks,
-        onSave: { _, _, _, _ in },
+        onSave: { _ in },
         onRemove: nil
     )
     .padding()
@@ -216,9 +270,13 @@ struct TodayActivityDetailSheet: View {
         TodayActivityDetailSheet(
             activity: .mock,
             initialSessionCount: 3,
-            completedSessionCount: 1,
+            completedUnitCount: 1,
+            checklistItems: [],
+            tickedItemIds: [],
+            canConvertToChecklist: false,
+            canConvertToSession: true,
             projects: ProjectModel.mocks,
-            onSave: { _, _, _, _ in },
+            onSave: { _ in },
             onRemove: nil
         )
         .padding()

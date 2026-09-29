@@ -50,7 +50,7 @@ final class FocusPresenter {
         case .completed:
             return session.restState == .active ? "Rest before your next session" : "Focus Session complete"
         case .abandoned:
-            return "No Reward Credit earned"
+            return "Session ended early"
         }
     }
 
@@ -318,7 +318,7 @@ final class FocusPresenter {
         router.showAlert(
             .alert,
             title: "Leave this session?",
-            subtitle: "An abandoned Focus Session earns no Reward Credit. You can begin again whenever you’re ready.",
+            subtitle: "An abandoned Focus Session ends early. You can begin again whenever you’re ready.",
             buttons: {
                 AnyView(
                     Button("Abandon Session", role: .destructive) {

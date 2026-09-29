@@ -5,27 +5,19 @@ struct TodayAddActivitySheet: View {
 
     let initialSessionCount: Int
     let projects: [ProjectModel]
-    let onSave: (
-        _ name: String,
-        _ category: ActivityCategory?,
-        _ sessionCount: Int,
-        _ projectId: String?
-    ) -> Void
+    let onSave: (ActivitySheetDraft) -> Void
 
     @State private var activityName: String
+    @State private var selectedType: ActivityType = .session
     @State private var sessionCount: Int
     @State private var selectedProjectId: String?
+    @State private var checklistItems: [ChecklistItemDraft] = []
 
     init(
         initialSessionCount: Int,
         projects: [ProjectModel],
         initialProjectId: String?,
-        onSave: @escaping (
-            _ name: String,
-            _ category: ActivityCategory?,
-            _ sessionCount: Int,
-            _ projectId: String?
-        ) -> Void
+        onSave: @escaping (ActivitySheetDraft) -> Void
     ) {
         self.initialSessionCount = initialSessionCount
         self.projects = projects
@@ -39,10 +31,20 @@ struct TodayAddActivitySheet: View {
         !activityName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
+    private var plannedItemCount: Int {
+        checklistItems.filter {
+            !$0.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }.count
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: TyfeSpacing.section) {
             activityForm
-            sessionCountPicker
+            if selectedType == .checklist {
+                ChecklistItemsEditorView(items: $checklistItems)
+            } else {
+                sessionCountPicker
+            }
             TyfeActionButtonView(
                 title: "Add to Today",
                 systemImage: "checkmark",
@@ -85,6 +87,8 @@ struct TodayAddActivitySheet: View {
 
                 TyfeTextFieldView(placeholder: "Name your activity", text: $activityName)
                     .accessibilityIdentifier("activity-name-field")
+
+                ActivityTypePickerView(selection: $selectedType)
                 projectPicker
             }
         }
@@ -154,10 +158,14 @@ struct TodayAddActivitySheet: View {
 
     private func save() {
         onSave(
-            activityName,
-            nil,
-            sessionCount,
-            selectedProjectId
+            ActivitySheetDraft(
+                name: activityName,
+                category: nil,
+                type: selectedType,
+                checklistItems: checklistItems,
+                sessionCount: selectedType == .session ? sessionCount : plannedItemCount,
+                projectId: selectedProjectId
+            )
         )
     }
 }

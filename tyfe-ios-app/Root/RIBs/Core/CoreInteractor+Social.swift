@@ -68,7 +68,7 @@ extension CoreInteractor {
     func syncSharedProgress(for localDay: LocalDay? = nil) async {
         guard let userId = auth?.uid else { return }
         let day = localDay ?? todayManager.currentLocalDay
-        let planned = todayManager.dailyPlan(for: day)?.intendedSessionCount ?? 0
+        let planned = todayManager.plannedUnitCount(.session, on: day)
         let completed = todayManager.completedSessionCount(on: day)
         try? await socialManager.publishProgress(
             userId: userId,
@@ -169,7 +169,7 @@ extension CoreInteractor {
     func migrateLocalToSocial() async throws {
         guard let userId = auth?.uid else { throw SocialServiceError.notAuthenticated }
         let day = todayManager.currentLocalDay
-        let planned = todayManager.dailyPlan(for: day)?.intendedSessionCount ?? 0
+        let planned = todayManager.plannedUnitCount(.session, on: day)
         let completed = todayManager.completedSessionCount(on: day)
         try await socialManager.publishProgress(
             userId: userId,
