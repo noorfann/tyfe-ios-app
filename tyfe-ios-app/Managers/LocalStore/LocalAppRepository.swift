@@ -1,7 +1,7 @@
 import Foundation
 
 struct LocalAppSnapshot: Codable, Hashable {
-    private static let currentSchemaVersion = 5
+    private static let currentSchemaVersion = 6
 
     var schemaVersion: Int
     var activities: [ActivityModel]
@@ -10,12 +10,15 @@ struct LocalAppSnapshot: Codable, Hashable {
     var customRewards: [RewardModel]
     var rewardClaims: [RewardClaimModel]
     var focusSessions: [FocusSessionModel]
+    var checklistItems: [ChecklistItemModel]
+    var checklistItemCompletions: [ChecklistItemCompletionModel]
     var creditLedger: RewardCreditLedger
     var nextActivityNumber: Int
     var nextProjectNumber: Int
     var nextSessionNumber: Int
     var nextRewardNumber: Int
     var nextRewardClaimNumber: Int
+    var nextChecklistItemNumber: Int
 
     private enum CodingKeys: String, CodingKey {
         case schemaVersion
@@ -27,12 +30,15 @@ struct LocalAppSnapshot: Codable, Hashable {
         case customRewards
         case rewardClaims
         case focusSessions
+        case checklistItems
+        case checklistItemCompletions
         case creditLedger
         case nextActivityNumber
         case nextProjectNumber
         case nextSessionNumber
         case nextRewardNumber
         case nextRewardClaimNumber
+        case nextChecklistItemNumber
     }
 
     var dailyPlan: DailyPlanModel? {
@@ -91,7 +97,7 @@ struct LocalAppSnapshot: Codable, Hashable {
     }
 
     init(
-        schemaVersion: Int = 5,
+        schemaVersion: Int = 6,
         activities: [ActivityModel],
         projects: [ProjectModel] = [],
         dailyPlan: DailyPlanModel? = nil,
@@ -100,12 +106,15 @@ struct LocalAppSnapshot: Codable, Hashable {
         customRewards: [RewardModel] = [],
         rewardClaims: [RewardClaimModel] = [],
         focusSessions: [FocusSessionModel],
+        checklistItems: [ChecklistItemModel] = [],
+        checklistItemCompletions: [ChecklistItemCompletionModel] = [],
         creditLedger: RewardCreditLedger = RewardCreditLedger(),
         nextActivityNumber: Int,
         nextProjectNumber: Int = 1,
         nextSessionNumber: Int,
         nextRewardNumber: Int = 1,
-        nextRewardClaimNumber: Int = 1
+        nextRewardClaimNumber: Int = 1,
+        nextChecklistItemNumber: Int = 1
     ) {
         self.schemaVersion = schemaVersion
         self.activities = activities
@@ -114,12 +123,15 @@ struct LocalAppSnapshot: Codable, Hashable {
         self.customRewards = customRewards
         self.rewardClaims = rewardClaims
         self.focusSessions = focusSessions
+        self.checklistItems = checklistItems
+        self.checklistItemCompletions = checklistItemCompletions
         self.creditLedger = creditLedger
         self.nextActivityNumber = nextActivityNumber
         self.nextProjectNumber = nextProjectNumber
         self.nextSessionNumber = nextSessionNumber
         self.nextRewardNumber = nextRewardNumber
         self.nextRewardClaimNumber = nextRewardClaimNumber
+        self.nextChecklistItemNumber = nextChecklistItemNumber
     }
 
     init(from decoder: Decoder) throws {
@@ -134,12 +146,21 @@ struct LocalAppSnapshot: Codable, Hashable {
             rewardClaims: try container.decodeIfPresent([RewardClaimModel].self, forKey: .rewardClaims) ?? [],
             focusSessions: try container.decode([PersistedFocusSession].self, forKey: .focusSessions)
                 .map { try $0.migrated(at: Date()) },
+            checklistItems: try container.decodeIfPresent([ChecklistItemModel].self, forKey: .checklistItems) ?? [],
+            checklistItemCompletions: try container.decodeIfPresent(
+                [ChecklistItemCompletionModel].self,
+                forKey: .checklistItemCompletions
+            ) ?? [],
             creditLedger: try container.decode(RewardCreditLedger.self, forKey: .creditLedger),
             nextActivityNumber: try container.decode(Int.self, forKey: .nextActivityNumber),
             nextProjectNumber: try container.decodeIfPresent(Int.self, forKey: .nextProjectNumber) ?? 1,
             nextSessionNumber: try container.decode(Int.self, forKey: .nextSessionNumber),
             nextRewardNumber: try container.decodeIfPresent(Int.self, forKey: .nextRewardNumber) ?? 1,
-            nextRewardClaimNumber: try container.decodeIfPresent(Int.self, forKey: .nextRewardClaimNumber) ?? 1
+            nextRewardClaimNumber: try container.decodeIfPresent(Int.self, forKey: .nextRewardClaimNumber) ?? 1,
+            nextChecklistItemNumber: try container.decodeIfPresent(
+                Int.self,
+                forKey: .nextChecklistItemNumber
+            ) ?? 1
         )
     }
 
@@ -152,12 +173,15 @@ struct LocalAppSnapshot: Codable, Hashable {
         try container.encode(customRewards, forKey: .customRewards)
         try container.encode(rewardClaims, forKey: .rewardClaims)
         try container.encode(focusSessions, forKey: .focusSessions)
+        try container.encode(checklistItems, forKey: .checklistItems)
+        try container.encode(checklistItemCompletions, forKey: .checklistItemCompletions)
         try container.encode(creditLedger, forKey: .creditLedger)
         try container.encode(nextActivityNumber, forKey: .nextActivityNumber)
         try container.encode(nextProjectNumber, forKey: .nextProjectNumber)
         try container.encode(nextSessionNumber, forKey: .nextSessionNumber)
         try container.encode(nextRewardNumber, forKey: .nextRewardNumber)
         try container.encode(nextRewardClaimNumber, forKey: .nextRewardClaimNumber)
+        try container.encode(nextChecklistItemNumber, forKey: .nextChecklistItemNumber)
     }
 }
 

@@ -88,7 +88,7 @@ struct RewardsView: View {
     private func balanceCard(minContentHeight: CGFloat? = nil) -> some View {
         TyfeMetricCardView(
             title: "Credits",
-            value: String(presenter.balance),
+            value: "\(presenter.balance)",
             systemImage: "creditcard.rewards",
             accent: TyfeEditorialPalette.saffron,
             minContentHeight: minContentHeight

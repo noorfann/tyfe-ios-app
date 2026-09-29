@@ -35,20 +35,48 @@ struct PlanTimeBlockModel: Identifiable, Codable, Hashable {
 struct DailyPlanItemModel: Identifiable, Codable, Hashable {
     let planItemId: String
     let activityId: String
+    let unitKind: ActivityType
     let plannedSessionCount: Int
 
     var id: String {
         planItemId
     }
 
+    private enum CodingKeys: String, CodingKey {
+        case planItemId
+        case activityId
+        case unitKind
+        case plannedSessionCount
+    }
+
     init(
         planItemId: String,
         activityId: String,
+        unitKind: ActivityType = .session,
         plannedSessionCount: Int
     ) {
         self.planItemId = planItemId
         self.activityId = activityId
-        self.plannedSessionCount = max(plannedSessionCount, 1)
+        self.unitKind = unitKind
+        self.plannedSessionCount = max(plannedSessionCount, 0)
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            planItemId: try container.decode(String.self, forKey: .planItemId),
+            activityId: try container.decode(String.self, forKey: .activityId),
+            unitKind: try container.decodeIfPresent(ActivityType.self, forKey: .unitKind) ?? .session,
+            plannedSessionCount: try container.decode(Int.self, forKey: .plannedSessionCount)
+        )
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(planItemId, forKey: .planItemId)
+        try container.encode(activityId, forKey: .activityId)
+        try container.encode(unitKind, forKey: .unitKind)
+        try container.encode(plannedSessionCount, forKey: .plannedSessionCount)
     }
 }
 

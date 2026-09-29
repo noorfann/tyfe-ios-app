@@ -487,7 +487,7 @@ struct RewardManagerTests {
 
     private func creditEntry(
         id: String,
-        amount: Int,
+        amount: Decimal,
         recordedAt timestamp: TimeInterval
     ) -> RewardCreditLedgerEntry {
         RewardCreditLedgerEntry(

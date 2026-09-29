@@ -30,14 +30,14 @@ struct SocialMigrationTests {
         )
         let activitiesBefore = interactor.todayManager.activities.count
         let plansBefore = interactor.phase1DailyPlan?.intendedSessionCount
-        let creditsBefore = interactor.phase1RewardCredits
+        let creditsBefore = interactor.rewardCredits
 
         try await interactor.migrateLocalToSocial()
 
         #expect(interactor.isSocialMigrationComplete)
         #expect(interactor.todayManager.activities.count == activitiesBefore)
         #expect(interactor.phase1DailyPlan?.intendedSessionCount == plansBefore)
-        #expect(interactor.phase1RewardCredits == creditsBefore)
+        #expect(interactor.rewardCredits == creditsBefore)
     }
 
     private func makeInteractor(isSignedIn: Bool) -> CoreInteractor {

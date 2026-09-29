@@ -153,10 +153,6 @@ struct TyfeStreakFreezeBankView: View {
                     .textCase(.uppercase)
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
-                Text("\(progress.available) / \(progress.maximum)")
-                    .font(TyfeTypography.displayCompact)
-                    .monospacedDigit()
-
                 HStack(spacing: TyfeSpacing.unit) {
                     ForEach(0..<progress.maximum, id: \.self) { index in
                         freezeToken(isFilled: index < progress.available)

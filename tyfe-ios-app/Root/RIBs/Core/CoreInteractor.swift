@@ -352,13 +352,6 @@ struct CoreInteractor: GlobalInteractor {
         todayManager.completedSessionCount
     }
 
-    var phase1CompletedSessionCounts: [String: Int] {
-        guard let dailyPlan = todayManager.dailyPlan else { return [:] }
-        return Dictionary(uniqueKeysWithValues: dailyPlan.planItems.map { item in
-            (item.activityId, todayManager.completedSessionCount(for: item.activityId))
-        })
-    }
-
     func phase1DailyPlan(for localDay: LocalDay) -> DailyPlanModel? {
         todayManager.dailyPlan(for: localDay)
     }
@@ -375,17 +368,6 @@ struct CoreInteractor: GlobalInteractor {
         todayManager.visibleCompletedSessionCount(on: localDay)
     }
 
-    func phase1CompletedSessionCounts(on localDay: LocalDay) -> [String: Int] {
-        guard let dailyPlan = todayManager.dailyPlan(for: localDay) else { return [:] }
-        return Dictionary(uniqueKeysWithValues: dailyPlan.planItems.map { item in
-            (item.activityId, todayManager.completedSessionCount(for: item.activityId, on: localDay))
-        })
-    }
-
-    var phase1RewardCredits: Int {
-        todayManager.rewardCredits
-    }
-
     var hasSeenDeckSwipeCoachmark: Bool {
         todayManager.hasSeenDeckSwipeCoachmark
     }
@@ -400,7 +382,17 @@ struct CoreInteractor: GlobalInteractor {
         category: ActivityCategory?,
         colorToken: String?
     ) -> ActivityModel? {
-        todayManager.createActivity(name: name, category: category, colorToken: colorToken)
+        todayManager.createActivity(name: name, category: category, colorToken: colorToken, type: .session)
+    }
+
+    @discardableResult
+    func createPhase1Activity(
+        name: String,
+        category: ActivityCategory?,
+        colorToken: String?,
+        type: ActivityType
+    ) -> ActivityModel? {
+        todayManager.createActivity(name: name, category: category, colorToken: colorToken, type: type)
     }
 
     @discardableResult
@@ -482,6 +474,7 @@ struct CoreInteractor: GlobalInteractor {
     // MARK: Home Dashboard
 
     var dashboardState: HomeDashboardState {
+        let currentDay = todayManager.currentLocalDay
         let activeFocusSession = focusManager.activeFocusSession
         let activeFocusActivity = activeFocusSession.flatMap { session in
             todayManager.activities.first { activity in
@@ -491,10 +484,10 @@ struct CoreInteractor: GlobalInteractor {
 
         return HomeDashboardState(
             nextActivity: nextHomeActivity,
-            plannedSessionCount: todayManager.visiblePlanItems(on: todayManager.currentLocalDay)
-                .reduce(0) { $0 + $1.plannedSessionCount },
-            completedSessionCount: todayManager.visibleCompletedSessionCount(on: todayManager.currentLocalDay),
-            rewardCredits: todayManager.rewardCredits,
+            plannedSessionCount: todayManager.plannedUnitCount(.session, on: currentDay),
+            completedSessionCount: todayManager.visibleCompletedSessionCount(on: currentDay),
+            plannedChecklistItemCount: todayManager.plannedUnitCount(.checklist, on: currentDay),
+            completedChecklistItemCount: todayManager.visibleCompletedChecklistItemCount(on: currentDay),
             activeFocusSession: activeFocusSession,
             activeFocusActivity: activeFocusActivity
         )
@@ -508,18 +501,22 @@ struct CoreInteractor: GlobalInteractor {
             return activeFocusSession
         }
 
-        guard let nextHomeActivity else { return nil }
+        guard let nextHomeActivity, nextHomeActivity.type == .session else { return nil }
         return focusManager.startFocusSession(activityId: nextHomeActivity.activityId)
     }
 
     private var nextHomeActivity: ActivityModel? {
-        return todayManager.visiblePlanItems(on: todayManager.currentLocalDay).compactMap { item -> ActivityModel? in
-            guard todayManager.completedSessionCount(for: item.activityId) < item.plannedSessionCount else {
+        let currentDay = todayManager.currentLocalDay
+        return todayManager.visiblePlanItems(on: currentDay).compactMap { item -> ActivityModel? in
+            guard let activity = todayManager.activities.first(where: { candidate in
+                candidate.activityId == item.activityId && !candidate.isArchived
+            }) else {
                 return nil
             }
-            return todayManager.activities.first { activity in
-                activity.activityId == item.activityId && !activity.isArchived
+            guard todayManager.completedItems(for: item, on: currentDay) < item.plannedSessionCount else {
+                return nil
             }
+            return activity
         }.first
     }
 
@@ -529,7 +526,7 @@ struct CoreInteractor: GlobalInteractor {
         rewardManager.rewards
     }
 
-    var rewardCredits: Int {
+    var rewardCredits: Decimal {
         rewardManager.rewardCredits
     }
 

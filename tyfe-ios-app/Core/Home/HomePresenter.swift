@@ -21,8 +21,20 @@ class HomePresenter {
         dashboardState.plannedSessionCount
     }
 
-    var rewardCredits: Int {
-        dashboardState.rewardCredits
+    var completedChecklistItemCount: Int {
+        dashboardState.completedChecklistItemCount
+    }
+
+    var plannedChecklistItemCount: Int {
+        dashboardState.plannedChecklistItemCount
+    }
+
+    var hasChecklistItems: Bool {
+        dashboardState.plannedChecklistItemCount > 0 || dashboardState.completedChecklistItemCount > 0
+    }
+
+    var isNextActivityChecklist: Bool {
+        dashboardState.activeFocusSession == nil && dashboardState.nextActivity?.type == .checklist
     }
 
     var isRewardInProgress: Bool {
@@ -40,6 +52,9 @@ class HomePresenter {
         if dashboardState.activeFocusSession != nil {
             return "FOCUS IN PROGRESS"
         }
+        if isNextActivityChecklist {
+            return "CHECKLIST · YOUR PLAN"
+        }
         return canStartFocus ? "TUESDAY · YOUR PLAN" : "NO PLAN YET"
     }
 
@@ -49,6 +64,9 @@ class HomePresenter {
         }
         if dashboardState.activeFocusSession != nil {
             return "Return to\n\(activityTitle)."
+        }
+        if isNextActivityChecklist {
+            return "Check off\nyour list."
         }
         if canStartFocus {
             return "Make room\nfor a good hour."
@@ -63,6 +81,9 @@ class HomePresenter {
         if dashboardState.activeFocusSession != nil {
             return "Your current Focus Session is ready to continue."
         }
+        if isNextActivityChecklist {
+            return "Open Today and tick items off as you go."
+        }
         if canStartFocus {
             return "Small effort. Real downtime. Ready when you are."
         }
@@ -76,6 +97,9 @@ class HomePresenter {
         if dashboardState.activeFocusSession != nil {
             return "Resume Focus"
         }
+        if isNextActivityChecklist {
+            return "Open Today"
+        }
         return canStartFocus ? "Start Focus" : "Focus unavailable"
     }
 
@@ -85,6 +109,9 @@ class HomePresenter {
         }
         if dashboardState.activeFocusSession != nil {
             return "arrow.clockwise"
+        }
+        if isNextActivityChecklist {
+            return "checklist"
         }
         return canStartFocus ? "arrow.right" : "lock.fill"
     }
@@ -96,6 +123,9 @@ class HomePresenter {
         if dashboardState.activeFocusSession != nil {
             return "Resume Focus Session"
         }
+        if isNextActivityChecklist {
+            return "Open Today's checklist"
+        }
         return canStartFocus ? "Start Focus for \(activityTitle)" : "Focus unavailable"
     }
 
@@ -105,6 +135,9 @@ class HomePresenter {
         }
         if dashboardState.activeFocusSession != nil {
             return "Returns to the Focus Session for \(activityTitle)."
+        }
+        if isNextActivityChecklist {
+            return "Opens the checklist for \(activityTitle) in Today."
         }
         return canStartFocus
             ? "Begins a 25-minute Focus Session for \(activityTitle)."
@@ -154,6 +187,11 @@ class HomePresenter {
         )
     }
 
+    func onOpenTodayPressed() {
+        interactor.trackEvent(event: Event.onOpenToday)
+        router.showTodayView()
+    }
+
     func onFocusViewDismissed() {
         reload()
     }
@@ -177,6 +215,7 @@ extension HomePresenter {
         case onDevSettings
         case onDevSettingsFail
         case onStartFocus
+        case onOpenToday
 
         var eventName: String {
             switch self {
@@ -185,6 +224,7 @@ extension HomePresenter {
             case .onDevSettings:            return "HomeView_DevSettings"
             case .onDevSettingsFail:        return "HomeView_DevSettings_Fail"
             case .onStartFocus:             return "HomeView_StartFocus"
+            case .onOpenToday:              return "HomeView_OpenToday"
             }
         }
         

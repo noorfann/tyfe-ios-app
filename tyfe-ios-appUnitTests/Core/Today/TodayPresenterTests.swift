@@ -164,10 +164,14 @@ struct TodayPresenterTests {
         #expect(presenter.editingActivity?.activityId == item.activityId)
 
         presenter.saveActivityEdits(
-            name: "  Renamed activity  ",
-            category: .work,
-            sessionCount: 4,
-            projectId: project.projectId
+            ActivitySheetDraft(
+                name: "  Renamed activity  ",
+                category: .work,
+                type: .session,
+                checklistItems: [],
+                sessionCount: 4,
+                projectId: project.projectId
+            )
         )
 
         #expect(manager.activities.first { $0.activityId == item.activityId }?.name == "Renamed activity")
@@ -241,7 +245,16 @@ struct TodayPresenterTests {
         let existingItem = try #require(presenter.planItems.first)
         #expect(presenter.selectedPlanItemId == existingItem.id)
 
-        presenter.saveActivity(name: "Write report", category: .work, sessionCount: 1, projectId: nil)
+        presenter.saveActivity(
+            ActivitySheetDraft(
+                name: "Write report",
+                category: .work,
+                type: .session,
+                checklistItems: [],
+                sessionCount: 1,
+                projectId: nil
+            )
+        )
 
         let newActivity = try #require(manager.activities.first { $0.name == "Write report" })
         let newItem = try #require(
@@ -276,7 +289,7 @@ struct TodayPresenterTests {
         presenter.selectProject(writing.projectId)
 
         #expect(presenter.deckPlanItems.map(\.activityId) == [firstActivity.activityId])
-        #expect(presenter.planProgressLabel == "0 of 3")
+        #expect(presenter.sessionProgressLabel == "0 of 3")
 
         presenter.selectProject(home.projectId)
 
@@ -319,10 +332,14 @@ struct TodayPresenterTests {
         presenter.selectProject(project.projectId)
 
         presenter.saveActivity(
-            name: "Write report",
-            category: .work,
-            sessionCount: 2,
-            projectId: presenter.selectedProjectId
+            ActivitySheetDraft(
+                name: "Write report",
+                category: .work,
+                type: .session,
+                checklistItems: [],
+                sessionCount: 2,
+                projectId: presenter.selectedProjectId
+            )
         )
 
         let activity = try #require(manager.activities.first { $0.name == "Write report" })
@@ -343,10 +360,14 @@ struct TodayPresenterTests {
         presenter.selectProject(currentProject.projectId)
 
         presenter.saveActivity(
-            name: "Read papers",
-            category: .study,
-            sessionCount: 1,
-            projectId: destinationProject.projectId
+            ActivitySheetDraft(
+                name: "Read papers",
+                category: .study,
+                type: .session,
+                checklistItems: [],
+                sessionCount: 1,
+                projectId: destinationProject.projectId
+            )
         )
 
         let activity = try #require(manager.activities.first { $0.name == "Read papers" })
@@ -372,7 +393,7 @@ struct TodayPresenterTests {
         #expect(presenter.selectedLocalDay == fixture.previousDay)
         #expect(presenter.selectedProjectId == fixture.project.projectId)
         #expect(presenter.deckPlanItems.map(\.activityId) == [fixture.secondActivity.activityId])
-        #expect(presenter.planProgressLabel == "0 of 1")
+        #expect(presenter.sessionProgressLabel == "0 of 1")
 
         presenter.onNextDayPressed()
 
@@ -381,7 +402,7 @@ struct TodayPresenterTests {
             fixture.firstActivity.activityId,
             fixture.secondActivity.activityId
         ])
-        #expect(presenter.planProgressLabel == "0 of 2")
+        #expect(presenter.sessionProgressLabel == "0 of 2")
     }
 
     @Test func deletedSelectedProjectFallsBackToUnassignedDeck() throws {
@@ -508,67 +529,6 @@ struct TodayPresenterTests {
         #expect(focusManager.focusSessions.count == 1)
     }
 
-#if MOCK
-    @Test func focusDismissalRefreshesCompletedSessionsAndCredits() throws {
-        let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
-        let manager = try #require(dependencies.container.resolve(TodayManager.self))
-        let focusManager = try #require(dependencies.container.resolve(FocusManager.self))
-        _ = manager.addActivityToDailyPlan(
-            activityId: ActivityModel.mock.activityId,
-            sessionCount: 1
-        )
-        let presenter = TodayPresenter(
-            interactor: CoreInteractor(container: dependencies.container),
-            router: RecordingTodayRouter()
-        )
-        presenter.onViewAppear(delegate: TodayDelegate())
-        presenter.onStartFocusPressed()
-        let session = try #require(focusManager.focusSessions.first)
-
-        _ = try focusManager.beginFocusSession(focusSessionId: session.focusSessionId)
-        _ = try focusManager.markFocusSessionCompleteForTesting(
-            focusSessionId: session.focusSessionId
-        )
-
-        #expect(presenter.completedSessionCounts[ActivityModel.mock.activityId, default: 0] == 0)
-        #expect(presenter.rewardCredits == 0)
-
-        presenter.onFocusViewDismissed()
-
-        #expect(presenter.completedSessionCounts[ActivityModel.mock.activityId, default: 0] == 1)
-        #expect(presenter.rewardCredits == 1)
-    }
-
-    @Test func focusDelegateCarriesDismissActionThatRefreshesToday() throws {
-        let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
-        let manager = try #require(dependencies.container.resolve(TodayManager.self))
-        let focusManager = try #require(dependencies.container.resolve(FocusManager.self))
-        _ = manager.addActivityToDailyPlan(
-            activityId: ActivityModel.mock.activityId,
-            sessionCount: 1
-        )
-        let router = RecordingTodayRouter()
-        let presenter = TodayPresenter(
-            interactor: CoreInteractor(container: dependencies.container),
-            router: router
-        )
-        presenter.onViewAppear(delegate: TodayDelegate())
-        presenter.onStartFocusPressed()
-
-        let delegate = try #require(router.presentedFocusDelegate)
-        let onDismiss = try #require(delegate.onDismiss)
-        let session = try #require(focusManager.focusSessions.first)
-        _ = try focusManager.beginFocusSession(focusSessionId: session.focusSessionId)
-        _ = try focusManager.markFocusSessionCompleteForTesting(
-            focusSessionId: session.focusSessionId
-        )
-
-        onDismiss()
-
-        #expect(presenter.completedSessionCounts[ActivityModel.mock.activityId, default: 0] == 1)
-        #expect(presenter.rewardCredits == 1)
-    }
-#endif
 }
 
 @MainActor
@@ -592,13 +552,13 @@ extension TodayPresenterTests {
         #expect(presenter.projects.isEmpty)
         #expect(presenter.planItems.isEmpty)
         #expect(presenter.selectedProjectId == nil)
-        #expect(presenter.planProgressLabel == "0 of 0")
+        #expect(presenter.sessionProgressLabel == "0 of 0")
 
         presenter.onPreviousDayPressed()
         #expect(presenter.projects.first?.projectId == fixture.project.projectId)
         presenter.selectProject(fixture.project.projectId)
         #expect(presenter.deckPlanItems.map(\.activityId) == [fixture.secondActivity.activityId])
-        #expect(presenter.planProgressLabel == "0 of 1")
+        #expect(presenter.sessionProgressLabel == "0 of 1")
 
         presenter.onNextDayPressed()
         #expect(presenter.projects.isEmpty)
@@ -608,6 +568,68 @@ extension TodayPresenterTests {
         #expect(presenter.projects.first?.projectId == fixture.project.projectId)
         #expect(presenter.planItems.count == 2)
     }
+
+#if MOCK
+        @Test func focusDismissalRefreshesCompletedSessionsAndCredits() throws {
+            let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
+            let manager = try #require(dependencies.container.resolve(TodayManager.self))
+            let focusManager = try #require(dependencies.container.resolve(FocusManager.self))
+            _ = manager.addActivityToDailyPlan(
+                activityId: ActivityModel.mock.activityId,
+                sessionCount: 1
+            )
+            let presenter = TodayPresenter(
+                interactor: CoreInteractor(container: dependencies.container),
+                router: RecordingTodayRouter()
+            )
+            presenter.onViewAppear(delegate: TodayDelegate())
+            presenter.onStartFocusPressed()
+            let session = try #require(focusManager.focusSessions.first)
+
+            _ = try focusManager.beginFocusSession(focusSessionId: session.focusSessionId)
+            _ = try focusManager.markFocusSessionCompleteForTesting(
+                focusSessionId: session.focusSessionId
+            )
+
+            #expect(presenter.completedUnitCounts[ActivityModel.mock.activityId, default: 0] == 0)
+            #expect(manager.rewardCredits == 0)
+
+            presenter.onFocusViewDismissed()
+
+            #expect(presenter.completedUnitCounts[ActivityModel.mock.activityId, default: 0] == 1)
+            #expect(manager.rewardCredits == 1)
+        }
+
+        @Test func focusDelegateCarriesDismissActionThatRefreshesToday() throws {
+            let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
+            let manager = try #require(dependencies.container.resolve(TodayManager.self))
+            let focusManager = try #require(dependencies.container.resolve(FocusManager.self))
+            _ = manager.addActivityToDailyPlan(
+                activityId: ActivityModel.mock.activityId,
+                sessionCount: 1
+            )
+            let router = RecordingTodayRouter()
+            let presenter = TodayPresenter(
+                interactor: CoreInteractor(container: dependencies.container),
+                router: router
+            )
+            presenter.onViewAppear(delegate: TodayDelegate())
+            presenter.onStartFocusPressed()
+
+            let delegate = try #require(router.presentedFocusDelegate)
+            let onDismiss = try #require(delegate.onDismiss)
+            let session = try #require(focusManager.focusSessions.first)
+            _ = try focusManager.beginFocusSession(focusSessionId: session.focusSessionId)
+            _ = try focusManager.markFocusSessionCompleteForTesting(
+                focusSessionId: session.focusSessionId
+            )
+
+            onDismiss()
+
+            #expect(presenter.completedUnitCounts[ActivityModel.mock.activityId, default: 0] == 1)
+            #expect(manager.rewardCredits == 1)
+        }
+    #endif
 }
 
 @MainActor

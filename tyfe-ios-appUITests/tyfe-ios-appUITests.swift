@@ -349,7 +349,7 @@ final class TyfeappUITests: XCTestCase {
 
         XCTAssertTrue(app.staticTexts["Study Swift"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["DAILY PLAN, 0/2, sessions complete"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["CREDITS, 0, Reward Credits"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["CREDITS, 0, Reward Credits"].exists)
         XCTAssertTrue(app.buttons["Start Focus for Study Swift"].waitForExistence(timeout: 5))
 
         app.buttons["Start Focus for Study Swift"].tap()
@@ -359,7 +359,7 @@ final class TyfeappUITests: XCTestCase {
     }
 
     @MainActor
-    func testHomeFlowCompletionUpdatesProgressAndCredits() throws {
+    func testHomeFlowCompletionUpdatesProgressAndHidesCredits() throws {
         let app = XCUIApplication()
         app.launchArguments.append("HOME_FLOW")
         app.launch()
@@ -374,7 +374,7 @@ final class TyfeappUITests: XCTestCase {
         app.buttons["Back to Today"].tap()
 
         XCTAssertTrue(app.staticTexts["DAILY PLAN, 1/2, sessions complete"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["CREDITS, 1, Reward Credits"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["CREDITS, 1, Reward Credits"].exists)
     }
 
     @MainActor

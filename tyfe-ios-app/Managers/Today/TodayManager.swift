@@ -5,8 +5,8 @@ import Observation
 @MainActor
 final class TodayManager {
 
-    private let repository: LocalAppRepository
-    private let clock: FocusClock
+    let repository: LocalAppRepository
+    let clock: FocusClock
     private let calendar: Calendar
     private let notificationScheduler: LocalTimerNotificationScheduling?
     @ObservationIgnored private let userDefaults: UserDefaults?
@@ -73,7 +73,7 @@ final class TodayManager {
         completedSessionCount(on: currentLocalDay)
     }
 
-    var rewardCredits: Int {
+    var rewardCredits: Decimal {
         repository.snapshot.creditLedger.balance
     }
 
@@ -81,16 +81,19 @@ final class TodayManager {
     func createActivity(
         name: String,
         category: ActivityCategory?,
-        colorToken: String?
+        colorToken: String?,
+        type: ActivityType = .session
     ) -> ActivityModel? {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty else { return nil }
         guard !activities.contains(where: {
             $0.name.localizedCaseInsensitiveCompare(trimmedName) == .orderedSame
+                && $0.type == type
                 && isActivityAvailable($0)
         }) else {
             return activities.first(where: {
                 $0.name.localizedCaseInsensitiveCompare(trimmedName) == .orderedSame
+                    && $0.type == type
                     && isActivityAvailable($0)
             })
         }
@@ -101,6 +104,7 @@ final class TodayManager {
                 let activity = ActivityModel(
                     activityId: "activity-" + String(snapshot.nextActivityNumber),
                     name: trimmedName,
+                    type: type,
                     category: category,
                     iconToken: iconToken(for: category),
                     colorToken: colorToken,
@@ -281,6 +285,7 @@ final class TodayManager {
         let updatedActivity = ActivityModel(
             activityId: existingActivity.activityId,
             name: trimmedName,
+            type: existingActivity.type,
             category: category,
             iconToken: iconToken(for: category),
             colorToken: existingActivity.colorToken,
@@ -320,7 +325,7 @@ final class TodayManager {
         let selectedActivityIds = validActivityIds.isEmpty
             ? activities.first(where: isActivityAvailable).map { [$0.activityId] } ?? []
             : validActivityIds
-        let count = max(intendedSessionCount, 1)
+        let count = max(intendedSessionCount, 0)
         let normalizedTimeBlocks = timeBlocks?.map {
             PlanTimeBlockModel(
                 timeBlockId: $0.timeBlockId,
@@ -359,11 +364,14 @@ final class TodayManager {
         activityId: String,
         sessionCount: Int
     ) -> DailyPlanModel? {
-        guard activities.contains(where: { $0.activityId == activityId && isActivityAvailable($0) }) else {
+        guard let activity = activities.first(where: {
+            $0.activityId == activityId && isActivityAvailable($0)
+        }) else {
             return dailyPlan
         }
 
-        let count = max(sessionCount, 1)
+        let unitKind = activity.type
+        let count = clampedPlannedUnitCount(sessionCount, for: activity, unitKind: unitKind)
         guard let dailyPlan else {
             return acceptDailyPlan(
                 intendedSessionCount: count,
@@ -373,6 +381,7 @@ final class TodayManager {
                     DailyPlanItemModel(
                         planItemId: "plan-item-" + activityId,
                         activityId: activityId,
+                        unitKind: unitKind,
                         plannedSessionCount: count
                     )
                 ]
@@ -385,13 +394,20 @@ final class TodayManager {
             items[itemIndex] = DailyPlanItemModel(
                 planItemId: item.planItemId,
                 activityId: item.activityId,
-                plannedSessionCount: item.plannedSessionCount + count
+                unitKind: unitKind,
+                plannedSessionCount: clampedPlannedUnitCount(
+                    item.plannedSessionCount + count,
+                    for: activity,
+                    unitKind: unitKind,
+                    minimum: item.plannedSessionCount
+                )
             )
         } else {
             items.append(
                 DailyPlanItemModel(
                     planItemId: "plan-item-" + activityId,
                     activityId: activityId,
+                    unitKind: unitKind,
                     plannedSessionCount: count
                 )
             )
@@ -405,17 +421,30 @@ final class TodayManager {
         sessionCount: Int
     ) -> DailyPlanModel? {
         guard let dailyPlan,
-              let itemIndex = dailyPlan.planItems.firstIndex(where: { $0.activityId == activityId }) else {
+              let itemIndex = dailyPlan.planItems.firstIndex(where: { $0.activityId == activityId }),
+              let activity = activities.first(where: { $0.activityId == activityId }) else {
             return dailyPlan
         }
 
-        let completedCount = completedSessionCount(for: activityId)
-        let count = max(sessionCount, completedCount)
+        let item = dailyPlan.planItems[itemIndex]
+        let completedUnitCount: Int
+        switch item.unitKind {
+        case .session:
+            completedUnitCount = completedSessionCount(for: activityId)
+        case .checklist:
+            completedUnitCount = completedChecklistItemCount(for: activityId, on: currentLocalDay)
+        }
+        let count = clampedPlannedUnitCount(
+            sessionCount,
+            for: activity,
+            unitKind: item.unitKind,
+            minimum: completedUnitCount
+        )
         var items = dailyPlan.planItems
-        let item = items[itemIndex]
         items[itemIndex] = DailyPlanItemModel(
             planItemId: item.planItemId,
             activityId: item.activityId,
+            unitKind: item.unitKind,
             plannedSessionCount: count
         )
         return replaceDailyPlan(dailyPlan, planItems: items)
@@ -423,7 +452,9 @@ final class TodayManager {
 
     @discardableResult
     func removeActivityFromDailyPlan(activityId: String) -> DailyPlanModel? {
-        guard let dailyPlan, completedSessionCount(for: activityId) == 0 else {
+        guard let dailyPlan,
+              completedSessionCount(for: activityId) == 0,
+              completedChecklistItemCount(for: activityId, on: currentLocalDay) == 0 else {
             return dailyPlan
         }
 
@@ -448,35 +479,6 @@ final class TodayManager {
 
     func dailyPlan(for localDay: LocalDay) -> DailyPlanModel? {
         repository.snapshot.dailyPlans.last { $0.localDay == localDay }
-    }
-
-    func completedSessionCount(on localDay: LocalDay) -> Int {
-        repository.snapshot.focusSessions.filter {
-            $0.localDay == localDay && $0.state == .completed
-        }.count
-    }
-
-    func completedSessionCount(for activityId: String, on localDay: LocalDay) -> Int {
-        repository.snapshot.focusSessions.filter {
-            $0.localDay == localDay
-                && $0.activityId == activityId
-                && $0.state == .completed
-                && !$0.isBonusSession
-        }.count
-    }
-
-    func progress(for localDay: LocalDay) -> DailyPlanProgressModel? {
-        guard let plan = dailyPlan(for: localDay) else { return nil }
-        let sessions = repository.snapshot.focusSessions.filter {
-            $0.localDay == localDay && $0.state == .completed
-        }
-        return DailyPlanProgressModel(
-            localDay: localDay,
-            originalPlannedSessionCount: plan.originalIntendedSessionCount,
-            finalPlannedSessionCount: plan.intendedSessionCount,
-            plannedCompletionCount: sessions.filter { !$0.isBonusSession }.count,
-            bonusCompletionCount: sessions.filter(\.isBonusSession).count
-        )
     }
 
     private func replaceDailyPlan(

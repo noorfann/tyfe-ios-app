@@ -52,7 +52,7 @@ struct TodayHistoryInteractorTests {
         #expect(interactor.phase1EarliestRecordedLocalDay == historicalDay)
         #expect(interactor.phase1DailyPlan(for: historicalDay) == plan)
         #expect(interactor.phase1CompletedSessionCount(on: historicalDay) == 1)
-        #expect(interactor.phase1CompletedSessionCounts(on: historicalDay)[activity.activityId] == 1)
+        #expect(interactor.phase1CompletedUnitCounts(on: historicalDay)[activity.activityId] == 1)
         #expect(interactor.phase1DailyPlan(for: currentDay.adding(days: -1)) == nil)
     }
 }

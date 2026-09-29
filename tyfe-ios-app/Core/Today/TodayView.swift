@@ -32,7 +32,7 @@ struct TodayView: View {
                             projectTabs
                             emptyContent
                         } else {
-                            TodayHistoricalEmptyView(completedSessionCount: presenter.completedSessionCount)
+                            TodayHistoricalEmptyView(completedSessionCount: presenter.completedSessionUnitCount)
                         }
                     }
                 }
@@ -69,7 +69,11 @@ struct TodayView: View {
                 TodayActivityDetailSheet(
                     activity: activity,
                     initialSessionCount: item.plannedSessionCount,
-                    completedSessionCount: presenter.completedCount(for: item),
+                    completedUnitCount: presenter.completedCount(for: item),
+                    checklistItems: presenter.checklistItems(for: item),
+                    tickedItemIds: presenter.tickedItemIds,
+                    canConvertToChecklist: presenter.canConvertEditingActivity(to: .checklist),
+                    canConvertToSession: presenter.canConvertEditingActivity(to: .session),
                     projects: presenter.projects,
                     onSave: presenter.saveActivityEdits,
                     onRemove: presenter.removeEditingActivityFromToday
@@ -189,17 +193,15 @@ struct TodayView: View {
             }
 
             if presenter.dailyPlan != nil {
-                if presenter.isViewingToday {
-                    HStack(spacing: TyfeSpacing.control) {
+                HStack(spacing: TyfeSpacing.control) {
+                    if presenter.showsTasksMetric {
                         TyfeMetricCardView(
-                            title: "Credits",
-                            value: String(presenter.rewardCredits),
-                            systemImage: "creditcard.rewards",
+                            title: "Tasks",
+                            value: presenter.taskProgressLabel,
+                            systemImage: "checklist",
                             accent: TyfeEditorialPalette.saffron
                         )
-                        sessionsMetric
                     }
-                } else {
                     sessionsMetric
                 }
             }
@@ -208,14 +210,14 @@ struct TodayView: View {
             projectTabs
             planDeck
 
-            if !presenter.hasUnfinishedPlan {
+            if !presenter.hasUnfinishedPlan, presenter.planHasPlannedUnits {
                 TyfeSurfaceView(role: .paper) {
                     HStack(spacing: TyfeSpacing.small) {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundStyle(TyfeEditorialPalette.success)
                         Text(presenter.isViewingToday
-                             ? "Today’s planned sessions are complete."
-                             : "Planned sessions were completed.")
+                             ? "Today’s plan is complete."
+                             : "The recorded plan was completed.")
                             .font(TyfeTypography.interfaceStrong)
                     }
                 }
@@ -279,13 +281,16 @@ struct TodayView: View {
                     TodayActivityDeckView(
                         planItems: presenter.deckPlanItems,
                         activities: presenter.activities,
-                        completedSessionCounts: presenter.completedSessionCounts,
+                        completedUnitCounts: presenter.completedUnitCounts,
+                        checklistItemsByActivity: presenter.checklistItemsByActivity,
+                        tickedItemIds: presenter.tickedItemIds,
                         selectedPlanItemId: presenter.selectedPlanItemId,
                         nextPlanItemId: presenter.isViewingToday ? presenter.nextDeckPlanItem?.id : nil,
                         isRewardInProgress: presenter.isRewardInProgress,
                         isReadOnly: !presenter.isViewingToday,
                         onStart: { _ in presenter.onStartFocusPressed() },
                         onEdit: { presenter.onEditActivityPressed($0) },
+                        onToggleChecklistItem: { presenter.onChecklistItemToggled($0) },
                         onNext: presenter.selectNextPlanItem,
                         onPrevious: presenter.selectPreviousPlanItem
                     )
@@ -347,7 +352,7 @@ struct TodayView: View {
     private var sessionsMetric: some View {
         TyfeMetricCardView(
             title: "Sessions",
-            value: presenter.planProgressLabel,
+            value: presenter.sessionProgressLabel,
             systemImage: "list.bullet.rectangle",
             accent: TyfeEditorialPalette.teal
         )
@@ -375,292 +380,6 @@ struct TodayView: View {
         EmptyView()
         #endif
     }
-}
-
-struct TodayActivityDeckView: View {
-
-    let planItems: [DailyPlanItemModel]
-    let activities: [ActivityModel]
-    let completedSessionCounts: [String: Int]
-    let selectedPlanItemId: String?
-    let nextPlanItemId: String?
-    let isRewardInProgress: Bool
-    let isReadOnly: Bool
-    let onStart: (DailyPlanItemModel) -> Void
-    let onEdit: (DailyPlanItemModel) -> Void
-    let onNext: () -> Void
-    let onPrevious: () -> Void
-
-    @State private var dragOffset: CGFloat = 0
-    @State private var isDeckDragging = false
-    @State private var hasAppeared = false
-    @ScaledMetric(relativeTo: .body) private var deckHeight: CGFloat = 248
-    @ScaledMetric(relativeTo: .body) private var readOnlyDeckHeight: CGFloat = 196
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    private var deckAnimation: Animation? {
-        reduceMotion ? nil : .spring(response: 0.32, dampingFraction: 0.82)
-    }
-
-    private func entranceAnimation(depth: Int) -> Animation? {
-        guard !reduceMotion else { return nil }
-        return .spring(response: 0.38, dampingFraction: 0.78)
-            .delay(Double(depth) * 0.06)
-    }
-
-    private var selectedIndex: Int? {
-        guard let selectedPlanItemId else { return nil }
-        return planItems.firstIndex { $0.id == selectedPlanItemId }
-    }
-
-    private var visibleCards: [DeckCard] {
-        guard !planItems.isEmpty, let selectedIndex else { return [] }
-        let visibleCardCount = min(3, planItems.count)
-
-        return (0..<visibleCardCount).compactMap { depth in
-            let item = planItems[(selectedIndex + depth) % planItems.count]
-            guard let activity = activities.first(where: { $0.activityId == item.activityId }) else {
-                return nil
-            }
-            return DeckCard(
-                item: item,
-                activity: activity,
-                position: depth
-            )
-        }
-    }
-
-    var body: some View {
-        if let selectedIndex {
-            VStack(spacing: TyfeSpacing.small) {
-                ZStack {
-                    ForEach(visibleCards.reversed()) { card in
-                        cardView(card)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: isReadOnly ? readOnlyDeckHeight : deckHeight)
-                .contentShape(Rectangle())
-                .gesture(
-                    DeckSwipeGesture(
-                        onBegan: {
-                            isDeckDragging = true
-                        },
-                        onChanged: { translation in
-                            dragOffset = translation
-                        },
-                        onEnded: { translation, velocity in
-                            endDeckSwipe(translation: translation, velocity: velocity)
-                        },
-                        onCancelled: {
-                            isDeckDragging = false
-                            withAnimation(deckAnimation) {
-                                dragOffset = 0
-                            }
-                        }
-                    )
-                )
-                .onAppear { hasAppeared = true }
-                .accessibilityElement(children: .contain)
-                .accessibilityLabel(isReadOnly ? "Historical activities" : "Activities")
-                .accessibilityValue("Activity \(selectedIndex + 1) of \(planItems.count)")
-                .accessibilityHint("Swipe left or right to switch activities.")
-                .accessibilityAdjustableAction { direction in
-                    switch direction {
-                    case .increment:
-                        onNext()
-                    case .decrement:
-                        onPrevious()
-                    @unknown default:
-                        break
-                    }
-                }
-
-                HStack(spacing: TyfeSpacing.small) {
-                    ForEach(planItems.indices, id: \.self) { index in
-                        Circle()
-                            .fill(index == selectedIndex
-                                  ? TyfeEditorialPalette.teal
-                                  : TyfeEditorialPalette.muted.opacity(0.45))
-                            .frame(width: 8, height: 8)
-                    }
-                }
-                .frame(minHeight: 24)
-                .accessibilityHidden(true)
-                .animation(deckAnimation, value: selectedIndex)
-            }
-        }
-    }
-
-    private func cardView(_ card: DeckCard) -> some View {
-        let depth = card.position
-        let completedCount = completedSessionCounts[card.item.activityId, default: 0]
-
-        return TodayPlanCardView(
-            activity: card.activity,
-            item: card.item,
-            completedCount: completedCount,
-            isNext: nextPlanItemId == card.item.id,
-            isRewardInProgress: isRewardInProgress,
-            isReadOnly: isReadOnly,
-            isDeckDragging: isDeckDragging,
-            onStart: { onStart(card.item) },
-            onEdit: { onEdit(card.item) }
-        )
-        .scaleEffect((1 - (CGFloat(depth) * 0.035)) * (hasAppeared ? 1 : 0.94))
-        .offset(
-            x: depth == 0 ? dragOffset : 0,
-            y: (CGFloat(depth) * 12) + (hasAppeared ? 0 : -32)
-        )
-        .opacity((1 - (Double(depth) * 0.12)) * (hasAppeared ? 1 : 0))
-        .zIndex(Double(visibleCards.count - depth))
-        .allowsHitTesting(depth == 0)
-        .animation(deckAnimation, value: selectedPlanItemId)
-        .animation(entranceAnimation(depth: depth), value: hasAppeared)
-    }
-
-    private func endDeckSwipe(translation: CGFloat, velocity: CGFloat) {
-        isDeckDragging = false
-
-        let projectedTranslation = translation + (velocity * 0.25)
-        guard abs(projectedTranslation) > 80 else {
-            withAnimation(deckAnimation) {
-                dragOffset = 0
-            }
-            return
-        }
-
-        withAnimation(deckAnimation) {
-            if projectedTranslation < 0 {
-                onNext()
-            } else {
-                onPrevious()
-            }
-            dragOffset = 0
-        }
-    }
-
-    private struct DeckCard: Identifiable {
-        let item: DailyPlanItemModel
-        let activity: ActivityModel
-        let position: Int
-
-        var id: String {
-            item.id
-        }
-    }
-}
-
-struct TodayPlanCardView: View {
-
-    let activity: ActivityModel
-    let item: DailyPlanItemModel
-    let completedCount: Int
-    let isNext: Bool
-    let isRewardInProgress: Bool
-    let isReadOnly: Bool
-    let isDeckDragging: Bool
-    let onStart: () -> Void
-    let onEdit: () -> Void
-
-    private var isComplete: Bool {
-        completedCount >= item.plannedSessionCount
-    }
-
-    var body: some View {
-        TyfeSurfaceView(role: isComplete ? .disabled : .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
-                HStack(alignment: .top, spacing: TyfeSpacing.small) {
-                    VStack(alignment: .leading, spacing: TyfeSpacing.unit) {
-                        Text(isNext && !isComplete ? "NEXT UP" : "ACTIVITY")
-                            .font(TyfeTypography.eyebrow)
-                            .tracking(1.1)
-                            .foregroundStyle(isComplete ? TyfeEditorialPalette.disabledInk : TyfeEditorialPalette.muted)
-
-                        Text(activity.name)
-                            .font(TyfeTypography.displayCompact)
-                            .tracking(-0.8)
-                            .lineLimit(2)
-                            .minimumScaleFactor(0.6)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                    if isComplete {
-                        Label("Complete", systemImage: "checkmark.circle.fill")
-                            .font(TyfeTypography.caption)
-                            .foregroundStyle(TyfeEditorialPalette.disabledInk)
-                    } else if completedCount > 0 {
-                        Text("In progress")
-                            .font(TyfeTypography.caption)
-                            .foregroundStyle(TyfeEditorialPalette.muted)
-                    }
-                }
-
-                if isReadOnly {
-                    Text(progressLabel)
-                        .font(TyfeTypography.interfaceStrong)
-                } else {
-                    HStack(spacing: TyfeSpacing.small) {
-                        Text(progressLabel)
-                            .font(TyfeTypography.interfaceStrong)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-
-                        Label("Edit", systemImage: "pencil")
-                            .font(TyfeTypography.interfaceStrong)
-                            .foregroundStyle(TyfeEditorialPalette.ink)
-                            .padding(.horizontal, TyfeSpacing.control)
-                            .frame(minHeight: 44)
-                            .background(TyfeEditorialPalette.canvas)
-                            .clipShape(Capsule())
-                            .overlay {
-                                Capsule()
-                                    .stroke(
-                                        TyfeEditorialPalette.controlBorder,
-                                        lineWidth: TyfeStroke.hairline
-                                    )
-                            }
-                            .contentShape(Capsule())
-                            .asButton(.press, action: onEdit)
-                            .disabled(isDeckDragging)
-                            .accessibilityLabel("Edit " + activity.name)
-                    }
-
-                    TyfeActionButtonView(
-                        title: startButtonTitle,
-                        systemImage: startButtonSystemImage,
-                        isEnabled: !isComplete && !isRewardInProgress,
-                        onTap: onStart
-                    )
-                    .disabled(isDeckDragging)
-                }
-            }
-        }
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(accessibilityLabel)
-    }
-
-    private var startButtonTitle: String {
-        if isComplete { return "Completed" }
-        return isRewardInProgress ? "Reward in progress" : "Start"
-    }
-
-    private var startButtonSystemImage: String {
-        if isComplete { return "checkmark" }
-        return isRewardInProgress ? "clock.fill" : "play.fill"
-    }
-
-    private var progressLabel: String {
-        "\(completedCount) of \(item.plannedSessionCount) sessions"
-    }
-
-    private var accessibilityLabel: String {
-        let progress = "\(activity.name), \(progressLabel)"
-        guard isRewardInProgress && !isComplete else { return progress }
-        return progress + ". Focus unavailable while Reward is in progress."
-    }
-
 }
 
 #Preview("Today — empty") {

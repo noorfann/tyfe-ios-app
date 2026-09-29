@@ -48,10 +48,10 @@ extension CoreInteractor: FocusInteractor {
             ])
         }
 
-        await awardStreakFreezeIfEligible(focusSessionId: session.focusSessionId)
+        await awardStreakFreezeIfEligible(sourceId: session.focusSessionId)
     }
 
-    private func awardStreakFreezeIfEligible(focusSessionId: String) async {
+    func awardStreakFreezeIfEligible(sourceId: String) async {
         let streakData = currentStreakData
         guard let currentStreak = streakData.currentStreak,
               currentStreak > 0,
@@ -69,7 +69,7 @@ extension CoreInteractor: FocusInteractor {
             try await addStreakFreeze(id: freezeId)
         } catch {
             var parameters = error.eventParameters
-            parameters["focus_session_id"] = focusSessionId
+            parameters["streak_source_id"] = sourceId
             parameters["streak_count"] = currentStreak
             trackEvent(
                 eventName: "Focus_StreakFreezeAward_Fail",

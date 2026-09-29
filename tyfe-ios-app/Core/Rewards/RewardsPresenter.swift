@@ -7,7 +7,7 @@ final class RewardsPresenter {
     private let interactor: RewardsInteractor
     private let router: RewardsRouter
 
-    private(set) var balance = 0
+    private(set) var balance: Decimal = 0
     private(set) var rewards: [RewardModel] = []
     private(set) var activeClaim: RewardClaimModel?
     private(set) var finishedClaim: RewardClaimModel?
@@ -113,7 +113,7 @@ final class RewardsPresenter {
 
     private func requestClaimConfirmation(for reward: RewardModel) {
         let cost = reward.durationTier.creditCost
-        let remaining = max(balance - cost, 0)
+        let remaining = max(balance - Decimal(cost), 0)
         let costText = cost == 1 ? "1 Reward Credit" : "\(cost) Reward Credits"
 
         router.showAlert(
