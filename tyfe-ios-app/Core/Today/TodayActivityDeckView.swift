@@ -21,8 +21,6 @@ struct TodayActivityDeckView: View {
     @State private var dragOffset: CGFloat = 0
     @State private var isDeckDragging = false
     @State private var hasAppeared = false
-    @ScaledMetric(relativeTo: .body) private var deckHeight: CGFloat = 248
-    @ScaledMetric(relativeTo: .body) private var readOnlyDeckHeight: CGFloat = 196
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var deckAnimation: Animation? {
@@ -59,14 +57,14 @@ struct TodayActivityDeckView: View {
 
     var body: some View {
         if let selectedIndex {
-            VStack(spacing: TyfeSpacing.small) {
+            VStack(spacing: TyfeSpacing.section) {
                 ZStack {
                     ForEach(visibleCards.reversed()) { card in
                         cardView(card)
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .frame(minHeight: isReadOnly ? readOnlyDeckHeight : deckHeight)
+                .animation(deckAnimation, value: selectedIndex)
                 .contentShape(Rectangle())
                 .gesture(
                     DeckSwipeGesture(
@@ -199,7 +197,6 @@ struct TodayPlanCardView: View {
     @State private var checklistScrollOffset: CGFloat = 0
     @State private var checklistContentHeight: CGFloat = 0
     @State private var checklistViewportHeight: CGFloat = 0
-    @ScaledMetric(relativeTo: .body) private var checklistMinimumHeight: CGFloat = 84
 
     private var isChecklist: Bool {
         activity.type == .checklist
@@ -319,10 +316,7 @@ struct TodayPlanCardView: View {
                         checklistContentHeight = height
                     }
                 }
-                .frame(
-                    minHeight: checklistMinimumHeight,
-                    maxHeight: max(140, checklistMinimumHeight)
-                )
+                .frame(maxHeight: 140)
                 .scrollIndicators(.hidden)
                 .onGeometryChange(for: CGFloat.self) { proxy in
                     proxy.size.height
