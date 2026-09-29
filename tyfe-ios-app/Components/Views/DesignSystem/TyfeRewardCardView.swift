@@ -26,12 +26,12 @@ struct TyfeRewardCardView: View {
                 .padding(.horizontal, TyfeSpacing.control)
                 .padding(.vertical, TyfeSpacing.card)
         }
-        .background(TyfeEditorialPalette.paper)
         .background(alignment: .leading) {
             Rectangle()
                 .fill(stubFill)
                 .frame(width: stubWidth)
         }
+        .background(TyfeEditorialPalette.paper)
         .overlay(alignment: .topLeading) {
             perforation
         }
@@ -134,8 +134,7 @@ struct TyfeRewardCardView: View {
 
     private var stubFill: Color {
         if isAvailable { return TyfeEditorialPalette.saffron }
-        if usesDisabledSurface { return TyfeEditorialPalette.disabledFill }
-        return TyfeEditorialPalette.canvas
+        return TyfeEditorialPalette.disabledFill
     }
 
     private var stubInk: Color {
