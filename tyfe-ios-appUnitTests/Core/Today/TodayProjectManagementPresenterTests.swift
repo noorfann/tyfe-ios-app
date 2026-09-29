@@ -97,6 +97,55 @@ struct TodayProjectManagementPresenterTests {
         #expect(changeCount == 1)
     }
 
+    @Test func movingActiveSpacesReordersAroundArchivedSpaces() throws {
+        let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
+        let interactor = CoreInteractor(container: dependencies.container)
+        var changeCount = 0
+        let presenter = TodayProjectManagementPresenter(
+            interactor: interactor,
+            router: RecordingProjectManagementRouter(),
+            delegate: TodayProjectManagementDelegate(
+                onProjectCreated: { _ in },
+                onProjectManagementChanged: { changeCount += 1 }
+            )
+        )
+        let first = try #require(interactor.createPhase1Project(name: "First", colorToken: "teal"))
+        let second = try #require(interactor.createPhase1Project(name: "Second", colorToken: "teal"))
+        let third = try #require(interactor.createPhase1Project(name: "Third", colorToken: "teal"))
+        #expect(interactor.setPhase1ProjectArchived(projectId: second.projectId, isArchived: true))
+        presenter.onViewAppear()
+
+        #expect(presenter.moveActiveProjects(fromOffsets: IndexSet(integer: 0), toOffset: 2))
+
+        #expect(presenter.activeProjects.map(\.projectId) == [third.projectId, first.projectId])
+        #expect(presenter.archivedProjects.map(\.projectId) == [second.projectId])
+        #expect(interactor.phase1Projects.map(\.projectId) == [
+            second.projectId, third.projectId, first.projectId
+        ])
+        #expect(changeCount == 1)
+    }
+
+    @Test func movingActiveSpacesRejectsOutOfRangeOffsets() throws {
+        let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
+        let interactor = CoreInteractor(container: dependencies.container)
+        var changeCount = 0
+        let presenter = TodayProjectManagementPresenter(
+            interactor: interactor,
+            router: RecordingProjectManagementRouter(),
+            delegate: TodayProjectManagementDelegate(
+                onProjectCreated: { _ in },
+                onProjectManagementChanged: { changeCount += 1 }
+            )
+        )
+        try #require(interactor.createPhase1Project(name: "First", colorToken: "teal"))
+        try #require(interactor.createPhase1Project(name: "Second", colorToken: "teal"))
+        presenter.onViewAppear()
+
+        #expect(!presenter.moveActiveProjects(fromOffsets: IndexSet(integer: 2), toOffset: 0))
+        #expect(!presenter.moveActiveProjects(fromOffsets: IndexSet(integer: 0), toOffset: 3))
+        #expect(changeCount == 0)
+    }
+
     @Test func archivingAndRestoringMovesSpaceBetweenSections() throws {
         let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
         let interactor = CoreInteractor(container: dependencies.container)

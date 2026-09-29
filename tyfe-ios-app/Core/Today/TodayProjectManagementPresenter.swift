@@ -105,6 +105,43 @@ final class TodayProjectManagementPresenter {
         return true
     }
 
+    @discardableResult
+    func moveActiveProjects(fromOffsets source: IndexSet, toOffset destination: Int) -> Bool {
+        let orderedActiveProjects = activeProjects
+        guard source.count == 1,
+              let sourceIndex = source.first,
+              orderedActiveProjects.indices.contains(sourceIndex),
+              destination >= 0,
+              destination <= orderedActiveProjects.count else {
+            return false
+        }
+
+        let movedProject = orderedActiveProjects[sourceIndex]
+        var reorderedProjects = orderedActiveProjects
+        reorderedProjects.move(fromOffsets: source, toOffset: destination)
+        guard let movedIndex = reorderedProjects.firstIndex(where: {
+            $0.projectId == movedProject.projectId
+        }) else {
+            return false
+        }
+
+        var remainingProjects = projects
+        remainingProjects.removeAll { $0.projectId == movedProject.projectId }
+        let targetIndex: Int
+        if movedIndex + 1 < reorderedProjects.count {
+            guard let nextProjectIndex = remainingProjects.firstIndex(where: {
+                $0.projectId == reorderedProjects[movedIndex + 1].projectId
+            }) else {
+                return false
+            }
+            targetIndex = nextProjectIndex
+        } else {
+            targetIndex = remainingProjects.count
+        }
+
+        return reorderProject(projectId: movedProject.projectId, toIndex: targetIndex)
+    }
+
     private func reload() {
         projects = interactor.phase1Projects
     }

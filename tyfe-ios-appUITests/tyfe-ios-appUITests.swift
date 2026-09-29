@@ -93,9 +93,9 @@ final class TyfeappUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Add Space"].exists)
 
         let projectId = createSpace(in: app, name: "Writing")
-        let projectColorSwatch = app.descendants(matching: .any)["project-color-\(projectId)"]
-        XCTAssertTrue(projectColorSwatch.exists)
-        XCTAssertTrue(projectColorSwatch.label.contains("Olive"))
+        let projectRow = app.buttons["project-row-\(projectId)"]
+        XCTAssertTrue(projectRow.exists)
+        XCTAssertTrue(projectRow.label.contains("Olive"))
         app.buttons["today-project-management-done"].tap()
 
         let projectTab = app.buttons["today-project-tab-\(projectId)"]
@@ -104,7 +104,7 @@ final class TyfeappUITests: XCTestCase {
 
         manageProjectsButton.tap()
         updateSpaceColor(in: app, id: projectId, color: "focus", expectedName: "Lime")
-        XCTAssertTrue(projectColorSwatch.label.contains("Lime"))
+        XCTAssertTrue(projectRow.label.contains("Lime"))
         app.buttons["today-project-management-done"].tap()
         XCTAssertTrue((projectTab.value as? String)?.contains("Lime") == true)
 
@@ -157,11 +157,11 @@ final class TyfeappUITests: XCTestCase {
         app.buttons["project-color-option-olive"].tap()
         saveButton.tap()
 
-        let editButton = app.buttons.matching(
-            NSPredicate(format: "identifier BEGINSWITH %@", "project-edit-")
+        let projectRow = app.buttons.matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "project-row-")
         ).firstMatch
-        XCTAssertTrue(editButton.waitForExistence(timeout: 5))
-        return editButton.identifier.replacingOccurrences(of: "project-edit-", with: "")
+        XCTAssertTrue(projectRow.waitForExistence(timeout: 5))
+        return projectRow.identifier.replacingOccurrences(of: "project-row-", with: "")
     }
 
     @MainActor
@@ -171,24 +171,33 @@ final class TyfeappUITests: XCTestCase {
         color: String,
         expectedName: String
     ) {
-        app.buttons["project-edit-\(id)"].tap()
+        app.buttons["project-row-\(id)"].tap()
         XCTAssertTrue(app.buttons["project-form-save-button"].waitForExistence(timeout: 5))
         assertProjectIconControlsAreAbsent(in: app)
         app.buttons["project-color-option-\(color)"].tap()
         app.buttons["project-form-save-button"].tap()
-        let colorSwatch = app.descendants(matching: .any)["project-color-\(id)"]
-        XCTAssertTrue(colorSwatch.label.contains(expectedName))
+        let row = app.buttons["project-row-\(id)"]
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+        XCTAssertTrue(row.label.contains(expectedName))
     }
 
     @MainActor
     private func deleteSpace(in app: XCUIApplication, id: String, name: String) {
-        app.buttons["project-delete-\(id)"].tap()
+        let row = app.buttons["project-row-\(id)"]
+        row.swipeLeft()
+        let deleteButton = app.buttons["project-delete-\(id)"]
+        XCTAssertTrue(deleteButton.waitForExistence(timeout: 5))
+        deleteButton.tap()
         let deleteAlert = app.alerts["Delete \(name)?"]
         XCTAssertTrue(deleteAlert.waitForExistence(timeout: 5))
         deleteAlert.buttons["Cancel"].tap()
-        XCTAssertTrue(app.buttons["project-edit-\(id)"].exists)
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
 
-        app.buttons["project-delete-\(id)"].tap()
+        if !deleteButton.exists {
+            row.swipeLeft()
+        }
+        XCTAssertTrue(deleteButton.waitForExistence(timeout: 5))
+        deleteButton.tap()
         let confirmedDeleteAlert = app.alerts["Delete \(name)?"]
         XCTAssertTrue(confirmedDeleteAlert.waitForExistence(timeout: 5))
         XCTAssertTrue(
@@ -197,7 +206,7 @@ final class TyfeappUITests: XCTestCase {
             ].exists
         )
         confirmedDeleteAlert.buttons["Delete Space"].tap()
-        XCTAssertFalse(app.buttons["project-edit-\(id)"].exists)
+        XCTAssertFalse(row.exists)
     }
 
     @MainActor
