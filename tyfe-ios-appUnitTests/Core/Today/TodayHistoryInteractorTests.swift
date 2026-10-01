@@ -32,7 +32,6 @@ struct TodayHistoryInteractorTests {
             state: .completed,
             startedAt: historicalDay.startDate.addingTimeInterval(3_600),
             localDay: historicalDay,
-            dailyPlanIdAtStart: plan.dailyPlanId,
             completedAt: historicalDay.startDate.addingTimeInterval(5_100)
         )
         let repository = MockLocalAppRepository(snapshot: LocalAppSnapshot(

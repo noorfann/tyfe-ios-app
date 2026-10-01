@@ -157,7 +157,6 @@ private func historyPreviewContainer(
             state: .completed,
             startedAt: recordedDay.startDate.addingTimeInterval(3_600),
             localDay: recordedDay,
-            dailyPlanIdAtStart: plan.dailyPlanId,
             completedAt: recordedDay.startDate.addingTimeInterval(5_100)
         )
     ] : []

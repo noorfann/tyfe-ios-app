@@ -42,12 +42,10 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
     let state: FocusSessionState
     let startedAt: Date
     let localDay: LocalDay
-    let dailyPlanIdAtStart: String?
     let completedAt: Date?
     let focusEndsAt: Date?
     let restState: FocusRestState
     let restEndsAt: Date?
-    let isBonusSession: Bool
 
     private enum CodingKeys: String, CodingKey {
         case focusSessionId
@@ -55,12 +53,10 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
         case state
         case startedAt
         case localDay = "local_day"
-        case dailyPlanIdAtStart = "daily_plan_id_at_start"
         case completedAt
         case focusEndsAt
         case restState
         case restEndsAt
-        case isBonusSession
     }
 
     var id: String {
@@ -88,8 +84,7 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
         completedAt: Date? = nil,
         focusEndsAt: Date? = nil,
         restState: FocusRestState? = nil,
-        restEndsAt: Date?? = nil,
-        isBonusSession: Bool? = nil
+        restEndsAt: Date?? = nil
     ) -> Self {
         Self(
             focusSessionId: focusSessionId,
@@ -97,12 +92,10 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
             state: state,
             startedAt: startedAt,
             localDay: localDay,
-            dailyPlanIdAtStart: dailyPlanIdAtStart,
             completedAt: completedAt ?? self.completedAt,
             focusEndsAt: focusEndsAt ?? self.focusEndsAt,
             restState: restState ?? self.restState,
-            restEndsAt: restEndsAt ?? self.restEndsAt,
-            isBonusSession: isBonusSession ?? self.isBonusSession
+            restEndsAt: restEndsAt ?? self.restEndsAt
         )
     }
 
@@ -112,24 +105,20 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
         state: FocusSessionState,
         startedAt: Date,
         localDay: LocalDay? = nil,
-        dailyPlanIdAtStart: String? = nil,
         completedAt: Date? = nil,
         focusEndsAt: Date? = nil,
         restState: FocusRestState = .unavailable,
-        restEndsAt: Date? = nil,
-        isBonusSession: Bool = false
+        restEndsAt: Date? = nil
     ) {
         self.focusSessionId = focusSessionId
         self.activityId = activityId
         self.state = state
         self.startedAt = startedAt
         self.localDay = localDay ?? LocalDay(containing: startedAt, calendar: .current)
-        self.dailyPlanIdAtStart = dailyPlanIdAtStart
         self.completedAt = completedAt
         self.focusEndsAt = focusEndsAt
         self.restState = restState
         self.restEndsAt = restEndsAt
-        self.isBonusSession = isBonusSession
     }
 
     init(from decoder: Decoder) throws {
@@ -142,12 +131,10 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
             startedAt: startedAt,
             localDay: try container.decodeIfPresent(LocalDay.self, forKey: .localDay)
                 ?? LocalDay(containing: startedAt, calendar: .current),
-            dailyPlanIdAtStart: try container.decodeIfPresent(String.self, forKey: .dailyPlanIdAtStart),
             completedAt: try container.decodeIfPresent(Date.self, forKey: .completedAt),
             focusEndsAt: try container.decodeIfPresent(Date.self, forKey: .focusEndsAt),
             restState: try container.decodeIfPresent(FocusRestState.self, forKey: .restState) ?? .unavailable,
-            restEndsAt: try container.decodeIfPresent(Date.self, forKey: .restEndsAt),
-            isBonusSession: try container.decodeIfPresent(Bool.self, forKey: .isBonusSession) ?? false
+            restEndsAt: try container.decodeIfPresent(Date.self, forKey: .restEndsAt)
         )
     }
 
@@ -159,8 +146,7 @@ struct FocusSessionModel: Identifiable, Codable, Hashable {
             "focus_session_started_at": startedAt,
             "focus_session_ends_at": focusEndsAt as Any,
             "focus_session_rest_state": restState.rawValue,
-            "focus_session_rest_ends_at": restEndsAt as Any,
-            "focus_session_is_bonus": isBonusSession
+            "focus_session_rest_ends_at": restEndsAt as Any
         ]
     }
 

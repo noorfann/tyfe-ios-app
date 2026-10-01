@@ -57,7 +57,7 @@ struct FocusStreakIntegrationTests {
             completedSession(id: "focus-session-one")
         )
         try await context.interactor.recordFocusCompletionForStreak(
-            completedSession(id: "focus-session-two", isBonusSession: true)
+            completedSession(id: "focus-session-two")
         )
 
         let events = try await context.streakManager.getAllStreakEvents()
@@ -243,14 +243,13 @@ struct FocusStreakIntegrationTests {
         )
     }
 
-    private func completedSession(id: String, isBonusSession: Bool = false) -> FocusSessionModel {
+    private func completedSession(id: String) -> FocusSessionModel {
         FocusSessionModel(
             focusSessionId: id,
             activityId: ActivityModel.mock.activityId,
             state: .completed,
             startedAt: Date(),
-            completedAt: Date(),
-            isBonusSession: isBonusSession
+            completedAt: Date()
         )
     }
 

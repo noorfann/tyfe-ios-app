@@ -4,10 +4,9 @@ struct DailyPlanProgressModel: Codable, Equatable, Hashable, Sendable {
     let localDay: LocalDay
     let originalPlannedSessionCount: Int
     let finalPlannedSessionCount: Int
-    let plannedCompletionCount: Int
-    let bonusCompletionCount: Int
+    let completedUnitCount: Int
 
     var isSuccessful: Bool {
-        plannedCompletionCount >= finalPlannedSessionCount
+        completedUnitCount >= finalPlannedSessionCount
     }
 }

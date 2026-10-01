@@ -99,7 +99,6 @@ struct FocusRepositoryTests {
         if var sessions = object["focusSessions"] as? [[String: Any]],
            var legacySession = sessions.first {
             legacySession.removeValue(forKey: "local_day")
-            legacySession.removeValue(forKey: "daily_plan_id_at_start")
             sessions[0] = legacySession
             object["focusSessions"] = sessions
         }
@@ -111,6 +110,52 @@ struct FocusRepositoryTests {
         #expect(migrated.dailyPlans.count == 1)
         #expect(migrated.focusSessions.count == 1)
         #expect(migrated.creditLedger.balance == currentSnapshot.creditLedger.balance)
+    }
+
+    @Test(arguments: [true, false])
+    func legacySessionMetadataIsIgnoredWithoutChangingHistoryOrCredits(_ legacyFlag: Bool) throws {
+        // Given
+        let session = FocusSessionModel.completedMock
+        let snapshot = LocalAppSnapshot(
+            activities: [ActivityModel.mock],
+            dailyPlan: DailyPlanModel.mock,
+            focusSessions: [session],
+            creditLedger: .openingBalance(amount: 3, recordedAt: session.startedAt),
+            nextActivityNumber: 2,
+            nextSessionNumber: 2
+        )
+        var object = try #require(
+            JSONSerialization.jsonObject(with: JSONEncoder().encode(snapshot)) as? [String: Any]
+        )
+        var sessions = try #require(object["focusSessions"] as? [[String: Any]])
+        sessions[0]["isBonusSession"] = legacyFlag
+        sessions[0]["daily_plan_id_at_start"] = DailyPlanModel.mock.dailyPlanId
+        object["focusSessions"] = sessions
+        let legacySessionData = try JSONSerialization.data(withJSONObject: sessions[0])
+
+        // When
+        let restored = try JSONDecoder().decode(
+            LocalAppSnapshot.self,
+            from: JSONSerialization.data(withJSONObject: object)
+        )
+        let encoded = try JSONEncoder().encode(restored)
+        let encodedObject = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        let encodedSessions = try #require(encodedObject["focusSessions"] as? [[String: Any]])
+        let roundTripped = try JSONDecoder().decode(LocalAppSnapshot.self, from: encoded)
+        let clock = TestFocusClock(now: session.startedAt)
+        let repository = MockLocalAppRepository(snapshot: restored)
+        let today = TodayManager(repository: repository, clock: clock)
+        let focus = FocusManager(repository: repository, clock: clock)
+
+        // Then
+        #expect(try JSONDecoder().decode(FocusSessionModel.self, from: legacySessionData) == session)
+        #expect(restored == snapshot)
+        #expect(roundTripped == snapshot)
+        #expect(restored.creditLedger == snapshot.creditLedger)
+        #expect(encodedSessions[0]["isBonusSession"] == nil)
+        #expect(encodedSessions[0]["daily_plan_id_at_start"] == nil)
+        #expect(today.completedSessionCount(for: session.activityId, on: session.localDay) == 1)
+        #expect(focus.completedSessionCount(for: session.activityId, on: session.localDay) == 1)
     }
 
     @Test func legacyRewardTiersDecodeToTheirTenMinuteBlocks() throws {

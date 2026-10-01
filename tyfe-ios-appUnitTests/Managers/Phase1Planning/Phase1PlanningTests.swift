@@ -98,7 +98,7 @@ struct Phase1PlanningTests {
 
         #expect(session?.state == .ready)
         #expect(session?.activityId == activityId)
-        #expect(session?.isBonusSession == false)
+        #expect(session?.state == .ready)
         #expect(session?.durationMinutes == 25)
     }
 

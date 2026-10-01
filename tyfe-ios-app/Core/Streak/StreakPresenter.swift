@@ -242,7 +242,7 @@ enum StreakHeroState: Equatable {
         case .start:
             return "Ready when you are. Your first focus session lights the first tile."
         case .secured:
-            return "Your streak is safe for today. Bonus sessions still count."
+            return "Your streak is safe for today. Every completed focus session counts."
         case .open:
             return "One focus session keeps your run alive."
         case .rebuild:

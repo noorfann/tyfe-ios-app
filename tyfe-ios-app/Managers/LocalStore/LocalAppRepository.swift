@@ -293,13 +293,11 @@ private struct PersistedFocusSession: Decodable {
     let state: String
     let startedAt: Date
     let localDay: LocalDay?
-    let dailyPlanIdAtStart: String?
     let pausedAt: Date?
     let completedAt: Date?
     let focusEndsAt: Date?
     let restState: FocusRestState?
     let restEndsAt: Date?
-    let isBonusSession: Bool?
 
     private enum CodingKeys: String, CodingKey {
         case focusSessionId
@@ -307,13 +305,11 @@ private struct PersistedFocusSession: Decodable {
         case state
         case startedAt
         case localDay = "local_day"
-        case dailyPlanIdAtStart = "daily_plan_id_at_start"
         case pausedAt
         case completedAt
         case focusEndsAt
         case restState
         case restEndsAt
-        case isBonusSession
     }
 
     func migrated(at now: Date) throws -> FocusSessionModel {
@@ -342,12 +338,10 @@ private struct PersistedFocusSession: Decodable {
             state: migratedState,
             startedAt: startedAt,
             localDay: localDay,
-            dailyPlanIdAtStart: dailyPlanIdAtStart,
             completedAt: completedAt,
             focusEndsAt: migratedFocusEndsAt,
             restState: restState ?? .unavailable,
-            restEndsAt: restEndsAt,
-            isBonusSession: isBonusSession ?? false
+            restEndsAt: restEndsAt
         )
     }
 }

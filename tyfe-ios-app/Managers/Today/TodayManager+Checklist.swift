@@ -10,18 +10,16 @@ extension TodayManager {
         let checklistCompletions = repository.snapshot.checklistItemCompletions.filter {
             $0.localDay == localDay
         }
-        var plannedCompletionCount = sessions.filter { !$0.isBonusSession }.count
-        var bonusCompletionCount = sessions.filter(\.isBonusSession).count
+        var completedUnitCount = sessions.count
         for item in plan.planItems where item.unitKind == .checklist {
             let completedCount = checklistCompletions.filter { $0.activityId == item.activityId }.count
-            plannedCompletionCount += min(completedCount, item.plannedSessionCount)
+            completedUnitCount += min(completedCount, item.plannedSessionCount)
         }
         return DailyPlanProgressModel(
             localDay: localDay,
             originalPlannedSessionCount: plan.originalIntendedSessionCount,
             finalPlannedSessionCount: plan.intendedSessionCount,
-            plannedCompletionCount: plannedCompletionCount,
-            bonusCompletionCount: bonusCompletionCount
+            completedUnitCount: completedUnitCount
         )
     }
 
@@ -405,7 +403,6 @@ extension TodayManager {
             $0.localDay == localDay
                 && $0.activityId == activityId
                 && $0.state == .completed
-                && !$0.isBonusSession
         }.count
     }
 }

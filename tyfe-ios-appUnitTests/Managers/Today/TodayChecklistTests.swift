@@ -61,14 +61,12 @@ struct TodayChecklistTests {
         #expect(today.dailyPlan?.planItems.first?.plannedSessionCount == 3)
 
         let partialProgress = try #require(today.progress(for: today.currentLocalDay))
-        #expect(partialProgress.plannedCompletionCount == 2)
-        #expect(partialProgress.bonusCompletionCount == 0)
+        #expect(partialProgress.completedUnitCount == 2)
         #expect(!partialProgress.isSuccessful)
 
         _ = today.completeChecklistItem(itemId: items[1].itemId)
         let completedProgress = try #require(today.progress(for: today.currentLocalDay))
-        #expect(completedProgress.plannedCompletionCount == 3)
-        #expect(completedProgress.bonusCompletionCount == 0)
+        #expect(completedProgress.completedUnitCount == 3)
         #expect(completedProgress.isSuccessful)
         #expect(today.rewardCredits == 2.5)
     }

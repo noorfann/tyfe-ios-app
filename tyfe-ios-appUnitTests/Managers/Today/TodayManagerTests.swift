@@ -368,14 +368,12 @@ struct TodayManagerTests {
         let plannedSession = completedSession(
             focusSessionId: "focus-session-history-planned",
             localDay: planDay,
-            activityId: activity.activityId,
-            dailyPlanId: plan.dailyPlanId
+            activityId: activity.activityId
         )
         let sessionWithoutPlan = completedSession(
             focusSessionId: "focus-session-history-only",
             localDay: sessionOnlyDay,
-            activityId: activity.activityId,
-            isBonusSession: true
+            activityId: activity.activityId
         )
         let repository = MockLocalAppRepository(snapshot: LocalAppSnapshot(
             activities: [activity],
@@ -417,9 +415,7 @@ struct TodayManagerTests {
     private func completedSession(
         focusSessionId: String,
         localDay: LocalDay,
-        activityId: String,
-        dailyPlanId: String? = nil,
-        isBonusSession: Bool = false
+        activityId: String
     ) -> FocusSessionModel {
         FocusSessionModel(
             focusSessionId: focusSessionId,
@@ -427,9 +423,7 @@ struct TodayManagerTests {
             state: .completed,
             startedAt: localDay.startDate.addingTimeInterval(3_600),
             localDay: localDay,
-            dailyPlanIdAtStart: dailyPlanId,
-            completedAt: localDay.startDate.addingTimeInterval(5_100),
-            isBonusSession: isBonusSession
+            completedAt: localDay.startDate.addingTimeInterval(5_100)
         )
     }
 
@@ -456,7 +450,7 @@ struct TodayManagerTests {
         #expect(scheduler.scheduledPlans == [plan])
     }
 
-    @Test func successfulDayExcludesBonusCompletions() throws {
+    @Test func successfulDayIncludesCompletionsBeyondTheTarget() throws {
         let clock = TestFocusClock()
         let calendar = utcCalendar()
         let repository = MockLocalAppRepository()
@@ -470,15 +464,81 @@ struct TodayManagerTests {
         clock.advance(by: TimeInterval(planned.durationSeconds))
         _ = try focus.refreshFocusSession(focusSessionId: planned.focusSessionId)
 
-        let bonus = try #require(focus.startFocusSession(activityId: activityId))
-        _ = try focus.beginFocusSession(focusSessionId: bonus.focusSessionId)
-        clock.advance(by: TimeInterval(bonus.durationSeconds))
-        _ = try focus.refreshFocusSession(focusSessionId: bonus.focusSessionId)
+        let additional = try #require(focus.startFocusSession(activityId: activityId))
+        _ = try focus.beginFocusSession(focusSessionId: additional.focusSessionId)
+        clock.advance(by: TimeInterval(additional.durationSeconds))
+        _ = try focus.refreshFocusSession(focusSessionId: additional.focusSessionId)
 
         let progress = try #require(today.progress(for: today.currentLocalDay))
-        #expect(progress.plannedCompletionCount == 1)
-        #expect(progress.bonusCompletionCount == 1)
+        #expect(progress.completedUnitCount == 2)
         #expect(progress.isSuccessful)
+        #expect(today.completedSessionCount(for: activityId) == 2)
+        #expect(today.completedItems(for: try #require(today.dailyPlan?.planItems.first), on: today.currentLocalDay) == 2)
+        #expect(today.rewardCredits == 2)
+
+        _ = today.updateDailyPlanItemCount(activityId: activityId, sessionCount: 1)
+        #expect(today.dailyPlan?.intendedSessionCount == 2)
+        _ = today.removeActivityFromDailyPlan(activityId: activityId)
+        #expect(today.dailyPlan?.planItems.count == 1)
+    }
+
+    @Test func completionBeforePlanningCountsTowardTheNewPlan() throws {
+        let clock = TestFocusClock()
+        let calendar = utcCalendar()
+        let repository = MockLocalAppRepository()
+        let today = TodayManager(repository: repository, clock: clock, calendar: calendar)
+        let focus = FocusManager(repository: repository, clock: clock, calendar: calendar)
+        let activityId = ActivityModel.mock.activityId
+        let session = try #require(focus.startFocusSession(activityId: activityId))
+        _ = try focus.beginFocusSession(focusSessionId: session.focusSessionId)
+        clock.advance(by: TimeInterval(session.durationSeconds))
+        _ = try focus.refreshFocusSession(focusSessionId: session.focusSessionId)
+
+        #expect(today.progress(for: today.currentLocalDay) == nil)
+        #expect(today.completedSessionCount(for: activityId) == 1)
+        _ = today.addActivityToDailyPlan(activityId: activityId, sessionCount: 1)
+
+        let progress = try #require(today.progress(for: today.currentLocalDay))
+        #expect(progress.completedUnitCount == 1)
+        #expect(progress.isSuccessful)
+        #expect(today.rewardCredits == 1)
+    }
+
+    @Test func progressIncludesUnplannedActivitiesButExcludesIncompleteAndOtherDaySessions() throws {
+        let clock = TestFocusClock()
+        let calendar = utcCalendar()
+        let repository = MockLocalAppRepository()
+        let today = TodayManager(repository: repository, clock: clock, calendar: calendar)
+        let focus = FocusManager(repository: repository, clock: clock, calendar: calendar)
+        let activityId = ActivityModel.mock.activityId
+        let unplanned = try #require(today.createActivity(name: "Unplanned", category: nil, colorToken: nil))
+        _ = today.addActivityToDailyPlan(activityId: activityId, sessionCount: 1)
+        let day = today.currentLocalDay
+        let completed = completedSession(focusSessionId: "completed-unplanned", localDay: day, activityId: unplanned.activityId)
+        try repository.transaction { snapshot in
+            snapshot.focusSessions = [
+                completed,
+                completedSession(focusSessionId: "previous-day", localDay: day.adding(days: -1), activityId: activityId)
+            ]
+            for state in [FocusSessionState.ready, .running, .abandoned] {
+                snapshot.focusSessions.append(FocusSessionModel(
+                    focusSessionId: "incomplete-" + state.rawValue,
+                    activityId: unplanned.activityId,
+                    state: state,
+                    startedAt: clock.now,
+                    localDay: day
+                ))
+            }
+        }
+
+        let progress = try #require(today.progress(for: day))
+        #expect(progress.completedUnitCount == 1)
+        #expect(progress.isSuccessful)
+        #expect(today.completedSessionCount(on: day) == 1)
+        #expect(focus.completedSessionCount(on: day) == 1)
+        #expect(today.completedSessionCount(for: activityId, on: day) == 0)
+        #expect(today.completedSessionCount(for: unplanned.activityId, on: day) == 1)
+        #expect(focus.completedSessionCount(for: unplanned.activityId, on: day) == 1)
     }
 
     @Test func deckSwipeCoachmarkFlagPersistsThroughUserDefaults() throws {

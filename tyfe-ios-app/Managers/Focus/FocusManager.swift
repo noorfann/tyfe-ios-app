@@ -104,24 +104,12 @@ final class FocusManager {
             $0.projectId == activity.projectId && !$0.isArchived
         }) else { return nil }
 
-        let plan = snapshot.dailyPlans.last { $0.localDay == currentLocalDay }
-        let plannedItem = plan?.planItems.first { item in
-            item.activityId == activityId
-        }
-        let hasPlannedCapacity = plannedItem.map { item in
-            completedSessionCount(for: activityId, on: currentLocalDay) < item.plannedSessionCount
-        } ?? false
-        let dailyPlanIdAtStart = hasPlannedCapacity ? plan?.dailyPlanId : nil
-        let isBonusSession = dailyPlanIdAtStart == nil
-
         let session = FocusSessionModel(
             focusSessionId: "focus-session-" + String(snapshot.nextSessionNumber),
             activityId: activityId,
             state: .ready,
             startedAt: clock.now,
-            localDay: currentLocalDay,
-            dailyPlanIdAtStart: dailyPlanIdAtStart,
-            isBonusSession: isBonusSession
+            localDay: currentLocalDay
         )
 
         do {
@@ -142,7 +130,7 @@ final class FocusManager {
 
     func completedSessionCount(on localDay: LocalDay) -> Int {
         focusSessions.filter {
-            $0.localDay == localDay && $0.state == .completed && !$0.isBonusSession
+            $0.localDay == localDay && $0.state == .completed
         }.count
     }
 
@@ -151,27 +139,7 @@ final class FocusManager {
             $0.localDay == localDay
                 && $0.activityId == activityId
                 && $0.state == .completed
-                && !$0.isBonusSession
         }.count
-    }
-
-    private func legacyBonusStatus(for session: FocusSessionModel, in snapshot: LocalAppSnapshot) -> Bool {
-        guard !session.isBonusSession else { return true }
-        let plan = snapshot.dailyPlans.last { plan in
-            plan.localDay == session.localDay
-                && (session.dailyPlanIdAtStart == nil || plan.dailyPlanId == session.dailyPlanIdAtStart)
-        }
-        guard let item = plan?.planItems.first(where: { $0.activityId == session.activityId }) else {
-            return true
-        }
-        let completedCount = snapshot.focusSessions.filter {
-            $0.focusSessionId != session.focusSessionId
-                && $0.localDay == session.localDay
-                && $0.activityId == session.activityId
-                && $0.state == .completed
-                && !$0.isBonusSession
-        }.count
-        return completedCount >= item.plannedSessionCount
     }
 
     func startAnotherFocusSession(activityId: String) throws -> FocusSessionModel {
@@ -383,13 +351,11 @@ final class FocusManager {
     private func completeNaturally(_ session: FocusSessionModel) throws -> FocusSessionModel {
         guard session.state == .running else { return session }
 
-        let isBonusSession = legacyBonusStatus(for: session, in: repository.snapshot)
         let completedSession = session.updated(
             state: .completed,
             completedAt: clock.now,
             restState: .pending,
-            restEndsAt: .some(nil),
-            isBonusSession: isBonusSession
+            restEndsAt: .some(nil)
         )
         let creditKey = "focus-session-" + session.focusSessionId + "-credit"
 

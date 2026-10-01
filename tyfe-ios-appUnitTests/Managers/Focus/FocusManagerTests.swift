@@ -263,7 +263,7 @@ struct FocusManagerTests {
         })
     }
 
-    @Test func reducingPlanWhileRunningFinalizesExcessCompletionAsBonus() throws {
+    @Test func reducingPlanWhileRunningKeepsEveryCompletionInProgress() throws {
         let clock = TestFocusClock()
         let calendar = utcCalendar()
         let repository = MockLocalAppRepository()
@@ -283,12 +283,15 @@ struct FocusManagerTests {
         clock.advance(by: TimeInterval(second.durationSeconds))
         let refresh = try manager.refreshFocusSession(focusSessionId: second.focusSessionId)
 
-        #expect(refresh.session.isBonusSession)
-        #expect(today.progress(for: today.currentLocalDay)?.plannedCompletionCount == 1)
-        #expect(today.progress(for: today.currentLocalDay)?.bonusCompletionCount == 1)
+        #expect(refresh.session.state == .completed)
+        #expect(today.progress(for: today.currentLocalDay)?.completedUnitCount == 2)
+        #expect(today.progress(for: today.currentLocalDay)?.isSuccessful == true)
+        #expect(manager.completedSessionCount(for: activityId) == 2)
+        #expect(today.completedSessionCount(for: activityId) == 2)
+        #expect(manager.rewardCredits == 2)
     }
 
-    @Test func unplannedCompletionRemainsBonus() throws {
+    @Test func unplannedCompletionCountsAndAwardsCreditsOnce() throws {
         let clock = TestFocusClock()
         let calendar = utcCalendar()
         let repository = MockLocalAppRepository()
@@ -299,7 +302,11 @@ struct FocusManagerTests {
 
         let completed = try manager.refreshFocusSession(focusSessionId: session.focusSessionId).session
 
-        #expect(completed.isBonusSession)
+        #expect(completed.state == .completed)
+        #expect(manager.completedSessionCount(on: manager.currentLocalDay) == 1)
+        #expect(manager.completedSessionCount(for: session.activityId) == 1)
+        #expect(manager.rewardCredits == 1)
+        _ = try manager.refreshFocusSession(focusSessionId: session.focusSessionId)
         #expect(manager.rewardCredits == 1)
     }
 

@@ -602,6 +602,17 @@ extension TodayPresenterTests {
 
             #expect(presenter.completedUnitCounts[ActivityModel.mock.activityId, default: 0] == 1)
             #expect(manager.rewardCredits == 1)
+
+            let additional = try #require(focusManager.startFocusSession(activityId: ActivityModel.mock.activityId))
+            _ = try focusManager.beginFocusSession(focusSessionId: additional.focusSessionId)
+            _ = try focusManager.markFocusSessionCompleteForTesting(focusSessionId: additional.focusSessionId)
+            presenter.onFocusViewDismissed()
+
+            let item = try #require(presenter.planItems.first)
+            #expect(presenter.completedCount(for: item) == 2)
+            #expect(presenter.remainingUnitCount(for: item) == 0)
+            #expect(presenter.sessionProgressLabel == "2 of 1")
+            #expect(manager.rewardCredits == 2)
         }
 
         @Test func focusDelegateCarriesDismissActionThatRefreshesToday() throws {
