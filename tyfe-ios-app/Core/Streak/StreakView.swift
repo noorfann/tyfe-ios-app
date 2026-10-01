@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftfulUI
 
 struct StreakDelegate {
     var eventParameters: [String: Any]? { nil }
@@ -11,6 +12,7 @@ struct StreakView: View {
     @State private var celebrationTrigger = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.scenePhase) private var scenePhase
     let delegate: StreakDelegate
 
     init(presenter: StreakPresenter, delegate: StreakDelegate) {
@@ -34,7 +36,18 @@ struct StreakView: View {
 
                 TyfeStreakWeekTrailView(days: presenter.recentDays)
 
-                StreakMonthCalendarView(recentEvents: data.recentEvents ?? [])
+                StreakMonthCalendarView(
+                    month: presenter.calendarMonth,
+                    canViewPreviousMonth: presenter.canViewPreviousMonth,
+                    canViewNextMonth: presenter.canViewNextMonth,
+                    isViewingCurrentMonth: presenter.isViewingCurrentMonth,
+                    isLoading: presenter.isHistoryLoading,
+                    hasError: presenter.hasHistoryError,
+                    onPreviousMonth: presenter.onPreviousMonthPressed,
+                    onNextMonth: presenter.onNextMonthPressed,
+                    onToday: presenter.onTodayPressed,
+                    onRetry: { presenter.onRetryHistoryPressed() }
+                )
             }
             .padding(.horizontal, TyfeSpacing.control)
             .padding(.vertical, TyfeSpacing.control)
@@ -59,6 +72,12 @@ struct StreakView: View {
         }
         .onDisappear {
             presenter.onViewDisappear(delegate: delegate)
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { presenter.refreshHistory() }
+        }
+        .onChange(of: data) { _, _ in
+            presenter.refreshHistory()
         }
     }
 
@@ -96,30 +115,16 @@ struct StreakView: View {
 }
 
 struct StreakMonthCalendarView: View {
-    let recentEvents: [StreakEvent]
-
-    private let calendar = Calendar.current
-    private let currentMonth = Date()
-
-    private var monthYearText: String {
-        currentMonth.formatted(.dateTime.month(.wide).year())
-    }
-
-    private var daysInMonth: [Date] {
-        guard let monthInterval = calendar.dateInterval(of: .month, for: currentMonth),
-              let firstWeek = calendar.dateInterval(of: .weekOfMonth, for: monthInterval.start) else {
-            return []
-        }
-
-        var dates: [Date] = []
-        var date = firstWeek.start
-        while date < monthInterval.end {
-            dates.append(date)
-            guard let nextDate = calendar.date(byAdding: .day, value: 1, to: date) else { break }
-            date = nextDate
-        }
-        return dates
-    }
+    let month: StreakCalendarMonth
+    let canViewPreviousMonth: Bool
+    let canViewNextMonth: Bool
+    let isViewingCurrentMonth: Bool
+    let isLoading: Bool
+    let hasError: Bool
+    let onPreviousMonth: () -> Void
+    let onNextMonth: () -> Void
+    let onToday: () -> Void
+    let onRetry: () -> Void
 
     var body: some View {
         TyfeSurfaceView(role: .paper) {
@@ -130,11 +135,42 @@ struct StreakMonthCalendarView: View {
                     .tracking(1.2)
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
-                Text(monthYearText)
-                    .font(TyfeTypography.displayCompact)
+                HStack(spacing: TyfeSpacing.small) {
+                    navigationButton(symbol: "chevron.left", label: "Previous month", enabled: canViewPreviousMonth, action: onPreviousMonth)
+                    Text(month.title)
+                        .font(TyfeTypography.displayCompact)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .accessibilityIdentifier("streak-calendar-month")
+                    navigationButton(symbol: "chevron.right", label: "Next month", enabled: canViewNextMonth, action: onNextMonth)
+                }
+                if !isViewingCurrentMonth {
+                    Text("Today")
+                        .font(TyfeTypography.interfaceStrong)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .asButton(.press, action: onToday)
+                        .accessibilityLabel("Return to current month")
+                        .accessibilityIdentifier("streak-current-month")
+                }
+
+                if isLoading {
+                    ProgressView("Loading activity history")
+                        .font(TyfeTypography.caption)
+                }
+                if hasError {
+                    VStack(alignment: .leading, spacing: TyfeSpacing.unit) {
+                        Text("Activity history is incomplete. Please try again.")
+                            .font(TyfeTypography.caption)
+                            .foregroundStyle(TyfeEditorialPalette.muted)
+                        Text("Retry")
+                            .font(TyfeTypography.interfaceStrong)
+                            .frame(minWidth: 44, minHeight: 44)
+                            .asButton(.press, action: onRetry)
+                            .accessibilityIdentifier("streak-history-retry")
+                    }
+                }
 
                 HStack(spacing: 0) {
-                    ForEach(Array(calendar.veryShortWeekdaySymbols.enumerated()), id: \.offset) { _, day in
+                    ForEach(Array(month.weekdaySymbols.enumerated()), id: \.offset) { _, day in
                         Text(day)
                             .font(TyfeTypography.caption)
                             .foregroundStyle(TyfeEditorialPalette.muted)
@@ -146,12 +182,8 @@ struct StreakMonthCalendarView: View {
                     columns: Array(repeating: GridItem(.flexible()), count: 7),
                     spacing: TyfeSpacing.small
                 ) {
-                    ForEach(daysInMonth, id: \.self) { date in
-                        StreakDayCell(
-                            date: date,
-                            events: recentEvents.filter { calendar.isDate($0.dateCreated, inSameDayAs: date) },
-                            isCurrentMonth: calendar.isDate(date, equalTo: currentMonth, toGranularity: .month)
-                        )
+                    ForEach(month.days) { day in
+                        StreakDayCell(day: day)
                     }
                 }
 
@@ -162,6 +194,18 @@ struct StreakMonthCalendarView: View {
             }
         }
         .accessibilityIdentifier("streak-activity-calendar")
+    }
+
+    private func navigationButton(symbol: String, label: String, enabled: Bool, action: @escaping () -> Void) -> some View {
+        Image(systemName: symbol)
+            .font(.subheadline.weight(.black))
+            .foregroundStyle(enabled ? TyfeEditorialPalette.ink : TyfeEditorialPalette.disabledInk)
+            .frame(width: 44, height: 44)
+            .background(enabled ? TyfeEditorialPalette.canvas : TyfeEditorialPalette.disabledFill)
+            .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
+            .asButton(.press, action: action)
+            .disabled(!enabled)
+            .accessibilityLabel(label)
     }
 
     private func legendItem(title: String, symbol: String, color: Color) -> some View {
@@ -177,13 +221,11 @@ struct StreakMonthCalendarView: View {
 }
 
 private struct StreakDayCell: View {
-    let date: Date
-    let events: [StreakEvent]
-    let isCurrentMonth: Bool
+    let day: StreakCalendarDay
 
     var body: some View {
         VStack(spacing: TyfeSpacing.unit) {
-            Text(date, format: .dateTime.day())
+            Text(day.date, format: .dateTime.day())
                 .font(TyfeTypography.caption)
                 .foregroundStyle(textColor)
                 .frame(width: 32, height: 32)
@@ -191,11 +233,11 @@ private struct StreakDayCell: View {
                 .clipShape(Circle())
 
             HStack(spacing: TyfeSpacing.unit) {
-                if events.contains(where: { !$0.isFreeze }) {
+                if day.hasFocus {
                     Image(systemName: "flame.fill")
                         .foregroundStyle(TyfeEditorialPalette.warning)
                 }
-                if events.contains(where: { $0.isFreeze }) {
+                if day.hasFreeze {
                     Image(systemName: "snowflake")
                         .foregroundStyle(TyfeEditorialPalette.teal)
                 }
@@ -208,27 +250,27 @@ private struct StreakDayCell: View {
     }
 
     private var backgroundColor: Color {
-        guard isCurrentMonth else { return .clear }
-        if Calendar.current.isDateInToday(date) {
+        guard day.isSelectedMonth else { return .clear }
+        if day.isToday {
             return TyfeEditorialPalette.saffron.opacity(0.28)
         }
-        if events.contains(where: { $0.isFreeze }) {
+        if day.hasFreeze {
             return TyfeEditorialPalette.teal.opacity(0.18)
         }
-        if !events.isEmpty {
+        if day.hasFocus {
             return TyfeEditorialPalette.success.opacity(0.18)
         }
         return .clear
     }
 
     private var textColor: Color {
-        isCurrentMonth ? TyfeEditorialPalette.ink : TyfeEditorialPalette.muted.opacity(0.35)
+        day.isSelectedMonth ? TyfeEditorialPalette.ink : TyfeEditorialPalette.muted.opacity(0.35)
     }
 
     private var accessibilityLabel: String {
-        var values = [date.formatted(date: .complete, time: .omitted)]
-        if events.contains(where: { !$0.isFreeze }) { values.append("Focus day") }
-        if events.contains(where: { $0.isFreeze }) { values.append("Freeze used") }
+        var values = [day.date.formatted(date: .complete, time: .omitted)]
+        if day.hasFocus { values.append("Focus day") }
+        if day.hasFreeze { values.append("Freeze used") }
         return values.joined(separator: ", ")
     }
 }
@@ -295,13 +337,42 @@ private struct StreakDayCell: View {
     let freezeDate = calendar.date(byAdding: .day, value: 5, to: monthStart) ?? monthStart
     let mixedDate = calendar.date(byAdding: .day, value: 6, to: monthStart) ?? monthStart
 
-    return StreakMonthCalendarView(recentEvents: [
+    let events = [
         StreakEvent.mock(dateCreated: focusDate),
         StreakEvent.mock(dateCreated: freezeDate, isFreeze: true),
         StreakEvent.mock(dateCreated: mixedDate),
         StreakEvent.mock(dateCreated: mixedDate, isFreeze: true)
-    ])
+    ]
+    let month = StreakCalendarMonth(
+        month: monthStart, today: Date(), calendar: calendar,
+        eventsByDay: Dictionary(grouping: events) { calendar.startOfDay(for: $0.dateCreated) }
+    )
+    return StreakMonthCalendarView(
+        month: month, canViewPreviousMonth: true, canViewNextMonth: false,
+        isViewingCurrentMonth: true, isLoading: false, hasError: false,
+        onPreviousMonth: { }, onNextMonth: { }, onToday: { }, onRetry: { }
+    )
     .padding(TyfeSpacing.control)
+    .background(TyfeEditorialPalette.canvas)
+}
+
+#Preview("Calendar — Variety") {
+    let calendar = Calendar.current
+    let today = Date()
+    let historicalMonth = calendar.date(byAdding: .month, value: -1, to: today) ?? today
+    return ScrollView {
+        VStack(spacing: TyfeSpacing.section) {
+            ForEach(0..<3) { state in
+                StreakMonthCalendarView(
+                    month: StreakCalendarMonth(month: state == 0 ? historicalMonth : today, today: today, calendar: calendar, eventsByDay: [:]),
+                    canViewPreviousMonth: state == 0, canViewNextMonth: state == 0,
+                    isViewingCurrentMonth: state != 0, isLoading: state == 1, hasError: state == 2,
+                    onPreviousMonth: { }, onNextMonth: { }, onToday: { }, onRetry: { }
+                )
+            }
+        }
+        .padding(TyfeSpacing.control)
+    }
     .background(TyfeEditorialPalette.canvas)
 }
 

@@ -6,6 +6,23 @@ import Testing
 @MainActor
 struct FocusStreakIntegrationTests {
 
+    @Test(arguments: [DateComponents(year: 2026, month: 10, day: 1, hour: 12), DateComponents(year: 2027, month: 1, day: 1, hour: 12)])
+    func consecutiveStreakCrossesMonthAndYearBoundaries(_ components: DateComponents) throws {
+        let calendar = Calendar.current
+        let today = try #require(calendar.date(from: components))
+        let events = try (0..<3).map { daysAgo in
+            StreakEvent.mock(date: try #require(calendar.date(byAdding: .day, value: -daysAgo, to: today)))
+        }
+        let result = StreakCalculator.calculateStreak(
+            events: events,
+            freezes: [],
+            configuration: Dependencies.streakConfiguration,
+            currentDate: today
+        )
+        #expect(result.streak.currentStreak == 3)
+        #expect(result.streak.longestStreak == 3)
+    }
+
 #if MOCK
     @Test func completedFocusSessionRecordsStreakOnceAcrossRepeatedRefreshes() async throws {
         let context = try await makeContext()

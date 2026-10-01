@@ -6,6 +6,16 @@ final class StreakPresenter {
 
     private let interactor: StreakInteractor
     private let router: StreakRouter
+    private let calendar: Calendar
+    private let now: () -> Date
+    private(set) var selectedMonth: Date
+    private(set) var isHistoryLoading = false
+    private(set) var hasHistoryError = false
+    private var hasLoadedHistory = false
+    private var historyUserId: String?
+    private var eventsByDay: [Date: [StreakEvent]] = [:]
+    @ObservationIgnored private var historyTask: Task<Void, Never>?
+    @ObservationIgnored private var historyRequestId = UUID()
 
     var currentStreakData: CurrentStreakData {
         interactor.currentStreakData
@@ -15,17 +25,120 @@ final class StreakPresenter {
         StreakFreezePolicy.guidance
     }
 
-    init(interactor: StreakInteractor, router: StreakRouter) {
+    init(
+        interactor: StreakInteractor,
+        router: StreakRouter,
+        calendar: Calendar = .autoupdatingCurrent,
+        now: @escaping () -> Date = { Date() }
+    ) {
         self.interactor = interactor
         self.router = router
+        self.calendar = calendar
+        self.now = now
+        self.selectedMonth = calendar.dateInterval(of: .month, for: now())?.start ?? now()
     }
 
     func onViewAppear(delegate: StreakDelegate) {
         interactor.trackScreenEvent(event: Event.onAppear(delegate: delegate))
+        selectedMonth = currentMonth
+        refreshHistory()
     }
 
     func onViewDisappear(delegate: StreakDelegate) {
+        historyTask?.cancel()
+        historyRequestId = UUID()
+        isHistoryLoading = false
         interactor.trackEvent(event: Event.onDisappear(delegate: delegate))
+    }
+
+    var calendarMonth: StreakCalendarMonth {
+        StreakCalendarMonth(month: selectedMonth, today: now(), calendar: calendar, eventsByDay: eventsByDay)
+    }
+
+    private var currentMonth: Date {
+        calendar.dateInterval(of: .month, for: now())?.start ?? now()
+    }
+
+    private var earliestMonth: Date {
+        guard let earliestDay = eventsByDay.keys.min(),
+              let month = calendar.dateInterval(of: .month, for: earliestDay)?.start else { return currentMonth }
+        return min(month, currentMonth)
+    }
+
+    var canViewPreviousMonth: Bool { hasLoadedHistory && selectedMonth > earliestMonth }
+    var canViewNextMonth: Bool { hasLoadedHistory && selectedMonth < currentMonth }
+    var isViewingCurrentMonth: Bool { selectedMonth == currentMonth }
+
+    func onPreviousMonthPressed() {
+        guard canViewPreviousMonth else { return }
+        moveMonth(by: -1)
+        interactor.trackEvent(event: Event.previousMonth)
+    }
+
+    func onNextMonthPressed() {
+        guard canViewNextMonth else { return }
+        moveMonth(by: 1)
+        interactor.trackEvent(event: Event.nextMonth)
+    }
+
+    func onTodayPressed() {
+        selectedMonth = currentMonth
+        interactor.trackEvent(event: Event.today)
+    }
+
+    @discardableResult
+    func onRetryHistoryPressed() -> Task<Void, Never> {
+        interactor.trackEvent(event: Event.retryHistory)
+        return refreshHistory()
+    }
+
+    private func moveMonth(by value: Int) {
+        guard let month = calendar.date(byAdding: .month, value: value, to: selectedMonth) else { return }
+        selectedMonth = min(max(month, earliestMonth), currentMonth)
+    }
+
+    @discardableResult
+    func refreshHistory() -> Task<Void, Never> {
+        historyTask?.cancel()
+        let requestId = UUID()
+        historyRequestId = requestId
+        let userId = currentStreakData.userId
+        if historyUserId != userId {
+            historyUserId = userId
+            hasLoadedHistory = false
+            selectedMonth = currentMonth
+            eventsByDay = [:]
+        }
+        if !hasLoadedHistory {
+            groupEvents(currentStreakData.recentEvents ?? [])
+        }
+        isHistoryLoading = true
+        hasHistoryError = false
+        let task = Task { [weak self] in
+            guard let self, !Task.isCancelled else { return }
+            do {
+                let events = try await interactor.getAllStreakEvents()
+                guard !Task.isCancelled, historyRequestId == requestId,
+                      currentStreakData.userId == userId else { return }
+                groupEvents(events)
+                hasLoadedHistory = true
+                let month = calendar.dateInterval(of: .month, for: selectedMonth)?.start ?? currentMonth
+                selectedMonth = min(max(month, earliestMonth), currentMonth)
+            } catch {
+                guard !Task.isCancelled, historyRequestId == requestId,
+                      currentStreakData.userId == userId else { return }
+                hasHistoryError = true
+                interactor.trackEvent(eventName: "StreakView_HistoryLoad_Fail", parameters: nil, type: .severe)
+            }
+            guard historyRequestId == requestId else { return }
+            isHistoryLoading = false
+        }
+        historyTask = task
+        return task
+    }
+
+    private func groupEvents(_ events: [StreakEvent]) {
+        eventsByDay = Dictionary(grouping: events) { calendar.startOfDay(for: $0.dateCreated) }
     }
 }
 
@@ -60,8 +173,8 @@ extension StreakPresenter {
     }
 
     var recentDays: [StreakDay] {
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
+        let calendar = self.calendar
+        let today = calendar.startOfDay(for: now())
         let events = currentStreakData.recentEvents ?? []
         let weekdaySymbols = calendar.veryShortWeekdaySymbols
 
@@ -164,11 +277,19 @@ extension StreakPresenter {
     enum Event: LoggableEvent {
         case onAppear(delegate: StreakDelegate)
         case onDisappear(delegate: StreakDelegate)
+        case previousMonth
+        case nextMonth
+        case today
+        case retryHistory
 
         var eventName: String {
             switch self {
             case .onAppear: return "StreakView_Appear"
             case .onDisappear: return "StreakView_Disappear"
+            case .previousMonth: return "StreakView_PreviousMonth"
+            case .nextMonth: return "StreakView_NextMonth"
+            case .today: return "StreakView_Today"
+            case .retryHistory: return "StreakView_RetryHistory"
             }
         }
 
@@ -176,6 +297,7 @@ extension StreakPresenter {
             switch self {
             case .onAppear(delegate: let delegate), .onDisappear(delegate: let delegate):
                 return delegate.eventParameters
+            case .previousMonth, .nextMonth, .today, .retryHistory: return nil
             }
         }
 
