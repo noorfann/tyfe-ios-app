@@ -15,7 +15,6 @@ These are on-demand reference workflows for recurring changes in this project. T
 | [`creating-extension/SKILL.md`](creating-extension/SKILL.md) | Adding a type extension |
 | [`adding-package/SKILL.md`](adding-package/SKILL.md) | Adding a Swift Package dependency |
 | [`adding-deep-link/SKILL.md`](adding-deep-link/SKILL.md) | Adding deep-link or push routing |
-| [`creating-paywall/SKILL.md`](creating-paywall/SKILL.md) | Adding a paywall variant |
 | [`refactoring-screen/SKILL.md`](refactoring-screen/SKILL.md) | Renaming or restructuring a screen |
 
 The `SKILL.md` filename is retained to keep the workflow references stable. These files are project documentation; use an installed Codex skill only when the current environment provides one and it fits the task.

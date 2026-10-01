@@ -9,7 +9,7 @@ Wire a new AB test through all required files. This is a multi-file mechanical c
 
 ## Steps
 
-1. Get the test name from the user (camelCase, e.g., `showBanner`, `paywallVariant`)
+1. Get the test name from the user (camelCase, e.g., `showBanner`, `onboardingVariant`)
 2. Determine the test type — Bool (on/off) or enum (multiple variants)
 3. If enum, create the option enum file first
 4. Read [references/checklist.md](references/checklist.md) for the exact code to add in each file
@@ -20,7 +20,7 @@ Wire a new AB test through all required files. This is a multi-file mechanical c
 | Type | When | Example |
 |------|------|---------|
 | **Bool** | Simple on/off flag | `showBanner: Bool` |
-| **Enum** | Multiple variants | `paywallVariant: PaywallTestOption` |
+| **Enum** | Multiple variants | `onboardingVariant: OnboardingTestOption` |
 
 For enum tests, create a `{TestName}Option.swift` file in `Managers/ABTests/Models/` with `String, Codable, CaseIterable` conformance and a `static var default`.
 

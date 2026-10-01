@@ -8,7 +8,6 @@ struct CoreInteractor: GlobalInteractor {
     private let userManager: UserManager
     private let logManager: LogManager
     private let abTestManager: ABTestManager
-    private let purchaseManager: PurchaseManager
     private let pushManager: PushManager
     private let hapticManager: HapticManager
     private let soundEffectManager: SoundEffectManager
@@ -26,7 +25,6 @@ struct CoreInteractor: GlobalInteractor {
         self.userManager = container.resolve(UserManager.self)!
         self.logManager = container.resolve(LogManager.self)!
         self.abTestManager = container.resolve(ABTestManager.self)!
-        self.purchaseManager = container.resolve(PurchaseManager.self)!
         self.pushManager = container.resolve(PushManager.self)!
         self.hapticManager = container.resolve(HapticManager.self)!
         self.soundEffectManager = container.resolve(SoundEffectManager.self)!
@@ -175,32 +173,6 @@ struct CoreInteractor: GlobalInteractor {
         
     func override(updateTests: ActiveABTests) throws {
         try abTestManager.override(updateTests: updateTests)
-    }
-    
-    // MARK: PurchaseManager
-    
-    var entitlements: [PurchasedEntitlement] {
-        purchaseManager.entitlements
-    }
-    
-    var isPremium: Bool {
-        entitlements.hasActiveEntitlement
-    }
-    
-    func getProducts(productIds: [String]) async throws -> [AnyProduct] {
-        try await purchaseManager.getProducts(productIds: productIds)
-    }
-    
-    func restorePurchase() async throws -> [PurchasedEntitlement] {
-        try await purchaseManager.restorePurchase()
-    }
-    
-    func purchaseProduct(productId: String) async throws -> [PurchasedEntitlement] {
-        try await purchaseManager.purchaseProduct(productId: productId)
-    }
-    
-    func updateProfileAttributes(attributes: PurchaseProfileAttributes) async throws {
-        try await purchaseManager.updateProfileAttributes(attributes: attributes)
     }
     
     // MARK: Haptics
@@ -606,18 +578,10 @@ struct CoreInteractor: GlobalInteractor {
     func logIn(user: UserAuthInfo, isNewUser: Bool) async throws {
         // Run all logins in parallel
         async let userLogin: Void = userManager.signIn(auth: user, isNewUser: isNewUser)
-        async let purchaseLogin: ([PurchasedEntitlement]) = purchaseManager.logIn(
-            userId: user.uid,
-            userAttributes: PurchaseProfileAttributes(
-                email: user.email,
-                mixpanelDistinctId: Constants.mixpanelDistinctId,
-                firebaseAppInstanceId: nil
-            )
-        )
         async let streakLogin: Void = streakManager.logIn(userId: user.uid)
         async let progressLogin: Void = progressManager.logIn(userId: user.uid)
 
-        let (_, _, _, _) = await (try userLogin, try purchaseLogin, try streakLogin, try progressLogin)
+        let (_, _, _) = await (try userLogin, try streakLogin, try progressLogin)
 
         // Add user properties
         logManager.addUserProperties(dict: Utilities.eventParameters, isHighPriority: false)
@@ -627,7 +591,6 @@ struct CoreInteractor: GlobalInteractor {
 
     func signOut() async throws {
         try authManager.signOut()
-        try await purchaseManager.logOut()
         userManager.signOut()
         socialManager.signOut()
         streakManager.logOut()
@@ -649,10 +612,7 @@ struct CoreInteractor: GlobalInteractor {
             // Delete the local user profile before revoking authentication.
             try await userManager.deleteCurrentUser()
         }
-        
-        // Delete Purchases (RevenueCat)
-        try await purchaseManager.logOut()
-        
+
         // Delete logs (Mixpanel)
         logManager.deleteUserProfile()
     }

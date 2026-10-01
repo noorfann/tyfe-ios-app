@@ -29,7 +29,7 @@ Instruct the user:
 
 | Type | When | Alias File | Manager |
 |------|------|------------|---------|
-| **Service package** | Package provides a service conforming to a manager's protocol (e.g., `RevenueCatPurchaseService`) | Yes | Yes — use `creating-manager` skill |
+| **Service package** | Package provides a service conforming to a manager's protocol (a vendor implementation of the manager protocol) | Yes | Yes — use `creating-manager` skill |
 | **Manager package** | Package provides a complete manager (e.g., `HapticManager`, `LogManager`) | Yes | Register directly in Dependencies.swift |
 | **Utility package** | Package provides helpers, extensions, UI components (e.g., `SwiftfulUI`, `SDWebImageSwiftUI`) | Optional | No |
 
@@ -37,7 +37,7 @@ Instruct the user:
 
 The package provides a service implementation that plugs into a manager's service protocol. This is the most common pattern.
 
-Example: `SwiftfulPurchasingRevenueCat` provides `RevenueCatPurchaseService` conforming to `PurchaseService`.
+Choose a service package whose implementation conforms to the target manager protocol.
 
 1. Create the Alias file
 2. Use the `creating-manager` skill to scaffold the manager, using the package's service as the production service implementation

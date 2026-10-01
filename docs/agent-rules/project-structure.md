@@ -76,7 +76,6 @@ Before creating a new manager, check if the functionality belongs in an existing
 | UserManager | User profile data and local sync (Supabase planned) |
 | LogManager | Analytics and logging (Mixpanel, console) |
 | AppState | Global app state, current module |
-| PurchaseManager | In-app purchases, entitlements (RevenueCat) |
 | ABTestManager | A/B test values (local) |
 | PushManager | Push notification registration and handling |
 | HapticManager | Haptic feedback |
@@ -141,6 +140,6 @@ Switch modules via `router.showModule(moduleId)`.
 ## Naming Conventions
 
 - Screen folders: PascalCase matching the screen name (`Home/`, `CreateAccount/`)
-- Manager folders: PascalCase matching the domain (`Auth/`, `Purchases/`, `User/`)
+- Manager folders: PascalCase matching the domain (`Auth/`, `Streak/`, `User/`)
 - Extensions: `{TypeName}+EXT.swift` (`Array+EXT.swift`, `String+EXT.swift`)
 - Components: descriptive PascalCase (`CustomModalView.swift`, `ImageLoaderView.swift`)

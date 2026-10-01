@@ -8,7 +8,6 @@ final class SettingsPresenter {
     private let interactor: SettingsInteractor
     private let router: SettingsRouter
 
-    private(set) var isPremium = false
     private(set) var isAnonymousUser = false
     private(set) var isSignedIn = false
     private(set) var cheersToday = 0
@@ -29,7 +28,6 @@ final class SettingsPresenter {
 
     func onViewAppear() {
         interactor.trackScreenEvent(event: Event.onAppear)
-        isPremium = interactor.isPremium
         setAnonymousAccountStatus()
         isSignedIn = interactor.currentAuthUserId != nil
         Task { await refreshSocialState() }

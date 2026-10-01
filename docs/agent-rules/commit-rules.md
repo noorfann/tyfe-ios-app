@@ -52,7 +52,7 @@ This project follows [Conventional Commits](https://www.conventionalcommits.org/
 
 ### Scope
 
-Optional. Name the concrete area touched, in lowercase: a screen, RIB, manager, or module (e.g. `paywall`, `streak-manager`, `root-dependencies`, `core`). Omit the parentheses when no single scope fits.
+Optional. Name the concrete area touched, in lowercase: a screen, RIB, manager, or module (e.g. `settings`, `streak-manager`, `root-dependencies`, `core`). Omit the parentheses when no single scope fits.
 
 ### Subject Rules
 
@@ -89,16 +89,16 @@ Use the footer for metadata:
 feat(home): add analytics tracking to HomePresenter
 
 Added trackEvent calls for all user actions in Home and Settings.
-Follows existing pattern from PaywallPresenter.
+Follows existing pattern from SettingsPresenter.
 
 Closes #142
 ```
 
 ```
-fix(paywall): guard nil product on purchase tap
+fix(settings): guard missing user on account action
 
-onPurchasePressed force-unwrapped selectedProduct which could be nil
-if products hadn't loaded. Added guard with LogManager error logging.
+The account action force-unwrapped the current user during logout.
+Added a guard before accessing the profile.
 
 Fixes #187
 ```
@@ -114,7 +114,7 @@ causing stale data on next login. Added task cancellation.
 refactor(core): parallelize login with async let
 
 Replaced sequential awaits with async let for faster login across
-UserManager, PurchaseManager, and ABTestManager.
+UserManager, StreakManager, and ABTestManager.
 ```
 
 ```

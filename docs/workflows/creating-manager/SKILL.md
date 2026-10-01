@@ -68,7 +68,7 @@ Every new manager must be registered in **2 places** — see the registration sn
 - Manager takes its service protocol in `init` — the protocol, not a concrete implementation
 - Service protocol is `@MainActor protocol ... : Sendable`
 - MockService is a `class` (mutable state for testing) — production service is a `struct` (unless it needs mutable state)
-- Production service naming: use the SDK/vendor name if it wraps a specific third-party (e.g., `FirebaseAvatarService`, `RevenueCatPurchaseService`). Use `Prod{ManagerName}Service` only if generic
+- Production service naming: use the SDK/vendor name if it wraps a specific third-party (e.g., `FirebaseAvatarService`, `SupabaseAuthService`). Use `Prod{ManagerName}Service` only if generic
 - Manager includes `enum Event: LoggableEvent` for analytics — event names follow `{ManagerName}Man_Action_Status` pattern
 - Managers are flexible — do NOT force signIn/signOut, state properties, or sync engines unless the user requests them
 - If the manager needs database syncing, use `DocumentSyncEngine` or `CollectionSyncEngine` composition (see `manager-lifecycle` rules)

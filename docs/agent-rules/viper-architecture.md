@@ -138,8 +138,8 @@ IMPORTANT: Components are DUMB UI. They receive data and fire callbacks. Nothing
 
 New screens register in 3 places within their RIB. The CoreRouter and CoreBuilder extensions live at the **bottom of the View file** — NOT in the Router file. The Router file only contains the protocol conformance.
 
-1. **View file** (e.g., `PaywallView.swift`) — contains the View, the Delegate struct, AND the `extension CoreRouter` with `func showScreenName()` AND the `extension CoreBuilder` with the factory method. These are the ONLY definitions — NEVER create duplicates elsewhere.
-2. **Router file** (e.g., `PaywallRouter.swift`) — contains ONLY the Router protocol and `extension CoreRouter: PaywallRouter { }` conformance. No `showX` implementations here.
+1. **View file** (e.g., `StreakView.swift`) — contains the View, the Delegate struct, AND the `extension CoreRouter` with `func showScreenName()` AND the `extension CoreBuilder` with the factory method. These are the ONLY definitions — NEVER create duplicates elsewhere.
+2. **Router file** (e.g., `StreakRouter.swift`) — contains ONLY the Router protocol and `extension CoreRouter: PaywallRouter { }` conformance. No `showX` implementations here.
 3. **Interactor extension** (e.g., `CoreInteractor`) — data access methods the screen needs
 
 IMPORTANT: Before adding a routing method, ALWAYS search the codebase for `func show[ScreenName]` to check if it already exists. They typically live in the View file but can be in any file as extensions. Each `showX` method must be defined exactly once — NEVER create a duplicate unless the user explicitly says to.

@@ -18,7 +18,6 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: TyfeSpacing.section) {
                     header
                     accountCard
-                    purchaseSection
                     applicationSection
                 }
                 .padding(.horizontal, TyfeSpacing.control)
@@ -89,26 +88,6 @@ struct SettingsView: View {
                         systemImage: "person.crop.circle.badge.plus",
                         role: .primary,
                         onTap: { presenter.onSaveAccountPressed() }
-                    )
-                }
-            }
-        }
-    }
-
-    private var purchaseSection: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.control) {
-            Text("Purchases")
-                .font(TyfeTypography.interfaceStrong)
-
-            TyfeSurfaceView(role: .paper) {
-                HStack(spacing: TyfeSpacing.small) {
-                    Text("Account status")
-                        .font(TyfeTypography.interface)
-                    Spacer()
-                    TyfePillView(
-                        label: presenter.isPremium ? "Premium" : "Free",
-                        systemImage: presenter.isPremium ? "star.fill" : "star",
-                        tone: presenter.isPremium ? .warning : .neutral
                     )
                 }
             }

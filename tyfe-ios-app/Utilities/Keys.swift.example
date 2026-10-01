@@ -8,7 +8,6 @@
 
 struct Keys {
     static let mixpanelToken = ""
-    static let revenueCatAPIKey = ""
 
     #if DEV
     static let supabaseURL = "https://<dev-project-ref>.supabase.co"

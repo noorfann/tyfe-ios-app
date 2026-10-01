@@ -91,15 +91,6 @@ Rules for building SwiftUI views and components in this project.
     }
 }
 
-#Preview("Premium User") {
-    let container = DevPreview.shared.container()
-    container.register(PurchaseManager.self, service: PurchaseManager(service: MockPurchaseService(activeEntitlements: [.mock])))
-    let builder = CoreBuilder(interactor: CoreInteractor(container: container))
-    return RouterView { router in
-        builder.screenView(router: router, delegate: ScreenDelegate())
-    }
-}
-
 #Preview("Signed Out") {
     let container = DevPreview.shared.container()
     container.register(AuthManager.self, service: AuthManager(service: MockAuthService(user: nil)))
@@ -112,7 +103,6 @@ Rules for building SwiftUI views and components in this project.
 
 Common overrides:
 - Auth state: `container.register(AuthManager.self, service: AuthManager(service: MockAuthService(user: .mock(isAnonymous: true))))`
-- Premium: `container.register(PurchaseManager.self, service: PurchaseManager(service: MockPurchaseService(activeEntitlements: [.mock])))`
 - AB tests: `container.register(ABTestManager.self, service: ABTestManager(service: MockABTestService(someTest: true)))`
 - Slow/error states: `container.register(SomeService.self, service: MockSomeService(delay: 20, showError: true))`
 

@@ -150,9 +150,9 @@ Replace repetitive copy-paste tests with `@Test(arguments:)`. Each argument beco
 ### Single argument
 
 ```swift
-@Test("Valid entitlements grant premium access", arguments: EntitlementOption.allCases)
-func entitlementGrantsAccess(_ entitlement: EntitlementOption) {
-    #expect(entitlement.isPremium || entitlement == .free)
+@Test("Valid weekdays", arguments: 1...7)
+func weekdayIsValid(_ weekday: Int) {
+    #expect((1...7).contains(weekday))
 }
 ```
 
@@ -162,12 +162,12 @@ Two collections generate all combinations:
 
 ```swift
 enum Region { case us, eu }
-enum Plan { case free, pro }
+enum Account { case guest, registered }
 
-@Test(arguments: [Region.us, .eu], [Plan.free, .pro])
-func accessRules(region: Region, plan: Plan) {
-    let allowed = canUseFeature(region: region, plan: plan)
-    #expect(allowed == (region == .eu && plan == .pro))
+@Test(arguments: [Region.us, .eu], [Account.guest, .registered])
+func accessRules(region: Region, account: Account) {
+    let allowed = canUseFeature(region: region, account: account)
+    #expect(allowed == (region == .eu && account == .registered))
 }
 ```
 
@@ -176,12 +176,12 @@ func accessRules(region: Region, plan: Plan) {
 Use `zip` when input A must pair with a corresponding input B:
 
 ```swift
-@Test("Free trial limits per tier", arguments: zip(
-    [Tier.basic, .premium],
-    [3, 10]
+@Test("Days per month", arguments: zip(
+    [1, 4],
+    [31, 30]
 ))
-func freeTrialLimits(_ tier: Tier, expected: Int) {
-    #expect(freeTries(for: tier) == expected)
+func monthLengths(_ month: Int, expected: Int) {
+    #expect(daysInMonth(month, year: 2026) == expected)
 }
 ```
 

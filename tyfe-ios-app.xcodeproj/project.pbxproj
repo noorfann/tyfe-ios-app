@@ -16,8 +16,6 @@
 		028F9B862CECF666009B9F48 /* SwiftfulUtilities in Frameworks */ = {isa = PBXBuildFile; productRef = 028F9B852CECF666009B9F48 /* SwiftfulUtilities */; };
 		028F9BC52CED14CA009B9F48 /* SwiftfulLogging in Frameworks */ = {isa = PBXBuildFile; productRef = 028F9BC42CED14CA009B9F48 /* SwiftfulLogging */; };
 		028F9BCE2CED152A009B9F48 /* SwiftfulLoggingMixpanel in Frameworks */ = {isa = PBXBuildFile; productRef = 028F9BCD2CED152A009B9F48 /* SwiftfulLoggingMixpanel */; };
-		028F9BD12CED1539009B9F48 /* SwiftfulPurchasing in Frameworks */ = {isa = PBXBuildFile; productRef = 028F9BD02CED1539009B9F48 /* SwiftfulPurchasing */; };
-		028F9BD42CED1547009B9F48 /* SwiftfulPurchasingRevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 028F9BD32CED1547009B9F48 /* SwiftfulPurchasingRevenueCat */; };
 		028F9BD72CED155A009B9F48 /* SwiftfulAuthUI in Frameworks */ = {isa = PBXBuildFile; productRef = 028F9BD62CED155A009B9F48 /* SwiftfulAuthUI */; };
 		028F9BD92CED155A009B9F48 /* SwiftfulAuthenticating in Frameworks */ = {isa = PBXBuildFile; productRef = 028F9BD82CED155A009B9F48 /* SwiftfulAuthenticating */; };
 		028F9BDF2CED1617009B9F48 /* SwiftfulUI in Frameworks */ = {isa = PBXBuildFile; productRef = 028F9BDE2CED1617009B9F48 /* SwiftfulUI */; };
@@ -152,10 +150,8 @@
 				468D73D230610833006E3D5A /* Lottie in Frameworks */,
 				0207BD982EA0958B00E46D93 /* SwiftfulGamification in Frameworks */,
 				028F9BD72CED155A009B9F48 /* SwiftfulAuthUI in Frameworks */,
-				028F9BD12CED1539009B9F48 /* SwiftfulPurchasing in Frameworks */,
 				028F9BC52CED14CA009B9F48 /* SwiftfulLogging in Frameworks */,
 				4690661F3053B12E0007A12D /* Supabase in Frameworks */,
-				028F9BD42CED1547009B9F48 /* SwiftfulPurchasingRevenueCat in Frameworks */,
 				028F9BD92CED155A009B9F48 /* SwiftfulAuthenticating in Frameworks */,
 				0210A6CA2DB4DCE40072B2FC /* SwiftfulRouting in Frameworks */,
 			);
@@ -283,8 +279,6 @@
 				028F9B852CECF666009B9F48 /* SwiftfulUtilities */,
 				028F9BC42CED14CA009B9F48 /* SwiftfulLogging */,
 				028F9BCD2CED152A009B9F48 /* SwiftfulLoggingMixpanel */,
-				028F9BD02CED1539009B9F48 /* SwiftfulPurchasing */,
-				028F9BD32CED1547009B9F48 /* SwiftfulPurchasingRevenueCat */,
 				028F9BD62CED155A009B9F48 /* SwiftfulAuthUI */,
 				028F9BD82CED155A009B9F48 /* SwiftfulAuthenticating */,
 				028F9BDE2CED1617009B9F48 /* SwiftfulUI */,
@@ -362,8 +356,6 @@
 				028F9B842CECF666009B9F48 /* XCRemoteSwiftPackageReference "SwiftfulUtilities" */,
 				028F9BC32CED14CA009B9F48 /* XCRemoteSwiftPackageReference "SwiftfulLogging" */,
 				028F9BCC2CED152A009B9F48 /* XCRemoteSwiftPackageReference "SwiftfulLoggingMixpanel" */,
-				028F9BCF2CED1539009B9F48 /* XCRemoteSwiftPackageReference "SwiftfulPurchasing" */,
-				028F9BD22CED1547009B9F48 /* XCRemoteSwiftPackageReference "SwiftfulPurchasingRevenueCat" */,
 				028F9BD52CED155A009B9F48 /* XCRemoteSwiftPackageReference "SwiftfulAuthenticating" */,
 				028F9BDD2CED1617009B9F48 /* XCRemoteSwiftPackageReference "SwiftfulUI" */,
 				0229588A2CEE932F00765488 /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */,
@@ -1149,22 +1141,6 @@
 				minimumVersion = 1.1.2;
 			};
 		};
-		028F9BCF2CED1539009B9F48 /* XCRemoteSwiftPackageReference "SwiftfulPurchasing" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SwiftfulThinking/SwiftfulPurchasing";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.6;
-			};
-		};
-		028F9BD22CED1547009B9F48 /* XCRemoteSwiftPackageReference "SwiftfulPurchasingRevenueCat" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SwiftfulThinking/SwiftfulPurchasingRevenueCat";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.2;
-			};
-		};
 		028F9BD52CED155A009B9F48 /* XCRemoteSwiftPackageReference "SwiftfulAuthenticating" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/SwiftfulThinking/SwiftfulAuthenticating";
@@ -1246,16 +1222,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 028F9BCC2CED152A009B9F48 /* XCRemoteSwiftPackageReference "SwiftfulLoggingMixpanel" */;
 			productName = SwiftfulLoggingMixpanel;
-		};
-		028F9BD02CED1539009B9F48 /* SwiftfulPurchasing */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 028F9BCF2CED1539009B9F48 /* XCRemoteSwiftPackageReference "SwiftfulPurchasing" */;
-			productName = SwiftfulPurchasing;
-		};
-		028F9BD32CED1547009B9F48 /* SwiftfulPurchasingRevenueCat */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 028F9BD22CED1547009B9F48 /* XCRemoteSwiftPackageReference "SwiftfulPurchasingRevenueCat" */;
-			productName = SwiftfulPurchasingRevenueCat;
 		};
 		028F9BD62CED155A009B9F48 /* SwiftfulAuthUI */ = {
 			isa = XCSwiftPackageProductDependency;

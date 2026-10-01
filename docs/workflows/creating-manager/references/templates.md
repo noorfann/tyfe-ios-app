@@ -76,7 +76,7 @@ class Mock{ManagerName}Service: {ManagerName}Service {
 
 ## File 4: Production Service
 
-**Naming convention:** Name after the SDK/vendor it wraps if specific (e.g., `FirebaseAvatarService`, `RevenueCatPurchaseService`). Use `Prod{ManagerName}Service` only if the implementation is generic and not tied to a specific third-party SDK.
+**Naming convention:** Name after the SDK/vendor it wraps if specific (e.g., `FirebaseAvatarService`, `SupabaseAuthService`). Use `Prod{ManagerName}Service` only if the implementation is generic and not tied to a specific third-party SDK.
 
 ```swift
 import SwiftUI

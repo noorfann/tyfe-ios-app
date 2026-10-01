@@ -37,10 +37,9 @@ Login is orchestrated in `CoreInteractor.logIn()` using `async let` for parallel
 
 ```
 async let userLogin = userManager.signIn(auth:isNewUser:)
-async let purchaseLogin = purchaseManager.logIn(userId:)
 async let streakLogin = streakManager.logIn(userId:)
-...
-let (_, _, _, ...) = await (try userLogin, try purchaseLogin, try streakLogin, ...)
+async let progressLogin = progressManager.logIn(userId:)
+let (_, _, _) = await (try userLogin, try streakLogin, try progressLogin)
 ```
 
 - All data sync managers with `signIn`/`logIn` must be added here
@@ -48,8 +47,8 @@ let (_, _, _, ...) = await (try userLogin, try purchaseLogin, try streakLogin, .
 - After all logins complete: add user properties to LogManager
 
 When adding a new data sync manager:
-1. Add `async let` line in `logIn()` with the manager's signIn method
-2. Add to the tuple `await` line
+1. Add an `async let` login in `logIn()`
+2. Await the refresh alongside streak and progress
 3. Add `signOut()`/`logOut()` call in `signOut()` method
 
 ## Logout Coordination
@@ -58,8 +57,8 @@ Logout is orchestrated in `CoreInteractor.signOut()` — sequential, not paralle
 
 ```
 1. authManager.signOut()        ← clears auth state first
-2. purchaseManager.logOut()     ← async cleanup
-3. userManager.signOut()        ← removes listeners, clears cache
+2. userManager.signOut()        ← removes listeners, clears cache
+3. socialManager.signOut()      ← clears social state
 4. streakManager.logOut()       ← clears gamification state
 5. progressManager.logOut()
 ```
@@ -74,8 +73,7 @@ Logout is orchestrated in `CoreInteractor.signOut()` — sequential, not paralle
 
 1. Reauthenticate user (Apple/Google/Anonymous)
 2. Delete user data INSIDE the auth closure (before auth is revoked) — prefer moving deletion logic to a backend function when Supabase is integrated
-3. Log out of PurchaseManager
-4. Delete LogManager user profile
+3. Delete LogManager user profile
 
 IMPORTANT: Data deletion must happen before auth revocation so the active user session remains available.
 

@@ -38,7 +38,6 @@ Deep links and push notifications are sensitive to user state. Always check stat
 // Available on interactor (add to ModuleWrapperInteractor protocol as needed):
 interactor.auth           // UserAuthInfo? — nil if not authenticated
 interactor.currentUser    // UserModel? — nil if not loaded
-interactor.isPremium      // Bool — entitlement status
 
 // Available on delegate:
 delegate.moduleId         // String — which module is active (Constants.tabbarModuleId or Constants.onboardingModuleId)
@@ -53,8 +52,6 @@ guard delegate.moduleId == Constants.tabbarModuleId else { return }
 // Require authentication
 guard interactor.auth != nil else { return }
 
-// Require premium
-guard interactor.isPremium else { return }
 ```
 
 ### Adding Interactor Properties
@@ -170,7 +167,7 @@ NotificationCenter.default.post(name: .deepLinkNavigation, object: nil, userInfo
 ## Key Patterns
 
 - **One file to edit** — all logic goes in `ModuleWrapperPresenter.swift`
-- **Always check state first** — use `delegate.moduleId`, `interactor.auth`, `interactor.isPremium` before routing
+- **Always check state first** — use `delegate.moduleId` and `interactor.auth` before routing
 - **Add interactor properties as needed** — expose what you need from CoreInteractor via the protocol
 - **No .push** — use `.fullScreenCover`, `.sheet`, or the notification workaround
 - **Track events** — deep link and push notification events are already wired for analytics
