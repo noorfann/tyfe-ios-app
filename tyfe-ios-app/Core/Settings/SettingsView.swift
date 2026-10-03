@@ -2,7 +2,6 @@ import SwiftUI
 import SwiftfulUI
 
 struct SettingsView: View {
-
     @State private var presenter: SettingsPresenter
 
     init(presenter: SettingsPresenter) {
@@ -11,13 +10,15 @@ struct SettingsView: View {
 
     var body: some View {
         ZStack {
-            TyfeEditorialPalette.canvas
-                .ignoresSafeArea()
-
+            TyfeEditorialPalette.canvas.ignoresSafeArea()
             ScrollView {
                 VStack(alignment: .leading, spacing: TyfeSpacing.section) {
-                    header
-                    accountCard
+                    Text("Settings")
+                        .font(TyfeTypography.display)
+                        .tracking(-1.6)
+                    profileSection
+                    appearanceSection
+                    purchasesSection
                     applicationSection
                 }
                 .padding(.horizontal, TyfeSpacing.control)
@@ -27,161 +28,117 @@ struct SettingsView: View {
             .scrollIndicators(.hidden)
         }
         .toolbar(.hidden, for: .navigationBar)
-        .onAppear {
-            presenter.onViewAppear()
-        }
-        .onDisappear {
-            presenter.onViewDisappear()
+        .onAppear { presenter.onViewAppear() }
+        .onDisappear { presenter.onViewDisappear() }
+    }
+
+    private var profileSection: some View {
+        section("Profile") {
+            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+                HStack(alignment: .top, spacing: TyfeSpacing.control) {
+                    ProfileAvatarView(initials: presenter.initials, photoURL: presenter.photoURL)
+                    VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+                        Text(presenter.displayName)
+                            .font(TyfeTypography.interfaceStrong)
+                            .fixedSize(horizontal: false, vertical: true)
+                        if let email = presenter.email {
+                            Text(email)
+                                .font(TyfeTypography.caption)
+                                .foregroundStyle(TyfeEditorialPalette.muted)
+                                .textSelection(.enabled)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        if presenter.needsAccountSetup {
+                            Text(presenter.accountTitle)
+                                .font(TyfeTypography.caption)
+                                .foregroundStyle(TyfeEditorialPalette.muted)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                TyfeActionButtonView(
+                    title: presenter.accountActionTitle,
+                    systemImage: presenter.canEditProfile ? "pencil" : "person.crop.circle.badge.plus",
+                    role: .secondary,
+                    onTap: { presenter.onProfilePressed() }
+                )
+                .accessibilityIdentifier(presenter.canEditProfile ? "settings-edit-profile" : "settings-create-account")
+            }
         }
     }
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.small) {
-            Text("Settings")
-                .font(TyfeTypography.display)
-                .tracking(-1.6)
+    private var appearanceSection: some View {
+        section("Appearance") {
+            Toggle("Dark mode", isOn: Binding(
+                get: { presenter.isDarkMode },
+                set: { presenter.onDarkModeChanged($0) }
+            ))
+            .font(TyfeTypography.interface)
+            .tint(TyfeEditorialPalette.ink)
+            .accessibilityIdentifier("settings-dark-mode")
+        }
+    }
 
-            Text("Your account, sharing, and app details.")
+    private var purchasesSection: some View {
+        section("Purchases") {
+            Text("There are no in-app purchases available at this time.")
                 .font(TyfeTypography.interface)
                 .foregroundStyle(TyfeEditorialPalette.muted)
-        }
-    }
-
-    private var accountCard: some View {
-        TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
-                Text(presenter.accountTitle)
-                    .font(TyfeTypography.interfaceStrong)
-
-                if presenter.isSignedIn {
-                    Text("Cheers today: \(presenter.cheersToday)")
-                        .font(TyfeTypography.caption)
-                        .foregroundStyle(TyfeEditorialPalette.muted)
-                        .accessibilityLabel(Text("Cheers today, \(presenter.cheersToday)"))
-
-                    Text("Your Circles sync quietly in the background.")
-                        .font(TyfeTypography.interface)
-                        .foregroundStyle(TyfeEditorialPalette.muted)
-
-                    if presenter.isAnonymousUser {
-                        TyfeActionButtonView(
-                            title: "Save & back up account",
-                            systemImage: "person.crop.circle.badge.plus",
-                            role: .primary,
-                            onTap: { presenter.onSaveAccountPressed() }
-                        )
-                    } else {
-                        TyfeActionButtonView(
-                            title: "Sign out",
-                            systemImage: "rectangle.portrait.and.arrow.right",
-                            role: .secondary,
-                            onTap: { presenter.onSignOutPressed() }
-                        )
-                    }
-                } else {
-                    Text("Turn on Circles to share today's progress with your private groups.")
-                        .font(TyfeTypography.interface)
-                        .foregroundStyle(TyfeEditorialPalette.muted)
-
-                    TyfeActionButtonView(
-                        title: "Save & back up account",
-                        systemImage: "person.crop.circle.badge.plus",
-                        role: .primary,
-                        onTap: { presenter.onSaveAccountPressed() }
-                    )
-                }
-            }
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
     private var applicationSection: some View {
         VStack(alignment: .leading, spacing: TyfeSpacing.control) {
-            Text("Application")
-                .font(TyfeTypography.interfaceStrong)
-
-            TyfeSurfaceView(role: .paper) {
+            section("Application") {
                 VStack(alignment: .leading, spacing: TyfeSpacing.control) {
                     detailRow(title: "Version", value: Utilities.appVersion ?? "—")
-                    detailRow(title: "Build Number", value: Utilities.buildNumber ?? "—")
-
+                    detailRow(title: "Build number", value: Utilities.buildNumber ?? "—")
                     TyfeActionButtonView(
-                        title: "Contact us",
-                        systemImage: "envelope.fill",
-                        role: .secondary,
+                        title: "Contact us", systemImage: "envelope", role: .secondary,
                         onTap: { presenter.onContactUsPressed() }
                     )
+                    if presenter.isSignedIn {
+                        TyfeActionButtonView(
+                            title: "Sign out", systemImage: "rectangle.portrait.and.arrow.right", role: .secondary,
+                            onTap: { presenter.onSignOutPressed() }
+                        )
+                        TyfeActionButtonView(
+                            title: "Delete account", systemImage: "trash", role: .destructive,
+                            onTap: { presenter.onDeleteAccountPressed() }
+                        )
+                    }
                 }
             }
-
-            if presenter.isSignedIn {
-                TyfeActionButtonView(
-                    title: "Delete account",
-                    systemImage: "trash",
-                    role: .destructive,
-                    onTap: { presenter.onDeleteAccountPressed() }
-                )
-            }
-
-            Text("2026 Zulfikar Noorfan ©️")
+            Text("2026 Zulfikar Noorfan ©")
                 .font(TyfeTypography.caption)
                 .foregroundStyle(TyfeEditorialPalette.muted)
                 .frame(maxWidth: .infinity, alignment: .center)
         }
     }
 
-    private func detailRow(title: String, value: String) -> some View {
-        HStack(spacing: TyfeSpacing.small) {
-            Text(title)
-                .font(TyfeTypography.interface)
-            Spacer()
-            Text(value)
-                .font(TyfeTypography.interface)
-                .foregroundStyle(TyfeEditorialPalette.muted)
+    private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+            Text(title).font(TyfeTypography.interfaceStrong)
+            TyfeSurfaceView(role: .paper, content: content)
         }
     }
 
-}
-
-#Preview("No auth") {
-    let container = DevPreview.shared.container()
-    container.register(AuthManager.self, service: AuthManager(service: MockAuthService(user: nil)))
-    container.register(UserManager.self, service: UserManager.mock())
-    let builder = CoreBuilder(interactor: CoreInteractor(container: container))
-
-    return RouterView { router in
-        builder.settingsView(router: router)
-    }
-}
-#Preview("Anonymous") {
-    let container = DevPreview.shared.container()
-    container.register(AuthManager.self, service: AuthManager(service: MockAuthService(user: UserAuthInfo.mock(isAnonymous: true))))
-    container.register(UserManager.self, service: UserManager.mock(user: .mock))
-    let builder = CoreBuilder(interactor: CoreInteractor(container: container))
-
-    return RouterView { router in
-        builder.settingsView(router: router)
-    }
-}
-#Preview("Not anonymous") {
-    let container = DevPreview.shared.container()
-    container.register(AuthManager.self, service: AuthManager(service: MockAuthService(user: UserAuthInfo.mock(isAnonymous: false))))
-    container.register(UserManager.self, service: UserManager.mock(user: .mock))
-    let builder = CoreBuilder(interactor: CoreInteractor(container: container))
-
-    return RouterView { router in
-        builder.settingsView(router: router)
+    private func detailRow(title: String, value: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: TyfeSpacing.small) {
+            Text(title)
+            Spacer()
+            Text(value).foregroundStyle(TyfeEditorialPalette.muted)
+        }
+        .font(TyfeTypography.interface)
     }
 }
 
 extension CoreBuilder {
-
     func settingsView(router: AnyRouter) -> some View {
-        SettingsView(
-            presenter: SettingsPresenter(
-                interactor: interactor,
-                router: CoreRouter(router: router, builder: self)
-            )
-        )
+        SettingsView(presenter: SettingsPresenter(
+            interactor: interactor,
+            router: CoreRouter(router: router, builder: self)
+        ))
     }
-
 }

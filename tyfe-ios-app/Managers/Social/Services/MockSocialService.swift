@@ -4,6 +4,7 @@ import Foundation
 final class MockSocialService: SocialService {
     private(set) var currentUserId: String
     private var profiles: [String: SocialProfileModel]
+    private let profileService: (any ProfileServicing)?
     private var circles: [CircleModel]
     private var memberships: [CircleMembershipModel]
     private var invites: [CircleInviteModel]
@@ -24,9 +25,11 @@ final class MockSocialService: SocialService {
         profiles: [String: SocialProfileModel]? = nil,
         circles: [CircleModel] = [],
         memberships: [CircleMembershipModel] = [],
-        invites: [CircleInviteModel] = []
+        invites: [CircleInviteModel] = [],
+        profileService: (any ProfileServicing)? = nil
     ) {
         self.currentUserId = currentUserId
+        self.profileService = profileService
         self.profiles = profiles ?? [
             currentUserId: SocialProfileModel(
                 userId: currentUserId,
@@ -49,7 +52,8 @@ final class MockSocialService: SocialService {
         profiles[userId] = SocialProfileModel(
             userId: userId,
             displayName: trimmed,
-            avatarToken: profiles[userId]?.avatarToken
+            avatarToken: profiles[userId]?.avatarToken,
+            avatarPath: profiles[userId]?.avatarPath
         )
     }
 
@@ -112,6 +116,7 @@ final class MockSocialService: SocialService {
 
     func fetchMembers(circleId: String) async throws -> [CircleMemberModel] {
         guard currentUserIsMember(of: circleId) else { throw SocialServiceError.notPermitted }
+        await refreshMockProfiles(circleId: circleId)
         return memberships
             .filter { $0.circleId == circleId }
             .map { membership in
@@ -121,7 +126,8 @@ final class MockSocialService: SocialService {
                     displayName: profile?.displayName ?? "Friend",
                     avatarToken: profile?.avatarToken,
                     role: membership.role,
-                    joinedAt: membership.joinedAt
+                    joinedAt: membership.joinedAt,
+                    avatarPath: profile?.avatarPath
                 )
             }
     }
@@ -228,6 +234,7 @@ final class MockSocialService: SocialService {
 
     func fetchCircleProgress(circleId: String) async throws -> [CircleMemberProgressModel] {
         guard currentUserIsMember(of: circleId) else { throw SocialServiceError.notPermitted }
+        await refreshMockProfiles(circleId: circleId)
         return memberships
             .filter { $0.circleId == circleId }
             .map { membership in
@@ -247,7 +254,8 @@ final class MockSocialService: SocialService {
                     todayCompleted: latest?.completed ?? 0,
                     sevenDayCompleted: sevenDay,
                     cheersToday: 0,
-                    progressUpdatedAt: latest?.updatedAt
+                    progressUpdatedAt: latest?.updatedAt,
+                    avatarPath: profile?.avatarPath
                 )
             }
     }
@@ -382,6 +390,18 @@ final class MockSocialService: SocialService {
             code = String((0..<8).map { _ in Self.codeAlphabet.randomElement()! })
         }
         return code
+    }
+
+    private func refreshMockProfiles(circleId: String) async {
+        guard let profileService else { return }
+        for membership in memberships where membership.circleId == circleId {
+            if let identity = try? await profileService.fetchProfile(userId: membership.userId) {
+                profiles[membership.userId] = SocialProfileModel(
+                    userId: identity.userId, displayName: identity.displayName,
+                    avatarToken: identity.avatarToken, avatarPath: identity.avatarPath
+                )
+            }
+        }
     }
 }
 

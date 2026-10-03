@@ -5,13 +5,20 @@
 //  
 //
 
+import SwiftUI
+
 @MainActor
 protocol SettingsInteractor: GlobalInteractor {
     var auth: UserAuthInfo? { get }
     var currentAuthUserId: String? { get }
-    var socialCheers: [CheerModel] { get }
+    var currentUser: UserModel? { get }
+    var profilePhotoURL: URL? { get }
+    var pendingEmailRegistration: PendingEmailRegistration? { get }
+    var canEditProfile: Bool { get }
+    var colorScheme: ColorScheme { get }
 
-    func refreshSocialCheers() async throws
+    func refreshProfile() async throws
+    func setDarkMode(_ enabled: Bool)
     func signOut() async throws
     func deleteAccount() async throws
 }

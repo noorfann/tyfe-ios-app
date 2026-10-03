@@ -9,7 +9,8 @@ import SwiftUI
 @MainActor
 protocol SettingsRouter: GlobalRouter {
     func showSignUpView(delegate: SignUpDelegate)
-    func switchToOnboardingModule()
+    func showProfileView(delegate: ProfileDelegate)
+    func switchToWelcome()
 }
 
 extension CoreRouter: SettingsRouter { }

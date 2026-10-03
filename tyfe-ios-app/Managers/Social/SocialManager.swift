@@ -6,6 +6,12 @@ import Observation
 final class SocialManager {
     @ObservationIgnored private let service: SocialService
     @ObservationIgnored private let logManager: LogManager?
+    @ObservationIgnored private let profileService: (any ProfileServicing)?
+    @ObservationIgnored private let now: () -> Date
+    @ObservationIgnored private var sessionGeneration = 0
+    @ObservationIgnored private var activeUserId: String?
+    @ObservationIgnored private var identityRevisions: [String: Int] = [:]
+    private var resolvedPhotos: [String: ResolvedCirclePhoto] = [:]
 
     private(set) var circles: [CircleModel] = []
     private(set) var membersByCircle: [String: [CircleMemberModel]] = [:]
@@ -27,24 +33,47 @@ final class SocialManager {
     init(
         service: SocialService,
         logManager: LogManager? = nil,
-        userDefaults: UserDefaults? = nil
+        userDefaults: UserDefaults? = nil,
+        profileService: (any ProfileServicing)? = nil,
+        now: @escaping () -> Date = Date.init
     ) {
         self.service = service
         self.logManager = logManager
         self.userDefaults = userDefaults
+        self.profileService = profileService
+        self.now = now
         self.hasMigratedToSocial = userDefaults?.bool(forKey: Self.migrationKey) ?? false
     }
 
+    func prepareAccount(userId: String) {
+        let normalizedId = userId.lowercased()
+        if let activeUserId, activeUserId != normalizedId { signOut() }
+        activeUserId = normalizedId
+    }
+
     func refreshCircles(for userId: String) async throws {
+        prepareAccount(userId: userId)
+        let generation = sessionGeneration
         isLoading = true
-        defer { isLoading = false }
-        circles = try await service.fetchCircles(userId: userId)
+        defer { if generation == sessionGeneration { isLoading = false } }
+        let fetchedCircles = try await service.fetchCircles(userId: userId)
+        try requireCurrentSession(generation)
+        circles = fetchedCircles
+        let availableIds = Set(fetchedCircles.map(\.circleId))
+        for circleId in membersByCircle.keys where !availableIds.contains(circleId) {
+            identityRevisions[circleId] = (identityRevisions[circleId] ?? 0) + 1
+        }
+        membersByCircle = membersByCircle.filter { availableIds.contains($0.key) }
+        progressByCircle = progressByCircle.filter { availableIds.contains($0.key) }
+        pruneResolvedPhotos()
     }
 
     func createCircle(name: String, ownerId: String) async throws -> CircleModel {
         logManager?.trackEvent(event: Event.createCircle(.start))
+        let generation = sessionGeneration
         do {
             let circle = try await service.createCircle(name: name, ownerId: ownerId)
+            try requireCurrentSession(generation)
             circles.append(circle)
             logManager?.trackEvent(event: Event.createCircle(.success))
             return circle
@@ -56,8 +85,10 @@ final class SocialManager {
 
     func updateCircle(circleId: String, name: String) async throws -> CircleModel {
         logManager?.trackEvent(event: Event.updateCircle(.start))
+        let generation = sessionGeneration
         do {
             let circle = try await service.updateCircle(circleId: circleId, name: name)
+            try requireCurrentSession(generation)
             if let index = circles.firstIndex(where: { $0.circleId == circleId }) {
                 circles[index] = circle
             }
@@ -71,12 +102,16 @@ final class SocialManager {
 
     func deleteCircle(circleId: String) async throws {
         logManager?.trackEvent(event: Event.deleteCircle(.start))
+        let generation = sessionGeneration
         do {
             try await service.deleteCircle(circleId: circleId)
+            try requireCurrentSession(generation)
+            identityRevisions[circleId] = (identityRevisions[circleId] ?? 0) + 1
             circles.removeAll { $0.circleId == circleId }
             membersByCircle[circleId] = nil
             progressByCircle[circleId] = nil
             focusStatusesByCircle[circleId] = nil
+            pruneResolvedPhotos()
             if activeFocusCircleIds.remove(circleId) != nil {
                 focusTasks[circleId]?.cancel()
                 focusTasks[circleId] = nil
@@ -127,17 +162,89 @@ final class SocialManager {
 
     @discardableResult
     func members(for circleId: String) async throws -> [CircleMemberModel] {
+        let generation = sessionGeneration
+        let revision = (identityRevisions[circleId] ?? 0) + 1
+        identityRevisions[circleId] = revision
         let members = try await service.fetchMembers(circleId: circleId)
+        try requireCurrentIdentity(generation: generation, circleId: circleId, revision: revision)
         membersByCircle[circleId] = members
+        pruneResolvedPhotos()
+        try await resolvePhotos(for: members, generation: generation, circleId: circleId, revision: revision)
+        try requireCurrentIdentity(generation: generation, circleId: circleId, revision: revision)
         return members
+    }
+
+    /// Signed URLs are memory-only and hidden once their five-minute lifetime ends.
+    func photoURL(for member: CircleMemberModel) -> URL? {
+        guard let photo = resolvedPhotos[member.userId.lowercased()],
+              photo.path == member.avatarPath,
+              photo.expiresAt > now() else { return nil }
+        return photo.url
+    }
+
+    private func resolvePhotos(
+        for members: [CircleMemberModel],
+        generation: Int,
+        circleId: String,
+        revision: Int
+    ) async throws {
+        guard let profileService else { return }
+        for member in members {
+            try requireCurrentIdentity(generation: generation, circleId: circleId, revision: revision)
+            let userId = member.userId.lowercased()
+            guard let path = member.avatarPath else {
+                resolvedPhotos[userId] = nil
+                continue
+            }
+            if let existing = resolvedPhotos[userId],
+               existing.path == path, existing.expiresAt.timeIntervalSince(now()) > 60 {
+                continue
+            }
+            resolvedPhotos[userId] = nil
+            do {
+                let requestedAt = now()
+                let url = try await profileService.resolvePhotoURL(path: path)
+                try requireCurrentIdentity(generation: generation, circleId: circleId, revision: revision)
+                resolvedPhotos[userId] = ResolvedCirclePhoto(
+                    path: path, url: url, expiresAt: requestedAt.addingTimeInterval(300)
+                )
+            } catch {
+                try requireCurrentIdentity(generation: generation, circleId: circleId, revision: revision)
+                // Missing/deleted objects and denied reads retain the token/initial fallback.
+            }
+        }
+    }
+
+    private func pruneResolvedPhotos() {
+        let paths = Dictionary(
+            membersByCircle.values.flatMap { $0 }.compactMap { member in
+                member.avatarPath.map { (member.userId.lowercased(), $0) }
+            },
+            uniquingKeysWith: { _, latest in latest }
+        )
+        resolvedPhotos = resolvedPhotos.filter { paths[$0.key] == $0.value.path }
+    }
+
+    private func requireCurrentSession(_ generation: Int) throws {
+        guard generation == sessionGeneration, !Task.isCancelled else { throw CancellationError() }
+    }
+
+    private func requireCurrentIdentity(generation: Int, circleId: String, revision: Int) throws {
+        try requireCurrentSession(generation)
+        guard identityRevisions[circleId] == revision else { throw CancellationError() }
     }
 
     func leaveCircle(circleId: String, userId: String) async throws {
         logManager?.trackEvent(event: Event.leaveCircle(.start))
+        let generation = sessionGeneration
         do {
             try await service.leaveCircle(circleId: circleId, userId: userId)
+            try requireCurrentSession(generation)
+            identityRevisions[circleId] = (identityRevisions[circleId] ?? 0) + 1
             circles.removeAll { $0.circleId == circleId }
             membersByCircle[circleId] = nil
+            progressByCircle[circleId] = nil
+            pruneResolvedPhotos()
             logManager?.trackEvent(event: Event.leaveCircle(.success))
         } catch {
             logManager?.trackEvent(event: Event.leaveCircle(.fail(error)))
@@ -147,9 +254,13 @@ final class SocialManager {
 
     func removeMember(circleId: String, userId: String) async throws {
         logManager?.trackEvent(event: Event.removeMember(.start))
+        let generation = sessionGeneration
         do {
             try await service.removeMember(circleId: circleId, userId: userId)
+            try requireCurrentSession(generation)
+            identityRevisions[circleId] = (identityRevisions[circleId] ?? 0) + 1
             membersByCircle[circleId]?.removeAll { $0.userId == userId }
+            pruneResolvedPhotos()
             logManager?.trackEvent(event: Event.removeMember(.success))
         } catch {
             logManager?.trackEvent(event: Event.removeMember(.fail(error)))
@@ -184,7 +295,9 @@ final class SocialManager {
 
     @discardableResult
     func circleProgress(circleId: String) async throws -> [CircleMemberProgressModel] {
+        let generation = sessionGeneration
         let progress = try await service.fetchCircleProgress(circleId: circleId)
+        try requireCurrentSession(generation)
         progressByCircle[circleId] = progress
         return progress
     }
@@ -211,7 +324,10 @@ final class SocialManager {
     }
 
     func refreshCheers(localDate: LocalDay) async throws {
-        cheers = try await service.fetchCheers(localDate: localDate)
+        let generation = sessionGeneration
+        let fetchedCheers = try await service.fetchCheers(localDate: localDate)
+        try requireCurrentSession(generation)
+        cheers = fetchedCheers
     }
 
     func startCheerDelivery(recipientId: String) {
@@ -221,11 +337,13 @@ final class SocialManager {
         pendingReceivedCheers = []
         cheerRecipientId = normalizedRecipientId
         let stream = service.cheerStream()
+        let generation = sessionGeneration
         cheerTask = Task { [weak self] in
             for await cheer in stream {
-                self?.cheers.append(cheer)
+                guard let self, generation == self.sessionGeneration, !Task.isCancelled else { return }
+                self.cheers.append(cheer)
                 if cheer.recipientId.lowercased() == normalizedRecipientId {
-                    self?.pendingReceivedCheers.append(cheer)
+                    self.pendingReceivedCheers.append(cheer)
                 }
             }
         }
@@ -245,9 +363,11 @@ final class SocialManager {
         guard focusTasks[circleId] == nil else { return }
         activeFocusCircleIds.insert(circleId)
         let stream = service.focusStatusStream(circleId: circleId)
+        let generation = sessionGeneration
         focusTasks[circleId] = Task { [weak self] in
             for await entries in stream {
-                self?.focusStatusesByCircle[circleId] = entries
+                guard let self, generation == self.sessionGeneration, !Task.isCancelled else { return }
+                self.focusStatusesByCircle[circleId] = entries
             }
         }
     }
@@ -298,6 +418,10 @@ final class SocialManager {
     }
 
     func signOut() {
+        sessionGeneration += 1
+        activeUserId = nil
+        identityRevisions = [:]
+        resolvedPhotos = [:]
         stopRealtime()
         circles = []
         membersByCircle = [:]
@@ -307,6 +431,12 @@ final class SocialManager {
         focusStatusesByCircle = [:]
         isLoading = false
     }
+}
+
+private struct ResolvedCirclePhoto {
+    let path: String
+    let url: URL
+    let expiresAt: Date
 }
 
 enum SocialManagerEventStatus {

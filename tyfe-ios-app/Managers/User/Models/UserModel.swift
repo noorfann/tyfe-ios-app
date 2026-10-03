@@ -29,8 +29,10 @@ public struct UserModel: DataSyncModelProtocol {
     
     // These values can be added by the user
     let submittedEmail: String?
-    let submittedName: String?
+    private(set) var submittedName: String?
     let submittedProfileImage: String?
+    private(set) var avatarPath: String?
+    private(set) var hasAuthoritativeProfileName: Bool?
     private(set) var didCompleteOnboarding: Bool?
     
     init(
@@ -49,6 +51,8 @@ public struct UserModel: DataSyncModelProtocol {
         submittedEmail: String? = nil,
         submittedName: String? = nil,
         submittedProfileImage: String? = nil,
+        avatarPath: String? = nil,
+        hasAuthoritativeProfileName: Bool? = nil,
         didCompleteOnboarding: Bool? = nil
     ) {
         self.userId = userId
@@ -66,10 +70,13 @@ public struct UserModel: DataSyncModelProtocol {
         self.submittedName = submittedName
         self.submittedEmail = submittedEmail
         self.submittedProfileImage = submittedProfileImage
+        self.avatarPath = avatarPath
+        self.hasAuthoritativeProfileName = hasAuthoritativeProfileName
         self.didCompleteOnboarding = didCompleteOnboarding
     }
     
-    public init(auth: UserAuthInfo, creationVersion: String?) {
+    public init(auth: UserAuthInfo, creationVersion: String?, existingUser: UserModel? = nil, preferredName: String? = nil) {
+        let existing = existingUser?.userId == auth.uid ? existingUser : nil
         self.init(
             userId: auth.uid,
             email: auth.email,
@@ -81,8 +88,15 @@ public struct UserModel: DataSyncModelProtocol {
             phoneNumber: auth.phoneNumber,
             photoURL: auth.photoURL?.absoluteString,
             creationDate: auth.creationDate,
-            creationVersion: creationVersion,
-            lastSignInDate: auth.lastSignInDate
+            creationVersion: existing?.creationVersion ?? creationVersion,
+            lastSignInDate: auth.lastSignInDate,
+            submittedEmail: existing?.submittedEmail,
+            submittedName: existing?.hasAuthoritativeProfileName == true
+                ? existing?.submittedName : preferredName ?? existing?.submittedName,
+            submittedProfileImage: existing?.submittedProfileImage,
+            avatarPath: existing?.avatarPath,
+            hasAuthoritativeProfileName: existing?.hasAuthoritativeProfileName,
+            didCompleteOnboarding: existing?.didCompleteOnboarding
         )
     }
     
@@ -102,6 +116,8 @@ public struct UserModel: DataSyncModelProtocol {
         case submittedName = "submitted_name"
         case submittedEmail = "submitted_email"
         case submittedProfileImage = "submitted_profile_image"
+        case avatarPath = "avatar_path"
+        case hasAuthoritativeProfileName = "has_authoritative_profile_name"
         case didCompleteOnboarding = "did_complete_onboarding"
     }
     
@@ -199,6 +215,12 @@ public struct UserModel: DataSyncModelProtocol {
     
     mutating func markDidCompleteOnboarding() {
         didCompleteOnboarding = true
+    }
+
+    mutating func applyProfile(_ profile: ProfileIdentity) {
+        submittedName = profile.displayName
+        avatarPath = profile.avatarPath
+        hasAuthoritativeProfileName = true
     }
     
     static var mock: Self {

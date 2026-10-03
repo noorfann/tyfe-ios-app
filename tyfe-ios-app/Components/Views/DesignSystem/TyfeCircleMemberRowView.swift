@@ -1,8 +1,10 @@
 import SwiftUI
 import SwiftfulUI
+import UIKit
 
 struct TyfeCircleMemberRowView: View {
     let member: CircleMemberModel
+    var photoURL: URL?
     let progress: CircleMemberProgressModel?
     let focusStatus: CircleFocusStatus?
     let isSelf: Bool
@@ -25,6 +27,7 @@ struct TyfeCircleMemberRowView: View {
 
     private var header: some View {
         HStack(spacing: TyfeSpacing.small) {
+            avatar
             Text(isSelf ? "Me" : member.displayName)
                 .font(TyfeTypography.interfaceStrong)
             if member.role == .owner {
@@ -38,6 +41,37 @@ struct TyfeCircleMemberRowView: View {
                 removeButton
             }
         }
+    }
+
+    private var avatar: some View {
+        Group {
+            if let photoURL, photoURL.isFileURL {
+                if let image = UIImage(contentsOfFile: photoURL.path) {
+                    Image(uiImage: image).resizable().scaledToFill()
+                } else {
+                    avatarFallback
+                }
+            } else {
+                AsyncImage(url: photoURL) { phase in
+                    if case .success(let image) = phase {
+                        image.resizable().scaledToFill()
+                    } else {
+                        avatarFallback
+                    }
+                }
+            }
+        }
+        .frame(width: 40, height: 40)
+        .clipShape(Circle())
+        .accessibilityHidden(true)
+    }
+
+    private var avatarFallback: some View {
+        Text(member.avatarFallbackText)
+            .font(TyfeTypography.interfaceStrong)
+            .foregroundStyle(TyfeEditorialPalette.muted)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(TyfeEditorialPalette.canvas)
     }
 
     private var removeButton: some View {

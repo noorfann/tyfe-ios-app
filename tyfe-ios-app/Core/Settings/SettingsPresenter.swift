@@ -8,9 +8,45 @@ final class SettingsPresenter {
     private let interactor: SettingsInteractor
     private let router: SettingsRouter
 
-    private(set) var isAnonymousUser = false
-    private(set) var isSignedIn = false
-    private(set) var cheersToday = 0
+    var isAnonymousUser: Bool { interactor.auth?.isAnonymous == true }
+    var isSignedIn: Bool { interactor.currentAuthUserId != nil }
+    var needsAccountSetup: Bool { !interactor.canEditProfile }
+    var canEditProfile: Bool { interactor.canEditProfile }
+    var isDarkMode: Bool { interactor.colorScheme == .dark }
+
+    private var matchingUser: UserModel? {
+        guard interactor.currentUser?.userId == currentUserId else { return nil }
+        return interactor.currentUser
+    }
+
+    var displayName: String {
+        ProfileDisplayIdentity.name(user: matchingUser, auth: interactor.auth)
+            ?? interactor.pendingEmailRegistration?.displayName
+            ?? accountTitle
+    }
+
+    var email: String? {
+        interactor.pendingEmailRegistration?.email ?? interactor.auth?.email ?? matchingUser?.emailCalculated
+    }
+
+    var initials: String { ProfileDisplayIdentity.initials(name: displayName) }
+    var photoURL: URL? { canEditProfile && matchingUser != nil ? interactor.profilePhotoURL : nil }
+    var accountActionTitle: String {
+        if canEditProfile { return "Edit profile" }
+        return interactor.pendingEmailRegistration == nil ? "Create account" : "Finish creating account"
+    }
+
+    func onDarkModeChanged(_ enabled: Bool) {
+        interactor.setDarkMode(enabled)
+    }
+
+    func onProfilePressed() {
+        guard canEditProfile else {
+            onSaveAccountPressed()
+            return
+        }
+        router.showProfileView(delegate: ProfileDelegate())
+    }
 
     init(interactor: SettingsInteractor, router: SettingsRouter) {
         self.interactor = interactor
@@ -22,23 +58,18 @@ final class SettingsPresenter {
     }
 
     var accountTitle: String {
+        if interactor.pendingEmailRegistration != nil { return "Finish creating your account" }
         guard isSignedIn else { return "Not signed in" }
-        return isAnonymousUser ? "Signed in anonymously" : "Signed in"
+        return isAnonymousUser ? "Guest account" : "Signed in"
     }
 
     func onViewAppear() {
         interactor.trackScreenEvent(event: Event.onAppear)
-        setAnonymousAccountStatus()
-        isSignedIn = interactor.currentAuthUserId != nil
-        Task { await refreshSocialState() }
+        Task { await refreshProfile() }
     }
 
     func onViewDisappear() {
         interactor.trackEvent(event: Event.onDisappear)
-    }
-
-    func setAnonymousAccountStatus() {
-        isAnonymousUser = interactor.auth?.isAnonymous == true
     }
 
     func onContactUsPressed() {
@@ -60,7 +91,7 @@ final class SettingsPresenter {
             do {
                 try await interactor.signOut()
                 interactor.trackEvent(event: Event.signOutSuccess)
-                returnToOnboarding()
+                returnToWelcome()
             } catch {
                 router.showAlert(error: error)
                 interactor.trackEvent(event: Event.signOutFail(error: error))
@@ -107,7 +138,7 @@ final class SettingsPresenter {
             do {
                 try await interactor.deleteAccount()
                 interactor.trackEvent(event: Event.deleteAccountSuccess)
-                returnToOnboarding()
+                returnToWelcome()
             } catch {
                 router.showAlert(error: error)
                 interactor.trackEvent(event: Event.deleteAccountFail(error: error))
@@ -118,26 +149,26 @@ final class SettingsPresenter {
     func onSaveAccountPressed() {
         interactor.trackEvent(event: Event.saveAccountPressed)
 
-        router.showSignUpView(delegate: SignUpDelegate())
+        router.showSignUpView(delegate: SignUpDelegate(onDidSignIn: { [weak self] in
+            self?.onAccountSetupCompleted()
+        }))
+    }
+
+    private func onAccountSetupCompleted() {
+        interactor.trackEvent(eventName: "SettingsView_AccountSetupCompleted", parameters: nil, type: .analytic)
+        Task { await refreshProfile() }
     }
 
     // MARK: Private
 
-    private func refreshSocialState() async {
-        guard interactor.currentAuthUserId != nil else {
-            cheersToday = 0
-            return
-        }
-        do {
-            try await interactor.refreshSocialCheers()
-            cheersToday = interactor.socialCheers.count
-        } catch {
-            // Account settings stay usable when social stats cannot load.
-        }
+    private func refreshProfile() async {
+        guard canEditProfile else { return }
+        // Cached identity remains useful when the network is unavailable.
+        try? await interactor.refreshProfile()
     }
 
-    private func returnToOnboarding() {
-        router.switchToOnboardingModule()
+    private func returnToWelcome() {
+        router.switchToWelcome()
     }
 
 }

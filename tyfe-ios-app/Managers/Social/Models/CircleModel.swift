@@ -29,6 +29,7 @@ struct SocialProfileModel: Identifiable, Codable, Hashable {
     let userId: String
     let displayName: String
     let avatarToken: String?
+    var avatarPath: String?
 
     var id: String {
         userId
@@ -38,5 +39,6 @@ struct SocialProfileModel: Identifiable, Codable, Hashable {
         case userId = "id"
         case displayName = "display_name"
         case avatarToken = "avatar_token"
+        case avatarPath = "avatar_path"
     }
 }

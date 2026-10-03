@@ -37,17 +37,30 @@ Login is orchestrated in `CoreInteractor.logIn()` using `async let` for parallel
 
 ```
 async let userLogin = userManager.signIn(auth:isNewUser:)
-async let streakLogin = streakManager.logIn(userId:)
-async let progressLogin = progressManager.logIn(userId:)
-let (_, _, _) = await (try userLogin, try streakLogin, try progressLogin)
+async let optionalLogin = refreshOptionalAccountServices(user:)
+try await userLogin
+await optionalLogin
 ```
 
 - All data sync managers with `signIn`/`logIn` must be added here
 - Service managers and config managers do NOT participate in login
 - After all logins complete: add user properties to LogManager
 
+`UserManager` owns the account-scoped local identity cache and persists it through
+`LocalDocumentPersistence<UserModel>`. It fetches the authoritative name and avatar
+path through `ProfileServicing` after login; a failed network refresh keeps the
+cached identity visible and does not fail account restoration. Profile refresh,
+save, and upload completions must match the session generation and authenticated
+user before updating local state. Auth metadata is a fallback, not a writer over
+an already fetched or edited backend identity. Signed photo URLs are transient
+state and must never be included in the persisted model.
+The existing document sync engine supplies the startup cache and logger only.
+`UserManager` stops its listener: unguarded engine cache writes could publish
+another session's identity. Subsequent auth, onboarding, and profile writes go
+through the Manager's guarded snapshot and direct local persistence.
+
 When adding a new data sync manager:
-1. Add an `async let` login in `logIn()`
+1. Add an independently handled refresh in `refreshOptionalAccountServices()`
 2. Await the refresh alongside streak and progress
 3. Add `signOut()`/`logOut()` call in `signOut()` method
 
@@ -71,11 +84,15 @@ Logout is orchestrated in `CoreInteractor.signOut()` — sequential, not paralle
 
 `CoreInteractor.deleteAccount()` handles account deletion:
 
-1. Reauthenticate user (Apple/Google/Anonymous)
-2. Delete user data INSIDE the auth closure (before auth is revoked) — prefer moving deletion logic to a backend function when Supabase is integrated
-3. Delete LogManager user profile
+1. Remove the authenticated owner's profile photos through the Storage API.
+   If cleanup fails, keep the account and local identity available for retry.
+2. Invoke the existing authenticated account-deletion RPC through AuthManager.
+   A failed RPC must not clear the local identity needed to retry.
+3. After remote deletion succeeds, clear the local user and social state, reset
+   registration/navigation state, and delete the LogManager user profile.
 
-IMPORTANT: Data deletion must happen before auth revocation so the active user session remains available.
+Storage cleanup must happen before authentication is revoked. Never delete rows
+from `storage.objects` with SQL: those rows are metadata, not the stored files.
 
 ## Analytics Tracking
 

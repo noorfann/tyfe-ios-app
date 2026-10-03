@@ -12,6 +12,7 @@ struct CircleMemberProgressModel: Identifiable, Codable, Hashable {
     let sevenDayCompleted: Int
     let cheersToday: Int
     let progressUpdatedAt: Date?
+    var avatarPath: String?
 
     var id: String {
         userId
@@ -27,6 +28,7 @@ struct CircleMemberProgressModel: Identifiable, Codable, Hashable {
         case userId = "user_id"
         case displayName = "display_name"
         case avatarToken = "avatar_token"
+        case avatarPath = "avatar_path"
         case isOwner = "is_owner"
         case latestDate = "latest_date"
         case todayPlanned = "today_planned"

@@ -26,8 +26,17 @@ struct CircleMemberModel: Identifiable, Hashable {
     let avatarToken: String?
     let role: CircleMemberRole
     let joinedAt: Date
+    var avatarPath: String?
 
     var id: String {
         userId
+    }
+
+    var avatarFallbackText: String {
+        if let token = avatarToken?.trimmingCharacters(in: .whitespacesAndNewlines), !token.isEmpty {
+            return token
+        }
+        let initials = displayName.split(whereSeparator: \.isWhitespace).prefix(2).compactMap(\.first)
+        return initials.isEmpty ? "?" : String(initials).uppercased()
     }
 }

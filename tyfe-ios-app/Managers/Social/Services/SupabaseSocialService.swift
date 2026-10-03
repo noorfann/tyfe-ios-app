@@ -74,7 +74,7 @@ final class SupabaseSocialService: SocialService {
     func fetchMembers(circleId: String) async throws -> [CircleMemberModel] {
         let rows: [MembershipMemberRow] = try await client
             .from("circle_memberships")
-            .select("user_id, role, joined_at, profiles(display_name, avatar_token)")
+            .select("user_id, role, joined_at, profiles(display_name, avatar_token, avatar_path)")
             .eq("circle_id", value: circleId)
             .execute()
             .value
@@ -85,7 +85,8 @@ final class SupabaseSocialService: SocialService {
                 displayName: row.profiles?.displayName ?? "Friend",
                 avatarToken: row.profiles?.avatarToken,
                 role: row.role,
-                joinedAt: row.joinedAt
+                joinedAt: row.joinedAt,
+                avatarPath: row.profiles?.avatarPath
             )
         }
     }
@@ -379,10 +380,12 @@ private struct MembershipMemberRow: Decodable {
 private struct MembershipMemberProfile: Decodable {
     let displayName: String
     let avatarToken: String?
+    let avatarPath: String?
 
     enum CodingKeys: String, CodingKey {
         case displayName = "display_name"
         case avatarToken = "avatar_token"
+        case avatarPath = "avatar_path"
     }
 }
 
