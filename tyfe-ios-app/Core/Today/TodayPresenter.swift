@@ -23,7 +23,6 @@ final class TodayPresenter {
     private(set) var selectedLocalDay: LocalDay
     private(set) var selectedProjectId: String?
     private(set) var earliestRecordedLocalDay: LocalDay?
-    var colorScheme: ColorScheme = .light
 
     var selectedPlanItemId: String?
     var isAddActivitySheetPresented = false
@@ -43,7 +42,6 @@ final class TodayPresenter {
         self.selectedLocalDay = currentLocalDay
         self.selectedProjectId = interactor.phase1SelectedProjectId
         self.earliestRecordedLocalDay = interactor.phase1EarliestRecordedLocalDay
-        self.colorScheme = interactor.colorScheme
     }
 
     var isViewingToday: Bool {
@@ -72,22 +70,12 @@ final class TodayPresenter {
         return selectedLocalDay.startDate.formatted(format)
     }
 
-    var isDarkAppearance: Bool {
-        colorScheme == .dark
-    }
-
     static func streakCount(from data: CurrentStreakData) -> Int {
         data.currentStreak ?? 0
     }
 
     var currentStreakCount: Int {
         Self.streakCount(from: interactor.currentStreakData)
-    }
-
-    func onToggleAppearancePressed() {
-        interactor.toggleColorScheme()
-        colorScheme = interactor.colorScheme
-        interactor.trackEvent(event: Event.toggleAppearance)
     }
 
     var greeting: String {
@@ -617,7 +605,6 @@ extension TodayPresenter {
         case removeActivityFromToday
         case toggleChecklistItem
         case startFocus
-        case toggleAppearance
         case openStreak
         case openProjectManagement
         case selectProject
@@ -637,7 +624,6 @@ extension TodayPresenter {
             case .removeActivityFromToday: return "Today_Activity_Remove"
             case .toggleChecklistItem: return "Today_ChecklistItem_Toggle"
             case .startFocus: return "Today_StartFocus"
-            case .toggleAppearance: return "Today_ToggleAppearance"
             case .openStreak: return "Today_Streak_Open"
             case .openProjectManagement: return "Today_ProjectManagement_Open"
             case .selectProject: return "Today_Project_Select"
@@ -652,7 +638,7 @@ extension TodayPresenter {
             case .onAppear(delegate: let delegate), .onDisappear(delegate: let delegate):
                 return delegate.eventParameters
             case .createPlan, .addActivity, .editPlan, .openActivityDetail, .saveActivityDetail,
-                    .removeActivityFromToday, .toggleChecklistItem, .startFocus, .toggleAppearance,
+                    .removeActivityFromToday, .toggleChecklistItem, .startFocus,
                     .openStreak, .openProjectManagement, .selectProject, .deckSwipeCoachmarkShown,
                     .viewPreviousDay, .viewNextDay:
                 return nil

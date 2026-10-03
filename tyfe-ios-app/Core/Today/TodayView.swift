@@ -106,23 +106,6 @@ struct TodayView: View {
                 .foregroundStyle(TyfeEditorialPalette.ink)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            Image(systemName: presenter.isDarkAppearance ? "moon.stars.fill" : "sun.max.fill")
-                .font(.subheadline.weight(.black))
-                .foregroundStyle(TyfeEditorialPalette.onAccent)
-                .frame(width: 40, height: 40)
-                .background(TyfeEditorialPalette.teal)
-                .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
-                .overlay {
-                    RoundedRectangle(cornerRadius: TyfeRadius.control)
-                        .stroke(TyfeEditorialPalette.onAccent, lineWidth: TyfeStroke.standard)
-                }
-                .asButton(.press) {
-                    presenter.onToggleAppearancePressed()
-                }
-                .accessibilityLabel("Appearance")
-                .accessibilityValue(presenter.isDarkAppearance ? "Dark" : "Light")
-                .accessibilityHint("Switches between light and dark appearance")
-
             HStack(spacing: 5) {
                 Image(systemName: "flame.fill")
                     .accessibilityHidden(true)

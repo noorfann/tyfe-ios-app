@@ -13,9 +13,6 @@ protocol TodayInteractor: GlobalInteractor {
     var phase1CompletedSessionCount: Int { get }
     var currentStreakData: CurrentStreakData { get }
     var hasSeenDeckSwipeCoachmark: Bool { get }
-    var colorScheme: ColorScheme { get }
-
-    func toggleColorScheme()
     func markDeckSwipeCoachmarkSeen()
     func synchronizeCurrentDay()
 

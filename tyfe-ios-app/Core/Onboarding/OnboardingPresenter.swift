@@ -51,7 +51,11 @@ final class OnboardingPresenter {
     }
 
     func goBack() {
-        guard currentIndex > 0 else { return }
+        guard currentIndex > 0 else {
+            interactor.trackEvent(event: Event.backToWelcome)
+            router.switchToWelcome()
+            return
+        }
         currentIndex -= 1
         interactor.trackEvent(event: Event.pageViewed(index: currentIndex))
     }
@@ -92,6 +96,7 @@ extension OnboardingPresenter {
         case onDisappear(delegate: OnboardingDelegate)
         case pageViewed(index: Int)
         case flowComplete
+        case backToWelcome
         case notificationPermissionResolved(isAuthorized: Bool)
 
         var eventName: String {
@@ -100,6 +105,7 @@ extension OnboardingPresenter {
             case .onDisappear: return "OnboardingView_Disappear"
             case .pageViewed: return "OnboardingView_PageViewed"
             case .flowComplete: return "OnboardingView_FlowComplete"
+            case .backToWelcome: return "OnboardingView_BackToWelcome"
             case .notificationPermissionResolved: return "OnboardingView_NotificationPermission"
             }
         }
@@ -110,7 +116,7 @@ extension OnboardingPresenter {
                 return delegate.eventParameters
             case .pageViewed(index: let index):
                 return ["page_index": index]
-            case .flowComplete:
+            case .flowComplete, .backToWelcome:
                 return nil
             case .notificationPermissionResolved(isAuthorized: let isAuthorized):
                 return ["push_is_authorized": isAuthorized]

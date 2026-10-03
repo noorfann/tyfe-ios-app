@@ -10,6 +10,7 @@ struct CirclesView: View {
 
     @State private var presenter: CirclesPresenter
     let delegate: CirclesDelegate
+    @Environment(\.scenePhase) private var scenePhase
 
     init(presenter: CirclesPresenter, delegate: CirclesDelegate) {
         _presenter = State(initialValue: presenter)
@@ -26,10 +27,14 @@ struct CirclesView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: TyfeSpacing.section) {
                     header
-                    if presenter.isSignedIn {
+                    if presenter.canAccessCircles {
                         content
                     } else {
-                        TyfeCircleEnableCardView(onEnable: { presenter.onEnableCirclesTapped() })
+                        TyfeCircleEnableCardView(
+                            accountActionTitle: presenter.accountActionTitle,
+                            onEnable: { presenter.onCreateAccountTapped() },
+                            onSignIn: { presenter.onSignInTapped() }
+                        )
                     }
                 }
                 .padding(.horizontal, TyfeSpacing.control)
@@ -101,6 +106,15 @@ struct CirclesView: View {
         }
         .onDisappear {
             presenter.onViewDisappear(delegate: delegate)
+        }
+        .onChange(of: presenter.canAccessCircles) { _, _ in
+            presenter.onAccountStatusChanged()
+        }
+        .onChange(of: presenter.currentUserId) { _, _ in
+            presenter.onAccountStatusChanged()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { presenter.onSceneBecameActive() }
         }
     }
 
@@ -186,6 +200,7 @@ struct CirclesView: View {
             ForEach(presenter.members) { member in
                 TyfeCircleMemberRowView(
                     member: member,
+                    photoURL: presenter.photoURL(for: member),
                     progress: presenter.memberProgress(for: member.userId),
                     focusStatus: presenter.focusStatus(for: member.userId),
                     isSelf: member.userId == presenter.currentUserId,
@@ -253,6 +268,10 @@ extension CoreBuilder {
 }
 
 extension CoreRouter {
+
+    func showCirclesSignInView(onDidSignIn: (() -> Void)?) {
+        showSignInSheet(onDidSignIn: onDidSignIn)
+    }
 
     func showCirclesView(delegate: CirclesDelegate = CirclesDelegate()) {
         router.showScreen(.push) { router in

@@ -123,17 +123,23 @@ extension CoreBuilder {
                 interactor: interactor
             ),
             content: {
-                switch interactor.startingModuleId {
-                case Constants.tabbarModuleId:
+                switch interactor.entryPhase {
+                case .core:
                     let delegate = ModuleWrapperDelegate(moduleId: Constants.tabbarModuleId)
                     RouterView(id: delegate.moduleId, addNavigationStack: false, addModuleSupport: true) { router in
                         coreModuleEntryView(router: router, delegate: delegate)
                     }
-                default:
+                case .onboarding:
                     let delegate = ModuleWrapperDelegate(moduleId: Constants.onboardingModuleId)
                     RouterView(id: delegate.moduleId, addNavigationStack: false, addModuleSupport: true) { router in
                         onboardingModuleEntryView(router: router, delegate: delegate)
                     }
+                    .id(AppEntryPhase.onboarding)
+                case .welcome:
+                    RouterView(id: "welcome", addNavigationStack: true, addModuleSupport: true) { router in
+                        welcomeView(router: router)
+                    }
+                    .id(AppEntryPhase.welcome)
                 }
             }
         )
@@ -180,10 +186,7 @@ extension CoreBuilder {
 extension CoreRouter {
     
     func switchToCoreModule() {
-        let delegate = ModuleWrapperDelegate(moduleId: Constants.tabbarModuleId)
-        router.showModule(.top(animation: .snappy), id: delegate.moduleId, onDismiss: nil) { router in
-            self.builder.coreModuleEntryView(router: router, delegate: delegate)
-        }
+        builder.interactor.setEntryPhase(.core)
     }
     
 }
@@ -191,9 +194,10 @@ extension CoreRouter {
 extension CoreRouter {
     
     func switchToOnboardingModule() {
-        let delegate = ModuleWrapperDelegate(moduleId: Constants.onboardingModuleId)
-        router.showModule(.bottom(animation: .snappy), id: delegate.moduleId, onDismiss: nil) { router in
-            self.builder.onboardingModuleEntryView(router: router, delegate: delegate)
-        }
+        builder.interactor.setEntryPhase(.onboarding)
+    }
+
+    func switchToWelcome() {
+        builder.interactor.setEntryPhase(.welcome)
     }
 }

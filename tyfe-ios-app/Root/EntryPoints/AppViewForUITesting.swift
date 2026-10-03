@@ -20,7 +20,13 @@ struct AppViewForUITesting: View {
     }
 
     var body: some View {
-        if processInfoContains("HOME_FLOW") || processInfoContains("HOME_EMPTY_FLOW") {
+        if processInfoContains("SIGNUP_FLOW") {
+            NavigationStack {
+                RouterView { router in
+                    builder.settingsView(router: router)
+                }
+            }
+        } else if processInfoContains("HOME_FLOW") || processInfoContains("HOME_EMPTY_FLOW") {
             NavigationStack {
                 RouterView { router in
                     builder.homeView(router: router, delegate: HomeDelegate())

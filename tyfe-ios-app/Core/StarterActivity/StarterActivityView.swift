@@ -37,6 +37,7 @@ struct StarterActivityView: View {
                         isEnabled: presenter.canContinue,
                         onTap: presenter.onContinuePressed
                     )
+                    .accessibilityIdentifier("starter-activity-continue")
                 }
                 .padding(.horizontal, TyfeSpacing.control)
                 .padding(.top, TyfeSpacing.control)
@@ -94,6 +95,7 @@ struct StarterActivityView: View {
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
                 TyfeTextFieldView(placeholder: "Name your activity", text: $presenter.activityName)
+                    .accessibilityIdentifier("starter-activity-name")
             }
         }
     }

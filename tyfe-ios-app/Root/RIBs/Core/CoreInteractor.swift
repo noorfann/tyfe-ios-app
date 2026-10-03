@@ -42,6 +42,24 @@ struct CoreInteractor: GlobalInteractor {
         appState.startingModuleId
     }
 
+    var entryPhase: AppEntryPhase { appState.entryPhase }
+
+    func setEntryPhase(_ phase: AppEntryPhase) { appState.setEntryPhase(phase) }
+
+    func prepareEntryTransition(to phase: AppEntryPhase) { appState.prepareEntryTransition(to: phase) }
+
+    func completeEntryTransition() { appState.completeEntryTransition() }
+
+    func prepareGuestForSignup() async throws {
+        _ = try await emailAuthService.restoreRegistration()
+        if emailAuthService.authenticatedUser == nil {
+            let result = try await authManager.signInAnonymously()
+            try await logIn(user: result.user, isNewUser: result.isNewUser)
+        }
+        guard let user = emailAuthService.authenticatedUser,
+              user.isAnonymous || pendingEmailRegistration != nil else { throw EmailAuthError.alreadySignedIn }
+    }
+
     var isFocusScreenVisible: Bool {
         appState.isFocusScreenVisible
     }
@@ -54,8 +72,8 @@ struct CoreInteractor: GlobalInteractor {
         appState.colorScheme
     }
 
-    func toggleColorScheme() {
-        appState.toggleColorScheme()
+    func setDarkMode(_ isDark: Bool) {
+        appState.setDarkMode(isDark)
     }
 
     func reconcileFocusLiveActivity() {
@@ -84,14 +102,6 @@ struct CoreInteractor: GlobalInteractor {
         try await authManager.signInAnonymously()
     }
 
-    func registerWithEmail(
-        email: String,
-        password: String,
-        displayName: String?
-    ) async throws -> (user: UserAuthInfo, isNewUser: Bool) {
-        try await emailAuthService.register(email: email, password: password, displayName: displayName)
-    }
-
     func signInWithEmail(
         email: String,
         password: String
@@ -102,27 +112,16 @@ struct CoreInteractor: GlobalInteractor {
     // MARK: UserManager
     
     var currentUser: UserModel? {
-        userManager.currentUser
+        guard let user = userManager.currentUser, user.userId == auth?.uid else { return nil }
+        return user
     }
-    
+
     func getCurrentUser() async throws -> UserModel {
         try await userManager.getUser()
     }
     
     func saveOnboardingComplete() async throws {
         try await userManager.saveOnboardingCompleteForCurrentUser()
-    }
-    
-    func saveUserName(name: String) async throws {
-        try await userManager.saveUserName(name: name)
-    }
-    
-    func saveUserEmail(email: String) async throws {
-        try await userManager.saveUserEmail(email: email)
-    }
-    
-    func saveUserProfileImage(image: UIImage) async throws {
-        try await userManager.saveUserProfileImage(image: image)
     }
     
     // MARK: LogManager
@@ -576,21 +575,23 @@ struct CoreInteractor: GlobalInteractor {
     // MARK: SHARED
 
     func logIn(user: UserAuthInfo, isNewUser: Bool) async throws {
-        // Run all logins in parallel
+        guard auth?.uid == user.uid else { throw EmailAuthError.sessionChanged }
+        socialManager.prepareAccount(userId: user.uid)
+        // Reconcile the profile while refreshing optional integrations independently.
         async let userLogin: Void = userManager.signIn(auth: user, isNewUser: isNewUser)
-        async let streakLogin: Void = streakManager.logIn(userId: user.uid)
-        async let progressLogin: Void = progressManager.logIn(userId: user.uid)
-
-        let (_, _, _) = await (try userLogin, try streakLogin, try progressLogin)
+        async let optionalLogin: Void = refreshOptionalAccountServices(user: user)
+        try await userLogin
+        await optionalLogin
 
         // Add user properties
         logManager.addUserProperties(dict: Utilities.eventParameters, isHighPriority: false)
 
-        await syncSocialRealtime()
     }
 
     func signOut() async throws {
         try authManager.signOut()
+        appState.setEntryPhase(.welcome)
+        resetRegistrationAfterSignOut()
         userManager.signOut()
         socialManager.signOut()
         streakManager.logOut()
@@ -607,14 +608,110 @@ struct CoreInteractor: GlobalInteractor {
             option = .apple
         }
         
-        // Delete auth
+        // Storage cleanup must finish while authenticated; failed cleanup leaves deletion retryable.
         try await authManager.deleteAccountWithReauthentication(option: option, revokeToken: false) {
-            // Delete the local user profile before revoking authentication.
-            try await userManager.deleteCurrentUser()
+            guard self.auth?.uid == auth.uid else { throw EmailAuthError.sessionChanged }
+            try await userManager.removeAllProfilePhotos()
+            guard self.auth?.uid == auth.uid else { throw EmailAuthError.sessionChanged }
         }
+        guard userManager.currentUser == nil || userManager.currentUser?.userId == auth.uid else {
+            throw EmailAuthError.sessionChanged
+        }
+        // Keep local identity until remote deletion succeeds, so an RPC failure can be retried.
+        do {
+            try await userManager.deleteCurrentUser()
+        } catch {
+            userManager.signOut()
+            logManager.trackEvent(eventName: "Account_LocalProfileCleanupFailed", parameters: nil, type: .warning)
+        }
+        appState.setEntryPhase(.welcome)
+        resetRegistrationAfterSignOut()
+        socialManager.signOut()
 
         // Delete logs (Mixpanel)
         logManager.deleteUserProfile()
+    }
+
+}
+
+extension CoreInteractor {
+    var canEditProfile: Bool {
+        auth?.isAnonymous == false && pendingEmailRegistration == nil
+    }
+
+    var profilePhotoURL: URL? {
+        guard currentUser?.userId == auth?.uid else { return nil }
+        return userManager.profilePhotoURL
+    }
+
+    var profileSessionGeneration: Int {
+        userManager.profileSessionGeneration
+    }
+
+    func refreshProfile() async throws {
+        guard canEditProfile else { throw AppError("Finish creating your account to edit your profile.") }
+        try await userManager.refreshProfile()
+    }
+
+    func saveProfile(name: String, photo: ProfilePhotoChange) async throws {
+        guard canEditProfile else { throw AppError("Finish creating your account to edit your profile.") }
+        try await userManager.saveProfile(name: name, photo: photo)
+    }
+
+    private func resetRegistrationAfterSignOut() {
+        do { try emailAuthService.resetRegistrationAfterSignOut() } catch {
+            logManager.trackEvent(eventName: "Account_RegistrationResetFailed", parameters: nil, type: .warning)
+        }
+    }
+
+    var pendingEmailRegistration: PendingEmailRegistration? {
+        emailAuthService.pendingRegistration
+    }
+
+    func restoreEmailRegistration() async throws -> PendingEmailRegistration? {
+        try await emailAuthService.restoreRegistration()
+    }
+
+    func beginEmailRegistration(email: String, displayName: String?) async throws -> PendingEmailRegistration {
+        try await emailAuthService.beginRegistration(email: email, displayName: displayName)
+    }
+
+    func verifyEmailRegistrationCode(_ code: String) async throws -> PendingEmailRegistration {
+        try await emailAuthService.verifyRegistrationCode(code)
+    }
+
+    func resendEmailRegistrationCode() async throws -> PendingEmailRegistration {
+        try await emailAuthService.resendRegistrationCode()
+    }
+
+    func finishEmailRegistration(password: String) async throws {
+        let user = try await emailAuthService.finishRegistration(password: password)
+        try await userManager.reconcileRegistration(auth: user)
+        guard emailAuthService.authenticatedUser?.uid == user.uid else { throw EmailAuthError.sessionChanged }
+        try emailAuthService.acknowledgeRegistrationComplete()
+        // Account creation is complete. Optional integrations cannot turn it into a failed signup.
+        Task { await refreshOptionalAccountServices(user: user) }
+    }
+
+    private func refreshOptionalAccountServices(user: UserAuthInfo) async {
+        guard auth?.uid == user.uid else { return }
+        async let streak: Void = refreshStreakAccount(userId: user.uid)
+        async let progress: Void = refreshProgressAccount(userId: user.uid)
+        _ = await (streak, progress)
+        guard auth?.uid == user.uid else { return }
+        await syncSocialRealtime()
+    }
+
+    private func refreshStreakAccount(userId: String) async {
+        do { try await streakManager.logIn(userId: userId) } catch {
+            logManager.trackEvent(eventName: "Account_StreakRefreshFailed", parameters: nil, type: .warning)
+        }
+    }
+
+    private func refreshProgressAccount(userId: String) async {
+        do { try await progressManager.logIn(userId: userId) } catch {
+            logManager.trackEvent(eventName: "Account_ProgressRefreshFailed", parameters: nil, type: .warning)
+        }
     }
 
 }

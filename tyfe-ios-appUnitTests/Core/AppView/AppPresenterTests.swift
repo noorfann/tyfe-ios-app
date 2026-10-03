@@ -115,8 +115,6 @@ private final class RecordingAppViewInteractor: AppViewInteractor {
     private(set) var focusLiveActivityReconciliationCount = 0
     private(set) var rewardLiveActivityReconciliationCount = 0
 
-    func toggleColorScheme() {}
-
     func logIn(user: UserAuthInfo, isNewUser: Bool) async throws {}
 
     func signInAnonymously() async throws -> (user: UserAuthInfo, isNewUser: Bool) {

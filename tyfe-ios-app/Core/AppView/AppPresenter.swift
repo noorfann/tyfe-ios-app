@@ -16,6 +16,7 @@ class AppPresenter {
     private(set) var activeCheerKinds: [CheerKind] = []
     @ObservationIgnored private var cheerBatchTask: Task<Void, Never>?
     @ObservationIgnored private var isApplicationActive = false
+    @ObservationIgnored private var isCheckingUserStatus = false
 
     private static let cheerBatchDelay = Duration.milliseconds(250)
     
@@ -29,10 +30,6 @@ class AppPresenter {
 
     var pendingReceivedCheerCount: Int {
         interactor.pendingReceivedCheerCount
-    }
-    
-    func toggleColorScheme() {
-        interactor.toggleColorScheme()
     }
     
     init(interactor: AppViewInteractor) {
@@ -87,6 +84,14 @@ class AppPresenter {
     }
     
     func checkUserStatus() async {
+        guard !isCheckingUserStatus else { return }
+        isCheckingUserStatus = true
+        defer { isCheckingUserStatus = false }
+        await restoreUserStatus()
+    }
+
+    private func restoreUserStatus() async {
+        guard !Task.isCancelled else { return }
         if let user = interactor.auth {
             // User is authenticated
             interactor.trackEvent(event: Event.existingAuthStart)
@@ -96,7 +101,7 @@ class AppPresenter {
             } catch {
                 interactor.trackEvent(event: Event.existingAuthFail(error: error))
                 try? await Task.sleep(for: .seconds(5))
-                await checkUserStatus()
+                await restoreUserStatus()
             }
         } else {
             // User is not authenticated
@@ -114,7 +119,7 @@ class AppPresenter {
             } catch {
                 interactor.trackEvent(event: Event.anonAuthFail(error: error))
                 try? await Task.sleep(for: .seconds(5))
-                await checkUserStatus()
+                await restoreUserStatus()
             }
         }
     }

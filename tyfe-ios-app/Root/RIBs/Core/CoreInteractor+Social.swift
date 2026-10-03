@@ -8,25 +8,37 @@ extension CoreInteractor {
         auth?.uid
     }
 
+    var canAccessCircles: Bool {
+        auth?.isAnonymous == false && pendingEmailRegistration == nil
+    }
+
+    private func requireCirclesAccount() throws {
+        guard canAccessCircles else { throw SocialServiceError.notAuthenticated }
+    }
+
     var socialCircles: [CircleModel] {
-        socialManager.circles
+        canAccessCircles ? socialManager.circles : []
     }
 
     func refreshSocialCircles(userId: String) async throws {
+        try requireCirclesAccount()
         try await socialManager.refreshCircles(for: userId)
     }
 
     @discardableResult
     func createCircle(name: String, ownerId: String) async throws -> CircleModel {
-        try await socialManager.createCircle(name: name, ownerId: ownerId)
+        try requireCirclesAccount()
+        return try await socialManager.createCircle(name: name, ownerId: ownerId)
     }
 
     @discardableResult
     func updateCircle(circleId: String, name: String) async throws -> CircleModel {
-        try await socialManager.updateCircle(circleId: circleId, name: name)
+        try requireCirclesAccount()
+        return try await socialManager.updateCircle(circleId: circleId, name: name)
     }
 
     func deleteCircle(circleId: String) async throws {
+        try requireCirclesAccount()
         try await socialManager.deleteCircle(circleId: circleId)
     }
 
@@ -36,37 +48,48 @@ extension CoreInteractor {
         createdBy: String,
         expiresAt: Date
     ) async throws -> CircleInviteModel {
-        try await socialManager.createInvite(circleId: circleId, createdBy: createdBy, expiresAt: expiresAt)
+        try requireCirclesAccount()
+        return try await socialManager.createInvite(circleId: circleId, createdBy: createdBy, expiresAt: expiresAt)
     }
 
     func revokeCircleInvite(inviteId: String) async throws {
+        try requireCirclesAccount()
         try await socialManager.revokeInvite(inviteId: inviteId)
     }
 
     @discardableResult
     func acceptCircleInvite(code: String) async throws -> String {
-        try await socialManager.acceptInvite(code: code)
+        try requireCirclesAccount()
+        return try await socialManager.acceptInvite(code: code)
     }
 
     @discardableResult
     func circleMembers(circleId: String) async throws -> [CircleMemberModel] {
-        try await socialManager.members(for: circleId)
+        try requireCirclesAccount()
+        return try await socialManager.members(for: circleId)
+    }
+
+    func circlePhotoURL(for member: CircleMemberModel) -> URL? {
+        canAccessCircles ? socialManager.photoURL(for: member) : nil
     }
 
     func leaveCircle(circleId: String, userId: String) async throws {
+        try requireCirclesAccount()
         try await socialManager.leaveCircle(circleId: circleId, userId: userId)
     }
 
     func removeCircleMember(circleId: String, userId: String) async throws {
+        try requireCirclesAccount()
         try await socialManager.removeMember(circleId: circleId, userId: userId)
     }
 
     func updateSocialDisplayName(_ name: String, userId: String) async throws {
+        try requireCirclesAccount()
         try await socialManager.updateDisplayName(name, userId: userId)
     }
 
     func syncSharedProgress(for localDay: LocalDay? = nil) async {
-        guard let userId = auth?.uid else { return }
+        guard canAccessCircles, let userId = auth?.uid else { return }
         let day = localDay ?? todayManager.currentLocalDay
         let planned = todayManager.plannedUnitCount(.session, on: day)
         let completed = todayManager.completedSessionCount(on: day)
@@ -83,24 +106,26 @@ extension CoreInteractor {
     }
 
     var circleProgressByCircle: [String: [CircleMemberProgressModel]] {
-        socialManager.progressByCircle
+        canAccessCircles ? socialManager.progressByCircle : [:]
     }
 
     @discardableResult
     func circleMemberProgress(circleId: String) async throws -> [CircleMemberProgressModel] {
-        try await socialManager.circleProgress(circleId: circleId)
+        try requireCirclesAccount()
+        return try await socialManager.circleProgress(circleId: circleId)
     }
 
     var socialCheers: [CheerModel] {
-        socialManager.cheers
+        canAccessCircles ? socialManager.cheers : []
     }
 
     var pendingReceivedCheerCount: Int {
-        socialManager.pendingReceivedCheers.count
+        canAccessCircles ? socialManager.pendingReceivedCheers.count : 0
     }
 
     func consumePendingReceivedCheers() -> [CheerModel] {
-        socialManager.consumePendingReceivedCheers()
+        guard canAccessCircles else { return [] }
+        return socialManager.consumePendingReceivedCheers()
     }
 
     func discardPendingReceivedCheers() {
@@ -108,10 +133,11 @@ extension CoreInteractor {
     }
 
     var socialFocusStatuses: [String: [CircleFocusStatusEntry]] {
-        socialManager.focusStatusesByCircle
+        canAccessCircles ? socialManager.focusStatusesByCircle : [:]
     }
 
     func sendCheer(_ kind: CheerKind, recipientId: String) async throws {
+        try requireCirclesAccount()
         guard let senderId = auth?.uid else { throw SocialServiceError.notAuthenticated }
         try await socialManager.sendCheer(
             kind,
@@ -122,11 +148,15 @@ extension CoreInteractor {
     }
 
     func refreshSocialCheers() async throws {
+        try requireCirclesAccount()
         try await socialManager.refreshCheers(localDate: todayManager.currentLocalDay)
     }
 
     func startSocialRealtime(circleIds: [String]) {
-        guard let recipientId = auth?.uid else { return }
+        guard canAccessCircles, let recipientId = auth?.uid else {
+            socialManager.stopRealtime()
+            return
+        }
         socialManager.startCheerDelivery(recipientId: recipientId)
         for circleId in circleIds {
             socialManager.startFocusStatus(circleId: circleId)
@@ -138,14 +168,14 @@ extension CoreInteractor {
     }
 
     func syncSocialRealtime() async {
-        guard let userId = auth?.uid else {
+        guard canAccessCircles, let userId = auth?.uid else {
             socialManager.stopRealtime()
             return
         }
         if socialManager.circles.isEmpty {
             try? await socialManager.refreshCircles(for: userId)
         }
-        guard !socialManager.circles.isEmpty else {
+        guard canAccessCircles, auth?.uid == userId, !socialManager.circles.isEmpty else {
             socialManager.stopRealtime()
             return
         }
@@ -158,7 +188,7 @@ extension CoreInteractor {
     }
 
     func updateSocialFocusStatus(_ status: CircleFocusStatus) async {
-        guard let userId = auth?.uid else { return }
+        guard canAccessCircles, let userId = auth?.uid else { return }
         await socialManager.updateFocusStatusForActiveCircles(status, userId: userId.lowercased())
     }
 
@@ -167,6 +197,7 @@ extension CoreInteractor {
     }
 
     func migrateLocalToSocial() async throws {
+        try requireCirclesAccount()
         guard let userId = auth?.uid else { throw SocialServiceError.notAuthenticated }
         let day = todayManager.currentLocalDay
         let planned = todayManager.plannedUnitCount(.session, on: day)

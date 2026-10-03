@@ -41,6 +41,7 @@ struct DailyPlanView: View {
                         systemImage: "checkmark",
                         onTap: presenter.acceptPlan
                     )
+                    .accessibilityIdentifier("daily-plan-accept")
                 }
                 .padding(.horizontal, TyfeSpacing.control)
                 .padding(.top, TyfeSpacing.control)

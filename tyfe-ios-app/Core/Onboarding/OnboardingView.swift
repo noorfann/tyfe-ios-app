@@ -65,16 +65,15 @@ struct OnboardingView: View {
 
     private var header: some View {
         HStack(spacing: TyfeSpacing.small) {
-            if !presenter.isFirstPage {
-                Image(systemName: "chevron.left")
-                    .font(.headline.weight(.black))
-                    .foregroundStyle(TyfeEditorialPalette.ink)
-                    .frame(width: 44, height: 44)
-                    .asButton(.press) {
-                        presenter.goBack()
-                    }
-                    .accessibilityLabel("Back")
-            }
+            Image(systemName: "chevron.left")
+                .font(.headline.weight(.black))
+                .foregroundStyle(TyfeEditorialPalette.ink)
+                .frame(width: 44, height: 44)
+                .asButton(.press) {
+                    presenter.goBack()
+                }
+                .accessibilityLabel("Back")
+                .accessibilityIdentifier("onboarding-back")
 
             Text(presenter.pages[presenter.currentIndex].eyebrow)
                 .font(TyfeTypography.eyebrow)
@@ -91,6 +90,7 @@ struct OnboardingView: View {
                         presenter.onSkipPressed()
                     }
                     .accessibilityLabel(OnboardingContent.skipAccessibilityLabel)
+                    .accessibilityIdentifier("onboarding-skip")
             }
         }
         .padding(.horizontal, TyfeSpacing.control)
@@ -118,6 +118,7 @@ struct OnboardingView: View {
                 systemImage: presenter.isLastPage ? "plus" : "arrow.right",
                 onTap: presenter.onPrimaryPressed
             )
+            .accessibilityIdentifier("onboarding-continue")
         }
         .padding(.horizontal, TyfeSpacing.control)
         .padding(.bottom, TyfeSpacing.control)
