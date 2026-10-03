@@ -9,9 +9,11 @@ import SwiftfulRouting
 
 struct SignInDelegate {
     var onDidSignIn: (() -> Void)?
+    var email: String
 
-    init(onDidSignIn: (() -> Void)? = nil) {
+    init(onDidSignIn: (() -> Void)? = nil, email: String = "") {
         self.onDidSignIn = onDidSignIn
+        self.email = email
     }
 
     var eventParameters: [String: Any]? { nil }
@@ -48,11 +50,12 @@ struct SignInView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .onAppear {
-            presenter.onViewAppear()
+            presenter.onViewAppear(delegate: delegate)
         }
         .onDisappear {
             presenter.onViewDisappear()
         }
+        .interactiveDismissDisabled(presenter.isSubmitting)
     }
 
     private var header: some View {
@@ -65,6 +68,8 @@ struct SignInView: View {
                     presenter.onBackPressed()
                 }
                 .accessibilityLabel("Back")
+                .accessibilityIdentifier("signin-back")
+                .disabled(presenter.isSubmitting)
 
             Text("SIGN IN")
                 .font(TyfeTypography.eyebrow)
@@ -94,18 +99,26 @@ struct SignInView: View {
                 TyfeTextFieldView(
                     placeholder: "you@example.com",
                     text: $presenter.email,
-                    autocapitalization: .never
+                    autocapitalization: .never,
+                    keyboardType: .emailAddress,
+                    textContentType: .username,
+                    submitLabel: .next
                 )
+                .accessibilityIdentifier("signin-email")
 
                 fieldLabel("PASSWORD")
                 TyfeTextFieldView(
                     placeholder: "Your password",
                     text: $presenter.password,
                     autocapitalization: .never,
-                    isSecure: true
+                    isSecure: true,
+                    textContentType: .password,
+                    submitLabel: .go
                 )
+                .accessibilityIdentifier("signin-password")
             }
         }
+        .disabled(presenter.isSubmitting)
     }
 
     @ViewBuilder
@@ -126,6 +139,7 @@ struct SignInView: View {
                 isEnabled: presenter.canSubmit,
                 onTap: { presenter.onSubmitPressed(delegate: delegate) }
             )
+            .accessibilityIdentifier("signin-submit")
 
             if presenter.isSubmitting {
                 ProgressView()
@@ -156,9 +170,16 @@ extension CoreBuilder {
 }
 
 extension CoreRouter {
-    func showSignInView(onDidSignIn: (() -> Void)?) {
-        router.showScreen(.push) { router in
+    func showSignInSheet(onDidSignIn: (() -> Void)?, onDismiss: (() -> Void)? = nil) {
+        let config = ResizableSheetConfig(detents: [.large], selection: nil, dragIndicator: .hidden)
+        router.showScreen(.sheetConfig(config: config), onDismiss: onDismiss) { router in
             builder.signInView(router: router, delegate: SignInDelegate(onDidSignIn: onDidSignIn))
+        }
+    }
+
+    func showSignInView(email: String = "", onDidSignIn: (() -> Void)?) {
+        router.showScreen(.push) { router in
+            builder.signInView(router: router, delegate: SignInDelegate(onDidSignIn: onDidSignIn, email: email))
         }
     }
 }

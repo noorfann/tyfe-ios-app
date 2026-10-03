@@ -6,20 +6,26 @@ import SwiftfulAuthenticating
 @MainActor
 final class SupabaseAuthService: AuthService {
     private let client: SupabaseClient
+    private let profileService: any ProfileServicing
+    private var guestSessionTask: Task<(user: UserAuthInfo, isNewUser: Bool), Error>?
+    private var signOutTask: Task<Void, Never>?
+    private var signOutGeneration = 0
 
-    init(client: SupabaseClient) {
+    init(client: SupabaseClient, profileService: any ProfileServicing) {
         self.client = client
+        self.profileService = profileService
     }
 
     func getAuthenticatedUser() -> UserAuthInfo? {
-        client.auth.currentSession.map { SupabaseUserAuthMapper.userAuthInfo(from: $0) }
+        guard signOutTask == nil else { return nil }
+        return client.auth.currentSession.map { SupabaseUserAuthMapper.userAuthInfo(from: $0) }
     }
 
     func addAuthenticatedUserListener() -> AsyncStream<UserAuthInfo?> {
         AsyncStream { continuation in
             let task = Task {
                 for await (_, session) in client.auth.authStateChanges {
-                    continuation.yield(session.map { SupabaseUserAuthMapper.userAuthInfo(from: $0) })
+                    continuation.yield(signOutTask == nil ? session.map { SupabaseUserAuthMapper.userAuthInfo(from: $0) } : nil)
                 }
                 continuation.finish()
             }
@@ -32,13 +38,22 @@ final class SupabaseAuthService: AuthService {
     func signIn(option: SignInOption) async throws -> (user: UserAuthInfo, isNewUser: Bool) {
         switch option {
         case .anonymous:
-            let session = try await client.auth.signInAnonymously()
-            let user = SupabaseUserAuthMapper.userAuthInfo(from: session)
-            let isNewUser = AuthSignInSupport.isNewUser(
-                createdAt: session.user.createdAt,
-                lastSignInAt: session.user.lastSignInAt
-            )
-            return (user, isNewUser)
+            await waitForPendingSignOut()
+            if let user = getAuthenticatedUser() { return (user, false) }
+            if let guestSessionTask { return try await guestSessionTask.value }
+            let task = Task {
+                let session = try await client.auth.signInAnonymously()
+                try Task.checkCancellation()
+                let user = SupabaseUserAuthMapper.userAuthInfo(from: session)
+                let isNewUser = AuthSignInSupport.isNewUser(
+                    createdAt: session.user.createdAt,
+                    lastSignInAt: session.user.lastSignInAt
+                )
+                return (user: user, isNewUser: isNewUser)
+            }
+            guestSessionTask = task
+            defer { guestSessionTask = nil }
+            return try await task.value
         case .apple:
             throw SupabaseAuthError.deferredProvider("Sign in with Apple")
         case .google:
@@ -47,11 +62,31 @@ final class SupabaseAuthService: AuthService {
     }
 
     func signOut() throws {
-        Task { try? await client.auth.signOut() }
+        guestSessionTask?.cancel()
+        signOutGeneration += 1
+        signOutTask = Task { _ = try? await client.auth.signOut() }
+    }
+
+    func waitForPendingSignOut() async {
+        let generation = signOutGeneration
+        await signOutTask?.value
+        if generation == signOutGeneration { signOutTask = nil }
+    }
+
+    func waitForSessionPreparation() async {
+        await waitForPendingSignOut()
+        // Email sign-in must follow guest bootstrap, so a late guest response cannot replace it.
+        _ = try? await guestSessionTask?.value
     }
 
     func deleteAccount() async throws {
+        guard let userId = getAuthenticatedUser()?.uid else { throw EmailAuthError.sessionChanged }
+        let generation = signOutGeneration
+        try await profileService.removeAllPhotos(userId: userId)
+        try requireDeletionSession(userId: userId, generation: generation)
         try await client.rpc("delete_account").execute()
+        try requireDeletionSession(userId: userId, generation: generation)
+        try signOut()
     }
 
     func deleteAccountWithReauthentication(
@@ -59,8 +94,19 @@ final class SupabaseAuthService: AuthService {
         revokeToken _: Bool,
         performDeleteActionsBeforeAuthIsDeleted: () async throws -> Void
     ) async throws {
+        guard let userId = getAuthenticatedUser()?.uid else { throw EmailAuthError.sessionChanged }
+        let generation = signOutGeneration
         try await performDeleteActionsBeforeAuthIsDeleted()
+        try requireDeletionSession(userId: userId, generation: generation)
         try await client.rpc("delete_account").execute()
+        try requireDeletionSession(userId: userId, generation: generation)
+        try signOut()
+    }
+
+    private func requireDeletionSession(userId: String, generation: Int) throws {
+        guard signOutGeneration == generation, getAuthenticatedUser()?.uid == userId else {
+            throw EmailAuthError.sessionChanged
+        }
     }
 }
 

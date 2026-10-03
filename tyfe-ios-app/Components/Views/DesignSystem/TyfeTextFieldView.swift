@@ -5,6 +5,9 @@ struct TyfeTextFieldView: View {
     @Binding var text: String
     var autocapitalization: TextInputAutocapitalization = .sentences
     var isSecure: Bool = false
+    var keyboardType: UIKeyboardType = .default
+    var textContentType: UITextContentType?
+    var submitLabel: SubmitLabel = .return
 
     var body: some View {
         Group {
@@ -17,6 +20,9 @@ struct TyfeTextFieldView: View {
         .font(TyfeTypography.interfaceStrong)
         .textInputAutocapitalization(autocapitalization)
         .autocorrectionDisabled()
+        .keyboardType(keyboardType)
+        .textContentType(textContentType)
+        .submitLabel(submitLabel)
         .padding(.horizontal, TyfeSpacing.control)
         .frame(minHeight: 52)
         .background(TyfeEditorialPalette.canvas)

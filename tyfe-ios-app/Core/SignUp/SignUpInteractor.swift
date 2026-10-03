@@ -6,14 +6,13 @@
 @MainActor
 protocol SignUpInteractor: GlobalInteractor {
     var suggestedDisplayName: String? { get }
+    var pendingEmailRegistration: PendingEmailRegistration? { get }
 
-    func registerWithEmail(
-        email: String,
-        password: String,
-        displayName: String?
-    ) async throws -> (user: UserAuthInfo, isNewUser: Bool)
-
-    func logIn(user: UserAuthInfo, isNewUser: Bool) async throws
+    func restoreEmailRegistration() async throws -> PendingEmailRegistration?
+    func beginEmailRegistration(email: String, displayName: String?) async throws -> PendingEmailRegistration
+    func verifyEmailRegistrationCode(_ code: String) async throws -> PendingEmailRegistration
+    func resendEmailRegistrationCode() async throws -> PendingEmailRegistration
+    func finishEmailRegistration(password: String) async throws
 }
 
 extension CoreInteractor: SignUpInteractor { }

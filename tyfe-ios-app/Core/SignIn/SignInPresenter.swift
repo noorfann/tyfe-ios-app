@@ -28,15 +28,18 @@ final class SignInPresenter {
             && !password.isEmpty
     }
 
-    func onViewAppear() {
+    func onViewAppear(delegate: SignInDelegate) {
         interactor.trackScreenEvent(event: Event.onAppear)
+        if email.isEmpty { email = delegate.email }
     }
 
     func onViewDisappear() {
+        password = ""
         interactor.trackEvent(event: Event.onDisappear)
     }
 
     func onBackPressed() {
+        guard !isSubmitting else { return }
         router.dismissScreen()
     }
 
@@ -46,12 +49,14 @@ final class SignInPresenter {
         errorMessage = nil
         isSubmitting = true
         interactor.trackEvent(event: Event.submit)
+        let submittedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        let submittedPassword = password
 
         Task {
             do {
                 let result = try await interactor.signInWithEmail(
-                    email: email.trimmingCharacters(in: .whitespacesAndNewlines),
-                    password: password
+                    email: submittedEmail,
+                    password: submittedPassword
                 )
                 try await interactor.logIn(user: result.user, isNewUser: result.isNewUser)
 

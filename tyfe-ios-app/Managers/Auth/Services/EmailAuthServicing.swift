@@ -12,11 +12,16 @@ import SwiftfulAuthenticating
 
 @MainActor
 protocol EmailAuthServicing: AnyObject {
-    func register(
-        email: String,
-        password: String,
-        displayName: String?
-    ) async throws -> (user: UserAuthInfo, isNewUser: Bool)
+    var authenticatedUser: UserAuthInfo? { get }
+    var pendingRegistration: PendingEmailRegistration? { get }
+
+    func restoreRegistration() async throws -> PendingEmailRegistration?
+    func beginRegistration(email: String, displayName: String?) async throws -> PendingEmailRegistration
+    func verifyRegistrationCode(_ code: String) async throws -> PendingEmailRegistration
+    func resendRegistrationCode() async throws -> PendingEmailRegistration
+    func finishRegistration(password: String) async throws -> UserAuthInfo
+    func acknowledgeRegistrationComplete() throws
+    func resetRegistrationAfterSignOut() throws
 
     func signIn(
         email: String,
@@ -31,6 +36,11 @@ enum EmailAuthError: LocalizedError, Equatable {
     case weakPassword
     case rateLimited
     case notConfigured
+    case invalidEmail
+    case invalidCode
+    case sessionChanged
+    case alreadySignedIn
+    case invalidStage
 
     var errorDescription: String? {
         switch self {
@@ -46,6 +56,16 @@ enum EmailAuthError: LocalizedError, Equatable {
             return "Too many attempts. Wait a moment and try again."
         case .notConfigured:
             return "Account creation isn't available right now."
+        case .invalidEmail:
+            return "Enter a valid email address."
+        case .invalidCode:
+            return "That code is invalid or expired. Try again or request a new code."
+        case .sessionChanged:
+            return "Your account session changed. Reopen account setup to continue safely."
+        case .alreadySignedIn:
+            return "You're already signed in to an account."
+        case .invalidStage:
+            return "Reopen account setup to continue from your last step."
         }
     }
 }
