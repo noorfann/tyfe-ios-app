@@ -12,9 +12,10 @@ final class SupabaseProfileService: ProfileServicing {
     }
 
     func fetchProfile(userId: String) async throws -> ProfileIdentity {
-        try await client.from("profiles")
+        let profile: ProfileIdentity = try await client.from("profiles")
             .select("id, display_name, avatar_token, avatar_path")
             .eq("id", value: userId).single().execute().value
+        return try validatedProfile(profile, userId: userId)
     }
 
     func saveProfile(userId: String, name: String, avatarPath: String?) async throws -> ProfileIdentity {
@@ -25,11 +26,12 @@ final class SupabaseProfileService: ProfileServicing {
             guard avatarPath.hasPrefix("\(userId.lowercased())/") else { throw ProfileServiceError.invalidPath }
         }
         // Explicit null clears the reference; avatar_token is deliberately not in this partial update.
-        return try await client.from("profiles")
+        let profile: ProfileIdentity = try await client.from("profiles")
             .update(ProfileUpdate(displayName: ProfileValidation.trimmedName(name), avatarPath: avatarPath))
             .eq("id", value: userId)
             .select("id, display_name, avatar_token, avatar_path")
             .single().execute().value
+        return try validatedProfile(profile, userId: userId)
     }
 
     func uploadPhoto(userId: String, jpeg: Data) async throws -> String {
@@ -91,6 +93,18 @@ final class SupabaseProfileService: ProfileServicing {
             // Storage can return success with no deletions under RLS. Never spin or claim cleanup.
             guard removed.count == paths.count else { throw ProfileServiceError.accountChanged }
         }
+    }
+
+    private func validatedProfile(_ profile: ProfileIdentity, userId: String) throws -> ProfileIdentity {
+        guard let requestedId = UUID(uuidString: userId),
+              let returnedId = UUID(uuidString: profile.userId), requestedId == returnedId else {
+            throw ProfileServiceError.accountChanged
+        }
+        // PostgreSQL returns lowercase UUIDs; retain the session ID spelling used by the identity cache.
+        return ProfileIdentity(
+            userId: userId, displayName: profile.displayName,
+            avatarToken: profile.avatarToken, avatarPath: profile.avatarPath
+        )
     }
 
     private func requireOwner(_ userId: String) throws {
