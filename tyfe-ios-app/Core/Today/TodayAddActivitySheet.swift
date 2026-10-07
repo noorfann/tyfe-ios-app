@@ -91,7 +91,7 @@ struct TodayAddActivitySheet: View {
                 TyfeTextFieldView(placeholder: "Name your activity", text: $activityName)
                     .accessibilityIdentifier("activity-name-field")
 
-                ActivityTypePickerView(selection: $selectedType)
+                Text("Session").font(TyfeTypography.interfaceStrong)
                 projectPicker
             }
         }

@@ -19,6 +19,7 @@ extension CoreInteractor {
     }
 
     func recordChecklistCompletionForStreak(_ completion: ChecklistItemCompletionModel) async throws {
+        guard todoManager.repository.snapshot.effort.migrationDay == nil else { return }
         let completionId = GamificationDictionaryValue.string(completion.completionId)
         let existingEvents = try await getAllStreakEvents()
         let alreadyRecorded = existingEvents.contains(where: {

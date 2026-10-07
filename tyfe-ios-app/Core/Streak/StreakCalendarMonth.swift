@@ -5,6 +5,7 @@ struct StreakCalendarMonth {
     let today: Date
     let calendar: Calendar
     let eventsByDay: [Date: [StreakEvent]]
+    var neutralDates: Set<Date> = []
 
     var title: String {
         var format = Date.FormatStyle().month(.wide).year()
@@ -31,7 +32,8 @@ struct StreakCalendarMonth {
                 isSelectedMonth: calendar.isDate(date, equalTo: month, toGranularity: .month),
                 isToday: calendar.isDate(date, inSameDayAs: today),
                 hasFocus: events.contains { !$0.isFreeze },
-                hasFreeze: events.contains { $0.isFreeze }
+                hasFreeze: events.contains { $0.isFreeze },
+                isNeutral: events.isEmpty && neutralDates.contains(calendar.startOfDay(for: date))
             ))
             guard let next = calendar.date(byAdding: .day, value: 1, to: date) else { break }
             date = next
@@ -47,4 +49,5 @@ struct StreakCalendarDay: Identifiable {
     let isToday: Bool
     let hasFocus: Bool
     let hasFreeze: Bool
+    var isNeutral = false
 }

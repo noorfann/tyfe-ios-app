@@ -11,9 +11,12 @@ struct CoreInteractor: GlobalInteractor {
     private let pushManager: PushManager
     private let hapticManager: HapticManager
     private let soundEffectManager: SoundEffectManager
-    private let streakManager: StreakManager
+    let streakManager: StreakManager
     private let progressManager: ProgressManager
     let todayManager: TodayManager
+    let todoManager: TodoManager
+    let habitManager: HabitManager
+    let effortStreakManager: EffortStreakManager
     let focusManager: FocusManager
     let rewardManager: RewardManager
     let socialManager: SocialManager
@@ -31,6 +34,9 @@ struct CoreInteractor: GlobalInteractor {
         self.streakManager = container.resolve(StreakManager.self, key: Dependencies.streakConfiguration.streakKey)!
         self.progressManager = container.resolve(ProgressManager.self, key: Dependencies.progressConfiguration.progressKey)!
         self.todayManager = container.resolve(TodayManager.self)!
+        self.todoManager = container.resolve(TodoManager.self)!
+        self.habitManager = container.resolve(HabitManager.self)!
+        self.effortStreakManager = container.resolve(EffortStreakManager.self)!
         self.focusManager = container.resolve(FocusManager.self)!
         self.rewardManager = container.resolve(RewardManager.self)!
         self.socialManager = container.resolve(SocialManager.self)!
@@ -221,7 +227,8 @@ struct CoreInteractor: GlobalInteractor {
     // MARK: StreakManager
 
     var currentStreakData: CurrentStreakData {
-        streakManager.currentStreakData
+        guard let userId = auth?.uid else { return streakManager.currentStreakData }
+        return effortStreakManager.data(userId: userId, fallback: streakManager.currentStreakData)
     }
 
     @discardableResult
@@ -230,7 +237,10 @@ struct CoreInteractor: GlobalInteractor {
     }
 
     func getAllStreakEvents() async throws -> [StreakEvent] {
-        try await streakManager.getAllStreakEvents()
+        if let userId = auth?.uid, effortStreakManager.hasBaseline(userId: userId) {
+            return effortStreakManager.events(userId: userId)
+        }
+        return try await streakManager.getAllStreakEvents()
     }
 
     func deleteAllStreakEvents() async throws {
@@ -246,12 +256,12 @@ struct CoreInteractor: GlobalInteractor {
         try await streakManager.useStreakFreezes()
     }
 
-    func getAllStreakFreezes() async throws -> [StreakFreeze] {
-        try await streakManager.getAllStreakFreezes()
-    }
-
     func recalculateStreak() {
-        streakManager.recalculateStreak()
+        if todoManager.repository.snapshot.effort.migrationDay != nil {
+            reconcileEffortStreak()
+        } else {
+            streakManager.recalculateStreak()
+        }
     }
 
     // MARK: ProgressManager
@@ -402,6 +412,7 @@ struct CoreInteractor: GlobalInteractor {
             activityIds: activityIds,
             timeBlocks: timeBlocks
         )
+        reconcileEffortStreak()
         scheduleSharedProgressSync()
         return plan
     }
@@ -426,6 +437,7 @@ struct CoreInteractor: GlobalInteractor {
             activityId: activityId,
             sessionCount: sessionCount
         )
+        reconcileEffortStreak()
         scheduleSharedProgressSync()
         return plan
     }
@@ -439,6 +451,7 @@ struct CoreInteractor: GlobalInteractor {
             activityId: activityId,
             sessionCount: sessionCount
         )
+        reconcileEffortStreak()
         scheduleSharedProgressSync()
         return plan
     }
@@ -446,6 +459,7 @@ struct CoreInteractor: GlobalInteractor {
     @discardableResult
     func removePhase1ActivityFromDailyPlan(activityId: String) -> DailyPlanModel? {
         let plan = todayManager.removeActivityFromDailyPlan(activityId: activityId)
+        reconcileEffortStreak()
         scheduleSharedProgressSync()
         return plan
     }
@@ -511,11 +525,6 @@ struct CoreInteractor: GlobalInteractor {
 
     func synchronizeRewardCreditDay() {
         rewardManager.synchronizeCreditDay()
-    }
-
-    func synchronizeCurrentDay() {
-        rewardManager.synchronizeCreditDay()
-        todayManager.materializeCurrentDay()
     }
 
     var activeRewardClaim: RewardClaimModel? {
@@ -700,12 +709,6 @@ extension CoreInteractor {
         _ = await (streak, progress)
         guard auth?.uid == user.uid else { return }
         await syncSocialRealtime()
-    }
-
-    private func refreshStreakAccount(userId: String) async {
-        do { try await streakManager.logIn(userId: userId) } catch {
-            logManager.trackEvent(eventName: "Account_StreakRefreshFailed", parameters: nil, type: .warning)
-        }
     }
 
     private func refreshProgressAccount(userId: String) async {

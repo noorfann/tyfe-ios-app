@@ -648,6 +648,66 @@ extension TodayPresenterTests {
 }
 
 @MainActor
+extension TodayPresenterTests {
+    @Test func phaseTwoSelectorKeepsSpaceAndUsesContextualAdd() throws {
+        let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
+        let today = try #require(dependencies.container.resolve(TodayManager.self))
+        let space = try #require(today.createProject(name: "Home"))
+        let presenter = TodayPresenter(interactor: CoreInteractor(container: dependencies.container), router: RecordingTodayRouter())
+        presenter.onViewAppear(delegate: TodayDelegate())
+        #expect(presenter.selectedPage == .session)
+        presenter.selectProject(space.id)
+        presenter.selectPage(.todo)
+        presenter.onAddActivityPressed()
+        #expect(presenter.effort.isTodoFormPresented)
+        #expect(presenter.effort.todoDraft.projectId == space.id)
+        presenter.effort.todoDraft.title = "Buy groceries"
+        presenter.effort.saveTodo()
+        #expect(presenter.effort.tasks(in: space.id, completed: false).count == 1)
+        #expect(presenter.effort.tasks(in: nil, completed: false).isEmpty)
+        presenter.selectPage(.habit)
+        presenter.onAddActivityPressed()
+        #expect(presenter.effort.isHabitFormPresented)
+        #expect(presenter.effort.habitDraft.projectId == space.id)
+        presenter.effort.habitDraft.title = "Walk"
+        presenter.effort.saveHabit()
+        #expect(presenter.effort.habits(in: space.id).count == 1)
+        #expect(presenter.effort.habits(in: nil).isEmpty)
+        presenter.selectPage(.session)
+        #expect(presenter.selectedProjectId == space.id)
+    }
+
+    @Test func taskHistoryAndHabitCalendarExposeStoredCompletionStatuses() throws {
+        let dependencies = Dependencies(config: .mock(isSignedIn: true, addLogging: false))
+        let presenter = TodayPresenter(interactor: CoreInteractor(container: dependencies.container), router: RecordingTodayRouter())
+        presenter.onViewAppear(delegate: TodayDelegate())
+        #expect(presenter.effort.tasks(in: nil, completed: false).isEmpty)
+        #expect(presenter.effort.habits(in: nil).isEmpty)
+        presenter.selectPage(.todo)
+        presenter.onAddActivityPressed()
+        presenter.effort.todoDraft.title = "Call dentist"
+        presenter.effort.saveTodo()
+        let task = try #require(presenter.effort.tasks.first)
+        presenter.effort.toggleTodo(task)
+        presenter.effort.toggleTaskHistory()
+        #expect(presenter.effort.showsCompletedTasks)
+        #expect(presenter.effort.tasks(in: nil, completed: false).isEmpty)
+        #expect(presenter.effort.history(in: nil).count == 1)
+        presenter.selectPage(.habit)
+        presenter.onAddActivityPressed()
+        presenter.effort.habitDraft.title = "Read"
+        presenter.effort.saveHabit()
+        let habit = try #require(presenter.effort.habits.first)
+        presenter.effort.toggleHabit(habit)
+        presenter.effort.showHabit(habit)
+        let tile = try #require(presenter.effort.calendarDays(for: habit).first(where: \.isToday))
+        #expect(tile.status == .completed)
+        #expect(tile.accessibilityLabel.contains("Completed"))
+        #expect(presenter.effort.heatmap(for: habit).flatMap(\.days).first(where: \.isToday)?.status == .completed)
+    }
+}
+
+@MainActor
 private final class RecordingTodayRouter: TodayRouter {
     var router: AnyRouter { fatalError("Router storage is unused by this recording test double") }
     private(set) var didShowStreak = false

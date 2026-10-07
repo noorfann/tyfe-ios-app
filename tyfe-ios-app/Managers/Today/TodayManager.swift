@@ -206,6 +206,7 @@ final class TodayManager {
                 for index in snapshot.activities.indices where snapshot.activities[index].projectId == projectId {
                     snapshot.activities[index].projectId = nil
                 }
+                snapshot.unassignEffort(from: projectId)
                 didDelete = true
             }
         } catch {

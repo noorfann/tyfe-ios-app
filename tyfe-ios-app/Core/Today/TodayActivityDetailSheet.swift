@@ -123,10 +123,7 @@ struct TodayActivityDetailSheet: View {
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
                 TyfeTextFieldView(placeholder: "Name your activity", text: $activityName)
-                ActivityTypePickerView(
-                    selection: $selectedType,
-                    isOptionEnabled: isTypeOptionEnabled
-                )
+                Text(activity.type.displayName).font(TyfeTypography.interfaceStrong)
                 projectPicker
             }
         }

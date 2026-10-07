@@ -52,7 +52,10 @@ final class StreakPresenter {
     }
 
     var calendarMonth: StreakCalendarMonth {
-        StreakCalendarMonth(month: selectedMonth, today: now(), calendar: calendar, eventsByDay: eventsByDay)
+        StreakCalendarMonth(
+            month: selectedMonth, today: now(), calendar: calendar, eventsByDay: eventsByDay,
+            neutralDates: Set(interactor.effortStreakDays.filter { $0.outcome == .neutral }.map { calendar.startOfDay(for: $0.localDay.startDate) })
+        )
     }
 
     private var currentMonth: Date {
@@ -155,8 +158,13 @@ extension StreakPresenter {
     }
 
     var heroState: StreakHeroState {
+        if !currentStreakData.isGoalMet,
+           interactor.effortStreakDays.contains(where: { calendar.isDate($0.localDay.startDate, inSameDayAs: now()) && $0.outcome == .neutral }) {
+            return .rest
+        }
         if currentStreak <= 0 { return .start }
         if currentStreakData.isGoalMet { return .secured }
+        if !interactor.effortStreakDays.isEmpty { return .open }
         if currentStreakData.status.isBroken { return .rebuild }
         return .open
     }
@@ -185,7 +193,8 @@ extension StreakPresenter {
 
             let dayEvents = events.filter { calendar.isDate($0.dateCreated, inSameDayAs: date) }
             let isToday = daysAgo == 0
-            let mark = Self.mark(for: dayEvents, isToday: isToday)
+            let neutral = interactor.effortStreakDays.contains { calendar.isDate($0.localDay.startDate, inSameDayAs: date) && $0.outcome == .neutral }
+            let mark: StreakDayMark = neutral && dayEvents.isEmpty ? .rest : Self.mark(for: dayEvents, isToday: isToday)
 
             let weekdayIndex = calendar.component(.weekday, from: date) - 1
             let weekdayInitial = weekdaySymbols.indices.contains(weekdayIndex)
@@ -212,10 +221,11 @@ extension StreakPresenter {
         let dayName = isToday ? "Today" : date.formatted(.dateTime.weekday(.wide))
 
         switch mark {
-        case .focus: return "\(dayName), focus day"
+        case .focus: return "\(dayName), successful day"
         case .freeze: return "\(dayName), freeze day"
         case .openToday: return "\(dayName), still open"
         case .empty: return "\(dayName), no activity"
+        case .rest: return "\(dayName), neutral rest day"
         }
     }
 }
@@ -227,6 +237,7 @@ enum StreakHeroState: Equatable {
     case secured
     case open
     case rebuild
+    case rest
 
     var title: String {
         switch self {
@@ -234,19 +245,22 @@ enum StreakHeroState: Equatable {
         case .secured: return "Today is secured"
         case .open: return "Today is still open"
         case .rebuild: return "Begin again"
+        case .rest: return "Room to rest"
         }
     }
 
     var message: String {
         switch self {
         case .start:
-            return "Ready when you are. Your first focus session lights the first tile."
+            return "Finish your planned Sessions and due Habits to light the first tile."
         case .secured:
-            return "Your streak is safe for today. Every completed focus session counts."
+            return "Today's planned Sessions and due Habits are complete."
         case .open:
-            return "One focus session keeps your run alive."
+            return "Finish today's planned Sessions and due Habits to keep your run alive."
         case .rebuild:
             return "Missed days happen. Today is a good day to start a new run."
+        case .rest:
+            return "No required effort today. Your streak stays the same, and no freeze is used."
         }
     }
 }
@@ -261,6 +275,7 @@ enum StreakDayMark: Equatable {
     case freeze
     case openToday
     case empty
+    case rest
 }
 
 struct StreakDay: Identifiable, Equatable {

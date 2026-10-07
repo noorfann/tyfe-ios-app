@@ -34,6 +34,11 @@ extension CoreInteractor: FocusInteractor {
 
     func recordFocusCompletionForStreak(_ session: FocusSessionModel) async throws {
         guard session.state == .completed else { return }
+        if todoManager.repository.snapshot.effort.migrationDay != nil {
+            try habitManager.prepare()
+            try effortStreakManager.reconcile()
+            return
+        }
 
         let existingEvents = try await getAllStreakEvents()
         let focusSessionId = GamificationDictionaryValue.string(session.focusSessionId)

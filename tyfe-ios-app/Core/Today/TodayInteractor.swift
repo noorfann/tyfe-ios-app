@@ -1,7 +1,7 @@
 import SwiftUI
 
 @MainActor
-protocol TodayInteractor: GlobalInteractor {
+protocol TodayInteractor: GlobalInteractor, TodayEffortInteractor {
     var activeFocusSession: FocusSessionModel? { get }
     var isRewardInProgress: Bool { get }
     var phase1Activities: [ActivityModel] { get }

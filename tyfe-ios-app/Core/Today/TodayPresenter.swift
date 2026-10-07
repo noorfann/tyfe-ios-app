@@ -6,6 +6,8 @@ final class TodayPresenter {
 
     private let interactor: TodayInteractor
     private let router: TodayRouter
+    let effort: TodayEffortPresenter
+    private(set) var selectedPage: TodayPage = .session
 
     private(set) var activities: [ActivityModel] = []
     private(set) var projects: [ProjectModel] = []
@@ -37,6 +39,7 @@ final class TodayPresenter {
     init(interactor: TodayInteractor, router: TodayRouter) {
         self.interactor = interactor
         self.router = router
+        self.effort = TodayEffortPresenter(interactor: interactor, router: router)
         let currentLocalDay = interactor.phase1CurrentLocalDay
         self.currentLocalDay = currentLocalDay
         self.selectedLocalDay = currentLocalDay
@@ -233,6 +236,15 @@ final class TodayPresenter {
 
     func onAddActivityPressed() {
         guard isViewingToday else { return }
+        switch selectedPage {
+        case .todo:
+            effort.addTodo(in: selectedProjectId)
+            return
+        case .habit:
+            effort.addHabit(in: selectedProjectId)
+            return
+        case .session: break
+        }
         presentAddActivityFlow(sessionCount: 1)
         interactor.trackEvent(event: Event.addActivity)
     }
@@ -492,6 +504,9 @@ final class TodayPresenter {
     }
 
     private func reload() {
+        let latestDay = interactor.phase1CurrentLocalDay
+        if selectedLocalDay == currentLocalDay { selectedLocalDay = latestDay }
+        currentLocalDay = latestDay
         interactor.synchronizeCurrentDay()
         activities = interactor.phase1Activities
         projects = interactor.phase1Projects.filter { !isViewingToday || !$0.isArchived }
@@ -503,12 +518,12 @@ final class TodayPresenter {
         }
         earliestRecordedLocalDay = interactor.phase1EarliestRecordedLocalDay
         dailyPlan = interactor.phase1DailyPlan(for: selectedLocalDay)
-        planItems = interactor.phase1VisiblePlanItems(on: selectedLocalDay)
+        planItems = interactor.phase1VisiblePlanItems(on: selectedLocalDay).filter { !isViewingToday || $0.unitKind == .session }
         completedUnitCounts = interactor.phase1CompletedUnitCounts(on: selectedLocalDay)
         plannedSessionUnitCount = interactor.phase1PlannedUnitCount(.session, on: selectedLocalDay)
-        plannedChecklistUnitCount = interactor.phase1PlannedUnitCount(.checklist, on: selectedLocalDay)
+        plannedChecklistUnitCount = isViewingToday ? 0 : interactor.phase1PlannedUnitCount(.checklist, on: selectedLocalDay)
         completedSessionUnitCount = interactor.phase1VisibleCompletedSessionCount(on: selectedLocalDay)
-        completedChecklistUnitCount = interactor.phase1VisibleCompletedChecklistItemCount(on: selectedLocalDay)
+        completedChecklistUnitCount = isViewingToday ? 0 : interactor.phase1VisibleCompletedChecklistItemCount(on: selectedLocalDay)
         var checklistItemsByActivity: [String: [ChecklistItemModel]] = [:]
         var tickedItemIds: Set<String> = []
         for item in planItems {
@@ -524,6 +539,7 @@ final class TodayPresenter {
         self.checklistItemsByActivity = checklistItemsByActivity
         self.tickedItemIds = tickedItemIds
         activeFocusSession = interactor.activeFocusSession
+        effort.reload()
 
         if let selectedPlanItemId,
            deckPlanItems.contains(where: { $0.id == selectedPlanItemId }) {
@@ -556,6 +572,34 @@ final class TodayPresenter {
 }
 
 extension TodayPresenter {
+    var pageSelection: TodayPage {
+        get { selectedPage }
+        set { selectPage(newValue) }
+    }
+
+    func selectPage(_ page: TodayPage) {
+        guard selectedPage != page else { return }
+        selectedPage = page
+        if page != .session { selectedLocalDay = interactor.phase1CurrentLocalDay }
+        reload()
+        interactor.trackEvent(eventName: "Today_Page_Select", parameters: ["page": page.rawValue], type: .analytic)
+    }
+
+    func refreshForCurrentDay() {
+        let day = interactor.phase1CurrentLocalDay
+        if selectedLocalDay == currentLocalDay { selectedLocalDay = day }
+        currentLocalDay = day
+        reload()
+    }
+
+    func observeDayBoundaries() async {
+        while !Task.isCancelled {
+            let delay = max(interactor.phase1CurrentLocalDay.adding(days: 1).startDate.timeIntervalSinceNow, 1)
+            do { try await Task.sleep(for: .seconds(delay)) } catch { return }
+            guard !Task.isCancelled else { return }
+            refreshForCurrentDay()
+        }
+    }
 
     private func addChecklistItems(activityId: String, drafts: [ChecklistItemDraft]) {
         for draft in drafts {

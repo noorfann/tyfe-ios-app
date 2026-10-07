@@ -10,6 +10,8 @@ struct TodayView: View {
     @State private var presenter: TodayPresenter
     let delegate: TodayDelegate
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     init(presenter: TodayPresenter, delegate: TodayDelegate) {
         _presenter = State(initialValue: presenter)
@@ -24,7 +26,16 @@ struct TodayView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: TyfeSpacing.section) {
                     header
-                    if presenter.hasPlan {
+                    pageSelector
+                    if presenter.effort.preparationFailed {
+                        preparationError
+                    } else if presenter.selectedPage == .todo {
+                        projectTabs
+                        TodayTodoView(presenter: presenter.effort, projectId: presenter.selectedProjectId)
+                    } else if presenter.selectedPage == .habit {
+                        projectTabs
+                        TodayHabitView(presenter: presenter.effort, projectId: presenter.selectedProjectId)
+                    } else if presenter.hasPlan {
                         plannedContent
                     } else {
                         dayNavigator
@@ -49,6 +60,7 @@ struct TodayView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
         }
         .toolbar(.hidden, for: .navigationBar)
+        .modifier(TodayEffortSheets(presenter: presenter.effort, projects: presenter.projects))
         .tyfeBottomSheet(
             isPresented: $presenter.isAddActivitySheetPresented,
             detents: [.large],
@@ -87,6 +99,12 @@ struct TodayView: View {
         }
         .onDisappear {
             presenter.onViewDisappear(delegate: delegate)
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { presenter.refreshForCurrentDay() }
+        }
+        .task(id: scenePhase) {
+            if scenePhase == .active { await presenter.observeDayBoundaries() }
         }
         .onChange(of: presenter.isAddActivitySheetPresented) { _, isPresented in
             guard !isPresented else { return }
@@ -130,6 +148,40 @@ struct TodayView: View {
                 .accessibilityValue("\(presenter.currentStreakCount) days")
                 .accessibilityHint("Opens streak details")
                 .accessibilityIdentifier("today-streak-button")
+        }
+    }
+
+    @ViewBuilder private var pageSelector: some View {
+        @Bindable var pagePresenter = presenter
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(spacing: TyfeSpacing.small) {
+                ForEach(TodayPage.allCases) { page in
+                    Text(page.rawValue)
+                        .font(TyfeTypography.interfaceStrong)
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .background(presenter.selectedPage == page ? TyfeEditorialPalette.focus : TyfeEditorialPalette.paper)
+                        .foregroundStyle(presenter.selectedPage == page ? TyfeEditorialPalette.onAccent : TyfeEditorialPalette.ink)
+                        .clipShape(.rect(cornerRadius: TyfeRadius.control))
+                        .asButton(.press) { presenter.selectPage(page) }
+                        .accessibilityAddTraits(presenter.selectedPage == page ? .isSelected : [])
+                }
+            }
+        } else {
+            Picker("Today page", selection: $pagePresenter.pageSelection) {
+                ForEach(TodayPage.allCases) { page in Text(page.rawValue).tag(page) }
+            }
+            .pickerStyle(.segmented)
+            .accessibilityIdentifier("today-page-selector")
+        }
+    }
+
+    private var preparationError: some View {
+        TyfeSurfaceView(role: .paper) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+                Text("Your saved work could not be prepared.").font(TyfeTypography.interfaceStrong)
+                Text("Your previous data is intact. Retry to open Today.").font(TyfeTypography.interface)
+                TyfeActionButtonView(title: "Try again", systemImage: "arrow.clockwise", onTap: presenter.refreshForCurrentDay)
+            }
         }
     }
 
@@ -201,7 +253,7 @@ struct TodayView: View {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundStyle(TyfeEditorialPalette.success)
                         Text(presenter.isViewingToday
-                             ? "Today’s plan is complete."
+                             ? "Today’s Session plan is complete."
                              : "The recorded plan was completed.")
                             .font(TyfeTypography.interfaceStrong)
                     }
@@ -220,7 +272,7 @@ struct TodayView: View {
 
             TodayProjectDeckTabsView(
                 projects: presenter.projects,
-                showsUnassigned: presenter.hasUnassignedPlannedActivities,
+                showsUnassigned: true,
                 selectedProjectId: presenter.selectedProjectId,
                 isManagementEnabled: presenter.isViewingToday,
                 onSelect: presenter.selectProject,
@@ -329,7 +381,8 @@ struct TodayView: View {
             .asButton(.press) {
                 presenter.onAddActivityPressed()
             }
-            .accessibilityLabel("Add Activity to Today")
+            .disabled(presenter.effort.preparationFailed)
+            .accessibilityLabel("Add \(presenter.selectedPage.rawValue)")
             .padding(.trailing, TyfeSpacing.control)
             .padding(.bottom, TyfeSpacing.control)
     }

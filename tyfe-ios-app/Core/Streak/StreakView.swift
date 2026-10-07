@@ -241,6 +241,9 @@ private struct StreakDayCell: View {
                     Image(systemName: "snowflake")
                         .foregroundStyle(TyfeEditorialPalette.teal)
                 }
+                if day.isNeutral {
+                    Image(systemName: "minus").foregroundStyle(TyfeEditorialPalette.muted)
+                }
             }
             .font(.caption2.weight(.bold))
             .frame(height: 14)
@@ -269,8 +272,9 @@ private struct StreakDayCell: View {
 
     private var accessibilityLabel: String {
         var values = [day.date.formatted(date: .complete, time: .omitted)]
-        if day.hasFocus { values.append("Focus day") }
+        if day.hasFocus { values.append("Successful day") }
         if day.hasFreeze { values.append("Freeze used") }
+        if day.isNeutral { values.append("Neutral rest day") }
         return values.joined(separator: ", ")
     }
 }

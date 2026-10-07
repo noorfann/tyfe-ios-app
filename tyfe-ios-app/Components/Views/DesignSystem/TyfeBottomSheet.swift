@@ -61,10 +61,11 @@ extension View {
         isPresented: Binding<Bool>,
         detents: Set<PresentationDetent> = [.fraction(0.8)],
         title: String,
+        onDismiss: (() -> Void)? = nil,
         onClose: (() -> Void)? = nil,
         @ViewBuilder content: @escaping () -> Content
     ) -> some View {
-        sheet(isPresented: isPresented) {
+        sheet(isPresented: isPresented, onDismiss: onDismiss) {
             TyfeBottomSheet(
                 title: title,
                 onClose: onClose ?? { isPresented.wrappedValue = false }

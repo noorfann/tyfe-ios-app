@@ -65,7 +65,7 @@ struct FocusRepositoryTests {
             from: JSONEncoder().encode(snapshot)
         )
 
-        #expect(restored.schemaVersion == 7)
+        #expect(restored.schemaVersion == 8)
         #expect(restored.activities[0].recurrence == snapshot.activities[0].recurrence)
         #expect(restored.lastMaterializedLocalDay == snapshot.lastMaterializedLocalDay)
     }

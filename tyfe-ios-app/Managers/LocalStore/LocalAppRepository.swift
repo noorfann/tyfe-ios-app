@@ -1,9 +1,10 @@
 import Foundation
 
 struct LocalAppSnapshot: Codable, Hashable {
-    private static let currentSchemaVersion = 7
+    private static let currentSchemaVersion = 8
 
     var schemaVersion: Int
+    var effort: EffortState
     var activities: [ActivityModel]
     var projects: [ProjectModel]
     var dailyPlans: [DailyPlanModel]
@@ -23,6 +24,7 @@ struct LocalAppSnapshot: Codable, Hashable {
 
     private enum CodingKeys: String, CodingKey {
         case schemaVersion
+        case effort
         case activities
         case projects
         case dailyPlans
@@ -99,7 +101,7 @@ struct LocalAppSnapshot: Codable, Hashable {
     }
 
     init(
-        schemaVersion: Int = 7,
+        schemaVersion: Int = 8,
         activities: [ActivityModel],
         projects: [ProjectModel] = [],
         dailyPlan: DailyPlanModel? = nil,
@@ -117,9 +119,11 @@ struct LocalAppSnapshot: Codable, Hashable {
         nextSessionNumber: Int,
         nextRewardNumber: Int = 1,
         nextRewardClaimNumber: Int = 1,
-        nextChecklistItemNumber: Int = 1
+        nextChecklistItemNumber: Int = 1,
+        effort: EffortState = EffortState()
     ) {
         self.schemaVersion = schemaVersion
+        self.effort = effort
         self.activities = activities
         self.projects = projects
         self.dailyPlans = dailyPlans ?? dailyPlan.map { [$0] } ?? []
@@ -140,8 +144,12 @@ struct LocalAppSnapshot: Codable, Hashable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        let storedVersion = try container.decodeIfPresent(Int.self, forKey: .schemaVersion) ?? 1
+        guard storedVersion <= Self.currentSchemaVersion else {
+            throw DecodingError.dataCorruptedError(forKey: .schemaVersion, in: container, debugDescription: "Unsupported snapshot version")
+        }
         self.init(
-            schemaVersion: Self.currentSchemaVersion,
+            schemaVersion: max(storedVersion, 7),
             activities: try container.decode([ActivityModel].self, forKey: .activities),
             projects: try container.decodeIfPresent([ProjectModel].self, forKey: .projects) ?? [],
             dailyPlan: try container.decodeIfPresent(DailyPlanModel.self, forKey: .dailyPlan),
@@ -168,13 +176,15 @@ struct LocalAppSnapshot: Codable, Hashable {
             nextChecklistItemNumber: try container.decodeIfPresent(
                 Int.self,
                 forKey: .nextChecklistItemNumber
-            ) ?? 1
+            ) ?? 1,
+            effort: try container.decodeIfPresent(EffortState.self, forKey: .effort) ?? EffortState()
         )
     }
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(Self.currentSchemaVersion, forKey: .schemaVersion)
+        try container.encode(effort.migrationDay == nil ? schemaVersion : Self.currentSchemaVersion, forKey: .schemaVersion)
+        try container.encode(effort, forKey: .effort)
         try container.encode(activities, forKey: .activities)
         try container.encode(projects, forKey: .projects)
         try container.encode(dailyPlans, forKey: .dailyPlans)
@@ -197,10 +207,15 @@ struct LocalAppSnapshot: Codable, Hashable {
 @MainActor
 protocol LocalAppRepository {
     var snapshot: LocalAppSnapshot { get }
+    func retryLoad() throws
 
     func transaction(
         _ update: (inout LocalAppSnapshot) throws -> Void
     ) throws
+}
+
+extension LocalAppRepository {
+    func retryLoad() throws { }
 }
 
 @MainActor
@@ -250,6 +265,14 @@ struct LocalFileRepositoryPersistence: LocalAppRepositoryPersistence {
 
     func save(_ snapshot: LocalAppSnapshot) throws {
         let data = try JSONEncoder().encode(snapshot)
+        if snapshot.effort.migrationDay != nil, FileManager.default.fileExists(atPath: fileURL.path) {
+            let backupURL = fileURL.appendingPathExtension("pre-phase2-backup")
+            if !FileManager.default.fileExists(atPath: backupURL.path) {
+                let previousData = try Data(contentsOf: fileURL)
+                let previous = try JSONDecoder().decode(LocalAppSnapshot.self, from: previousData)
+                if previous.effort.migrationDay == nil { try previousData.write(to: backupURL, options: .atomic) }
+            }
+        }
         try data.write(to: fileURL, options: .atomic)
     }
 }
@@ -257,6 +280,7 @@ struct LocalFileRepositoryPersistence: LocalAppRepositoryPersistence {
 @MainActor
 final class LocalFileRepository: LocalAppRepository {
     private let persistence: LocalAppRepositoryPersistence
+    private var loadFailed: Bool
     private(set) var snapshot: LocalAppSnapshot
 
     init(
@@ -267,15 +291,28 @@ final class LocalFileRepository: LocalAppRepository {
         let storedSnapshot: LocalAppSnapshot?
         do {
             storedSnapshot = try persistence.load()
+            self.loadFailed = false
         } catch {
             storedSnapshot = nil
+            self.loadFailed = true
         }
         self.snapshot = storedSnapshot ?? fallback
+    }
+
+    func retryLoad() throws {
+        guard loadFailed else { return }
+        do {
+            if let loaded = try persistence.load() { snapshot = loaded }
+            loadFailed = false
+        } catch {
+            throw FocusManagerError.persistenceFailed
+        }
     }
 
     func transaction(
         _ update: (inout LocalAppSnapshot) throws -> Void
     ) throws {
+        guard !loadFailed else { throw FocusManagerError.persistenceFailed }
         var nextSnapshot = snapshot
         try update(&nextSnapshot)
         do {

@@ -269,7 +269,7 @@ private struct TyfeStreakDayTile: View {
         case .focus: return TyfeEditorialPalette.success.opacity(0.2)
         case .freeze: return TyfeEditorialPalette.teal.opacity(0.2)
         case .openToday: return TyfeEditorialPalette.saffron
-        case .empty: return .clear
+        case .empty, .rest: return .clear
         }
     }
 
@@ -278,7 +278,7 @@ private struct TyfeStreakDayTile: View {
         case .focus: return TyfeEditorialPalette.success
         case .freeze: return TyfeEditorialPalette.teal
         case .openToday: return TyfeEditorialPalette.onAccent
-        case .empty: return TyfeEditorialPalette.muted.opacity(0.35)
+        case .empty, .rest: return TyfeEditorialPalette.muted.opacity(0.35)
         }
     }
 
@@ -292,6 +292,7 @@ private struct TyfeStreakDayTile: View {
         case .freeze: return "snowflake"
         case .openToday: return "circle"
         case .empty: return nil
+        case .rest: return "minus"
         }
     }
 }
