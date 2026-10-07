@@ -27,15 +27,16 @@ struct TyfeDesignSystemGalleryView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
                 galleryHeader
+                spacingSection
                 warmCanvasSection
                 focusChamberSection
                 rewardSection
                 asyncStateSection
             }
-            .padding(.horizontal, TyfeSpacing.control)
-            .padding(.vertical, TyfeSpacing.card)
+            .padding(.horizontal, TyfeSpacing.screenInset)
+            .padding(.vertical, TyfeSpacing.cardInset)
         }
         .background(TyfeEditorialPalette.canvas.ignoresSafeArea())
         .navigationTitle("Design System")
@@ -43,8 +44,8 @@ struct TyfeDesignSystemGalleryView: View {
     }
 
     private var galleryHeader: some View {
-        HStack(alignment: .top, spacing: TyfeSpacing.control) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+        HStack(alignment: .top, spacing: TyfeSpacing.itemGap) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
                 Text("Tyfe building blocks")
                     .font(TyfeTypography.displayCompact)
                 Text("Mock-only review surface for the Phase 1 production foundation.")
@@ -57,9 +58,34 @@ struct TyfeDesignSystemGalleryView: View {
         .accessibilityElement(children: .combine)
     }
 
+    private var spacingSection: some View {
+        gallerySection("Spacing by relationship") {
+            TyfeSurfaceView(role: .paper) {
+                VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
+                    VStack(alignment: .leading, spacing: TyfeSpacing.tightGap) {
+                        Text("Title and caption · 4 pt").font(TyfeTypography.interfaceStrong)
+                        Text("Standard surface inset · 24 pt").font(TyfeTypography.caption)
+                    }
+                    VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
+                        HStack(spacing: TyfeSpacing.relatedGap) {
+                            Image(systemName: "square.grid.2x2")
+                            Text("Related controls · 8 pt")
+                        }
+                        Text("Items · 16 pt; sections · 24 pt")
+                    }
+                    .font(TyfeTypography.interface)
+                }
+            }
+            TyfeSurfaceView(role: .paper, contentPadding: TyfeSpacing.compactCardInset) {
+                Text("Dense surface · 12 pt; screen gutter · 16 pt; major transition · 32 pt")
+                    .font(TyfeTypography.caption)
+            }
+        }
+    }
+
     private var warmCanvasSection: some View {
         gallerySection("Warm Canvas") {
-            HStack(spacing: TyfeSpacing.control) {
+            HStack(spacing: TyfeSpacing.itemGap) {
                 TyfeMetricCardView(
                     title: "Reward Credits",
                     value: "2",
@@ -82,8 +108,8 @@ struct TyfeDesignSystemGalleryView: View {
                 onStart: {}
             )
             LazyVGrid(
-                columns: [GridItem(.flexible()), GridItem(.flexible())],
-                spacing: TyfeSpacing.small
+                columns: [GridItem(.flexible(), spacing: TyfeSpacing.relatedGap), GridItem(.flexible(), spacing: TyfeSpacing.relatedGap)],
+                spacing: TyfeSpacing.relatedGap
             ) {
                 ForEach(FocusSessionState.allCases, id: \.self) { state in
                     TyfeStateBadgeView(state: state)
@@ -120,8 +146,8 @@ struct TyfeDesignSystemGalleryView: View {
         gallerySection("Reward rate") {
             ForEach(presenter.rewards) { reward in
                 TyfeSurfaceView(role: .paper) {
-                    VStack(alignment: .leading, spacing: TyfeSpacing.control) {
-                        HStack(alignment: .firstTextBaseline, spacing: TyfeSpacing.small) {
+                    VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
+                        HStack(alignment: .firstTextBaseline, spacing: TyfeSpacing.relatedGap) {
                             Text(reward.name)
                                 .font(TyfeTypography.interfaceStrong)
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -131,7 +157,7 @@ struct TyfeDesignSystemGalleryView: View {
                                 tone: .neutral
                             )
                         }
-                        HStack(spacing: TyfeSpacing.small) {
+                        HStack(spacing: TyfeSpacing.relatedGap) {
                             Image(systemName: "clock")
                             Text("\(reward.durationTier.durationMinutes) minutes · \(reward.durationTier.creditLabel)")
                                 .font(TyfeTypography.interface)
@@ -161,7 +187,7 @@ struct TyfeDesignSystemGalleryView: View {
         _ title: String,
         @ViewBuilder content: () -> Content
     ) -> some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
             Text(title)
                 .font(TyfeTypography.eyebrow)
                 .textCase(.uppercase)

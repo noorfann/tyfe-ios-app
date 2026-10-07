@@ -23,8 +23,11 @@ Rules for building SwiftUI views and components in this project.
   - Push content to one side: `.frame(maxWidth: .infinity, alignment: .leading)` instead of `HStack { Text("Hello"); Spacer() }`
   - Push content to top: `.frame(maxHeight: .infinity, alignment: .top)` instead of `VStack { Text("Hello"); Spacer() }`
   - Center with remaining space: `.frame(maxWidth: .infinity)` (centered by default)
-- Use spacing parameters in stacks: `VStack(spacing: 12)` instead of extra padding
-- Standard spacing values: 4, 8, 12, 16, 24
+- Use explicit semantic `TyfeSpacing` tokens for custom stack/grid spacing and padding: `VStack(spacing: TyfeSpacing.itemGap)`.
+- Use `tightGap` (4) for title/caption, `relatedGap` (8) for related controls, `itemGap` (16) between items, `sectionGap` (24) between sections, and `majorGap` (32) for an explicit major transition.
+- Use `screenInset` (16) for custom screen/sheet gutters. Shared surfaces own `cardInset` (24) or `compactCardInset` (12); callers must not duplicate that padding.
+- Keep native List/Form layout, safe areas, control dimensions, and minimum 44 pt touch targets separate from spacing. Name component-specific geometric exceptions rather than treating them as general spacing.
+- Swift owns token values; mirror them in pen.dev. See [spacing roles and canvas mapping](../spacing.md).
 - `.ignoresSafeArea()` on full-bleed background images only
 - Use `overlay`/`background` for decorating a primary view (child adopts parent's size) — use `ZStack` for composing peer views that jointly define layout
 
