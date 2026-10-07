@@ -3,9 +3,20 @@ import SwiftUI
 enum TyfeSpacing {
     static let unit: CGFloat = 4
     static let small: CGFloat = 8
+    static let compact: CGFloat = 12
     static let control: CGFloat = 16
     static let card: CGFloat = 24
     static let section: CGFloat = 32
+
+    // Layout callers use semantic roles; the original scale remains compatible.
+    static let tightGap = unit
+    static let relatedGap = small
+    static let itemGap = control
+    static let sectionGap = card
+    static let majorGap = section
+    static let screenInset = control
+    static let cardInset = card
+    static let compactCardInset = compact
 }
 
 enum TyfeRadius {
@@ -77,24 +88,24 @@ enum TyfeSurfaceRole: CaseIterable {
 }
 
 #Preview("Tyfe tokens — Warm Canvas") {
-    VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+    VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
         Text("Tyfe")
             .font(TyfeTypography.display)
         Text("Warm game board")
             .font(TyfeTypography.interfaceStrong)
-        HStack(spacing: TyfeSpacing.small) {
+        HStack(spacing: TyfeSpacing.relatedGap) {
             tokenSwatch("Focus", TyfeEditorialPalette.focus)
             tokenSwatch("Cyan", TyfeEditorialPalette.teal)
             tokenSwatch("Error", TyfeEditorialPalette.error)
         }
     }
-    .padding(TyfeSpacing.card)
+    .padding(TyfeSpacing.cardInset)
     .foregroundStyle(TyfeEditorialPalette.ink)
     .background(TyfeEditorialPalette.canvas)
 }
 
 #Preview("Tyfe tokens — Focus Chamber") {
-    VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+    VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
         Text("Focus Chamber")
             .font(TyfeTypography.displayCompact)
         Text("25:00")
@@ -104,7 +115,7 @@ enum TyfeSurfaceRole: CaseIterable {
             .font(TyfeTypography.interface)
             .foregroundStyle(TyfeEditorialPalette.onDark)
     }
-    .padding(TyfeSpacing.card)
+    .padding(TyfeSpacing.cardInset)
     .frame(maxWidth: .infinity, alignment: .leading)
     .background(TyfeEditorialPalette.navy)
     .foregroundStyle(TyfeEditorialPalette.onDark)
@@ -113,8 +124,8 @@ enum TyfeSurfaceRole: CaseIterable {
 private func tokenSwatch(_ label: String, _ color: Color) -> some View {
     Text(label)
         .font(TyfeTypography.caption)
-        .padding(.horizontal, TyfeSpacing.small)
-        .padding(.vertical, TyfeSpacing.unit)
+        .padding(.horizontal, TyfeSpacing.relatedGap)
+        .padding(.vertical, TyfeSpacing.tightGap)
         .foregroundStyle(TyfeEditorialPalette.onAccent)
         .background(color)
         .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))

@@ -6,6 +6,7 @@ struct TyfeSurfaceView<Content: View>: View {
     private let fillOverride: Color?
     private let foregroundOverride: Color?
     private let strokeColorOverride: Color?
+    private let contentPadding: CGFloat
     private let content: Content
 
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
@@ -35,6 +36,7 @@ struct TyfeSurfaceView<Content: View>: View {
         fill: Color? = nil,
         foreground: Color? = nil,
         strokeColor: Color? = nil,
+        contentPadding: CGFloat = TyfeSpacing.cardInset,
         @ViewBuilder content: () -> Content
     ) {
         self.role = role
@@ -42,13 +44,14 @@ struct TyfeSurfaceView<Content: View>: View {
         self.fillOverride = fill
         self.foregroundOverride = foreground
         self.strokeColorOverride = strokeColor
+        self.contentPadding = contentPadding
         self.content = content()
     }
 
     var body: some View {
         content
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(TyfeSpacing.card)
+            .padding(contentPadding)
             .foregroundStyle(resolvedForeground)
             .background {
                 if glass && !reduceTransparency {
@@ -77,7 +80,7 @@ struct TyfeSurfaceView<Content: View>: View {
 }
 
 #Preview("Surface roles") {
-    VStack(spacing: TyfeSpacing.control) {
+    VStack(spacing: TyfeSpacing.itemGap) {
         TyfeSurfaceView(role: .warmCanvas) {
             Text("Warm Canvas")
                 .font(TyfeTypography.interfaceStrong)
@@ -86,7 +89,11 @@ struct TyfeSurfaceView<Content: View>: View {
             Text("Focus Chamber")
                 .font(TyfeTypography.interfaceStrong)
         }
+        TyfeSurfaceView(role: .paper, contentPadding: TyfeSpacing.compactCardInset) {
+            Text("Compact padding")
+                .font(TyfeTypography.interfaceStrong)
+        }
     }
-    .padding(TyfeSpacing.card)
+    .padding(TyfeSpacing.cardInset)
     .background(TyfeEditorialPalette.canvas)
 }

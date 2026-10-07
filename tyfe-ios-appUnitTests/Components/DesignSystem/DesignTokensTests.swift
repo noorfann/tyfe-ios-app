@@ -5,6 +5,25 @@ import Testing
 
 struct DesignTokensTests {
 
+    @Test func semanticSpacingRolesPreserveTheCompatibleScale() {
+        #expect(TyfeSpacing.tightGap == 4)
+        #expect(TyfeSpacing.relatedGap == 8)
+        #expect(TyfeSpacing.itemGap == 16)
+        #expect(TyfeSpacing.sectionGap == 24)
+        #expect(TyfeSpacing.majorGap == 32)
+        #expect(TyfeSpacing.screenInset == 16)
+        #expect(TyfeSpacing.cardInset == 24)
+        #expect(TyfeSpacing.compactCardInset == 12)
+        #expect(TyfeSpacing.tightGap == TyfeSpacing.unit)
+        #expect(TyfeSpacing.relatedGap == TyfeSpacing.small)
+        #expect(TyfeSpacing.itemGap == TyfeSpacing.control)
+        #expect(TyfeSpacing.sectionGap == TyfeSpacing.card)
+        #expect(TyfeSpacing.majorGap == TyfeSpacing.section)
+        #expect(TyfeSpacing.screenInset == TyfeSpacing.control)
+        #expect(TyfeSpacing.cardInset == TyfeSpacing.card)
+        #expect(TyfeSpacing.compactCardInset == TyfeSpacing.compact)
+    }
+
     @Test func foundationGeometryUsesFourPointRhythm() {
         #expect(TyfeSpacing.unit == 4)
         #expect(TyfeSpacing.control == 16)
