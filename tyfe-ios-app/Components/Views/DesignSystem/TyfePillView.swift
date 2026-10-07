@@ -46,7 +46,7 @@ struct TyfePillView: View {
     }
 
     var body: some View {
-        HStack(spacing: TyfeSpacing.unit) {
+        HStack(spacing: TyfeSpacing.tightGap) {
             if let systemImage {
                 Image(systemName: systemImage)
                     .imageScale(.small)
@@ -55,7 +55,7 @@ struct TyfePillView: View {
                 .font(TyfeTypography.caption)
                 .lineLimit(1)
         }
-        .padding(.horizontal, TyfeSpacing.small)
+        .padding(.horizontal, TyfeSpacing.relatedGap)
         .frame(minHeight: 28)
         .foregroundStyle(tone.foreground)
         .background(tone.fill)
@@ -70,12 +70,12 @@ struct TyfePillView: View {
 }
 
 #Preview("State pills") {
-    HStack(spacing: TyfeSpacing.small) {
+    HStack(spacing: TyfeSpacing.relatedGap) {
         TyfePillView(label: "Ready", systemImage: "play.fill")
         TyfePillView(label: "Focusing", systemImage: "timer", tone: .success)
         TyfePillView(label: "Resting", systemImage: "hourglass", tone: .warning)
         TyfePillView(label: "Offline", systemImage: "wifi.slash", tone: .error)
     }
-    .padding(TyfeSpacing.card)
+    .padding(TyfeSpacing.cardInset)
     .background(TyfeEditorialPalette.canvas)
 }

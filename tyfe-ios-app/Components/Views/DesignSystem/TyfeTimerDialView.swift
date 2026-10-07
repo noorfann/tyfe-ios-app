@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct TyfeTimerDialView: View {
+    private static let innerRingInset: CGFloat = 18
     let timeText: String
     let caption: String
     let progress: Double
@@ -68,9 +69,9 @@ struct TyfeTimerDialView: View {
                     primaryForeground.opacity(0.18),
                     style: StrokeStyle(lineWidth: TyfeStroke.hairline)
                 )
-                .padding(18)
+                .padding(Self.innerRingInset)
 
-            VStack(spacing: TyfeSpacing.small) {
+            VStack(spacing: TyfeSpacing.relatedGap) {
                 Text(timeText)
                     .font(.system(size: 54, weight: .black, design: .monospaced))
                     .monospacedDigit()
@@ -82,7 +83,7 @@ struct TyfeTimerDialView: View {
                     .tracking(1.1)
                     .foregroundStyle(secondaryForeground)
             }
-            .padding(TyfeSpacing.card)
+            .padding(TyfeSpacing.cardInset)
         }
         .frame(width: diameter, height: diameter)
         .accessibilityElement(children: .ignore)
@@ -102,7 +103,7 @@ struct TyfeTimerDialView: View {
         accessibilityLabel: "Focus Session timer",
         accessibilityValue: "18:42, Focusing"
     )
-    .padding(TyfeSpacing.card)
+    .padding(TyfeSpacing.cardInset)
     .background(FocusDaypart.night.visualStyle.cardFill)
     .environment(\.colorScheme, .dark)
 }

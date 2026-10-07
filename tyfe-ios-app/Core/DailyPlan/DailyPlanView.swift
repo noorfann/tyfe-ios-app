@@ -31,7 +31,7 @@ struct DailyPlanView: View {
                 .ignoresSafeArea()
 
             ScrollView {
-                VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+                VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
                     header
                     intro
                     activitySummary
@@ -43,9 +43,9 @@ struct DailyPlanView: View {
                     )
                     .accessibilityIdentifier("daily-plan-accept")
                 }
-                .padding(.horizontal, TyfeSpacing.control)
-                .padding(.top, TyfeSpacing.control)
-                .padding(.bottom, TyfeSpacing.section)
+                .padding(.horizontal, TyfeSpacing.screenInset)
+                .padding(.top, TyfeSpacing.screenInset)
+                .padding(.bottom, TyfeSpacing.screenInset)
             }
             .scrollIndicators(.hidden)
         }
@@ -59,7 +59,7 @@ struct DailyPlanView: View {
     }
 
     private var header: some View {
-        HStack(spacing: TyfeSpacing.small) {
+        HStack(spacing: TyfeSpacing.relatedGap) {
             Image(systemName: "chevron.left")
                 .font(.headline.weight(.black))
                 .foregroundStyle(TyfeEditorialPalette.ink)
@@ -78,7 +78,7 @@ struct DailyPlanView: View {
     }
 
     private var intro: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
             Text("Make a little\nroom for focus.")
                 .font(TyfeTypography.display)
                 .tracking(-1.6)
@@ -92,7 +92,7 @@ struct DailyPlanView: View {
 
     private var activitySummary: some View {
         TyfeSurfaceView(role: .paper) {
-            HStack(spacing: TyfeSpacing.control) {
+            HStack(spacing: TyfeSpacing.itemGap) {
                 RoundedRectangle(cornerRadius: TyfeRadius.control)
                     .fill(TyfeEditorialPalette.teal)
                     .frame(width: 52, height: 52)
@@ -104,7 +104,7 @@ struct DailyPlanView: View {
                             .foregroundStyle(TyfeEditorialPalette.onAccent)
                     }
 
-                VStack(alignment: .leading, spacing: TyfeSpacing.unit) {
+                VStack(alignment: .leading, spacing: TyfeSpacing.tightGap) {
                     Text("FOCUS ACTIVITY")
                         .font(TyfeTypography.eyebrow)
                         .tracking(1.1)
@@ -119,13 +119,13 @@ struct DailyPlanView: View {
 
     private var sessionCount: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                 Text("HOW MUCH FEELS RIGHT?")
                     .font(TyfeTypography.eyebrow)
                     .tracking(1.1)
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
-                HStack(spacing: TyfeSpacing.control) {
+                HStack(spacing: TyfeSpacing.itemGap) {
                     planCounterButton(
                         systemImage: "minus",
                         label: "Fewer sessions",
@@ -133,7 +133,7 @@ struct DailyPlanView: View {
                         action: presenter.decrementSessionCount
                     )
 
-                    VStack(spacing: TyfeSpacing.unit) {
+                    VStack(spacing: TyfeSpacing.tightGap) {
                         Text("\(presenter.intendedSessionCount)")
                             .font(TyfeTypography.displayCompact)
                             .foregroundStyle(TyfeEditorialPalette.ink)

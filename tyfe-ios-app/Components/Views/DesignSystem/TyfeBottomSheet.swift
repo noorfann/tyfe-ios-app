@@ -22,14 +22,14 @@ struct TyfeBottomSheet<Content: View>: View {
                 .ignoresSafeArea()
 
             ScrollView {
-                VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+                VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
                     header
                     content
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, TyfeSpacing.control)
-                .padding(.top, TyfeSpacing.control)
-                .padding(.bottom, TyfeSpacing.section)
+                .padding(.horizontal, TyfeSpacing.screenInset)
+                .padding(.top, TyfeSpacing.screenInset)
+                .padding(.bottom, TyfeSpacing.screenInset)
             }
             .scrollIndicators(.hidden)
         }
@@ -37,7 +37,7 @@ struct TyfeBottomSheet<Content: View>: View {
     }
 
     private var header: some View {
-        HStack(spacing: TyfeSpacing.small) {
+        HStack(spacing: TyfeSpacing.relatedGap) {
             Text(title)
                 .font(TyfeTypography.eyebrow)
                 .tracking(1.2)

@@ -14,11 +14,11 @@ struct TyfeFocusStatusPillView: View {
 }
 
 #Preview("Focus status pills") {
-    HStack(spacing: TyfeSpacing.small) {
+    HStack(spacing: TyfeSpacing.relatedGap) {
         ForEach(CircleFocusStatus.allCases, id: \.self) { status in
             TyfeFocusStatusPillView(status: status)
         }
     }
-    .padding(TyfeSpacing.card)
+    .padding(TyfeSpacing.cardInset)
     .background(TyfeEditorialPalette.canvas)
 }

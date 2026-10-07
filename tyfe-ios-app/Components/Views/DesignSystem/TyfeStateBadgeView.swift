@@ -19,11 +19,11 @@ struct TyfeStateBadgeView: View {
 }
 
 #Preview("Focus state badges") {
-    VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+    VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
         ForEach(FocusSessionState.allCases, id: \.self) { state in
             TyfeStateBadgeView(state: state)
         }
     }
-    .padding(TyfeSpacing.card)
+    .padding(TyfeSpacing.cardInset)
     .background(TyfeEditorialPalette.canvas)
 }

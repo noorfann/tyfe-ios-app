@@ -12,7 +12,7 @@ struct TyfeProgressStatusBarView: View {
     var onTap: () -> Void = { }
 
     var body: some View {
-        HStack(spacing: TyfeSpacing.small) {
+        HStack(spacing: TyfeSpacing.relatedGap) {
             Image(systemName: systemImage)
                 .font(.subheadline.weight(.black))
                 .accessibilityHidden(true)
@@ -26,7 +26,7 @@ struct TyfeProgressStatusBarView: View {
                 .monospacedDigit()
         }
         .foregroundStyle(TyfeEditorialPalette.onAccent)
-        .padding(.horizontal, TyfeSpacing.control)
+        .padding(.horizontal, TyfeSpacing.screenInset)
         .frame(minHeight: 40)
         .background(accent)
         .clipShape(Capsule())
@@ -52,7 +52,7 @@ struct TyfeProgressStatusBarView: View {
 }
 
 #Preview("Progress status bars") {
-    VStack(spacing: TyfeSpacing.control) {
+    VStack(spacing: TyfeSpacing.itemGap) {
         TyfeProgressStatusBarView(
             title: "Reward in progress",
             timeText: "12:30",
@@ -71,7 +71,7 @@ struct TyfeProgressStatusBarView: View {
             accessibilityIdentifier: "focus-in-progress-status"
         )
     }
-        .padding(TyfeSpacing.card)
+        .padding(TyfeSpacing.cardInset)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(TyfeEditorialPalette.canvas)
 }

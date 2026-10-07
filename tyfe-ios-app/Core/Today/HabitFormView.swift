@@ -8,9 +8,9 @@ struct HabitFormView: View {
     private static let icons = ["leaf.fill", "book.fill", "figure.walk", "drop.fill", "heart.fill", "pencil"]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
             TyfeSurfaceView(role: .paper) {
-                VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+                VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                     TyfeTextFieldView(placeholder: "Name your habit", text: $draft.title)
                         .accessibilityIdentifier("habit-title-field")
                     EffortSpacePicker(projectId: $draft.projectId, projects: projects)
@@ -24,14 +24,14 @@ struct HabitFormView: View {
                 }
             }
             TyfeSurfaceView(role: .paper) {
-                VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+                VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                     Picker("Repeat", selection: $draft.schedule.kind) {
                         Text("Every day").tag(ActivityRecurrenceKind.daily)
                         Text("Selected weekdays").tag(ActivityRecurrenceKind.weekly)
                     }
                     .pickerStyle(.menu)
                     if draft.schedule.kind == .weekly {
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 68))], spacing: TyfeSpacing.small) {
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 68), spacing: TyfeSpacing.relatedGap)], spacing: TyfeSpacing.relatedGap) {
                             ForEach(1...7, id: \.self) { weekday in weekdayButton(weekday) }
                         }
                     }

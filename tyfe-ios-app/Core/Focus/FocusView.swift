@@ -123,7 +123,7 @@ struct FocusView: View {
 
     private func chamberContent(daypart: FocusDaypart) -> some View {
         ScrollView {
-            VStack(spacing: TyfeSpacing.card) {
+            VStack(spacing: TyfeSpacing.sectionGap) {
                 focusTopBar(daypart: daypart)
 
                 if presenter.isResting {
@@ -142,9 +142,9 @@ struct FocusView: View {
             }
             .frame(maxWidth: 560)
             .frame(maxWidth: .infinity)
-            .padding(.horizontal, TyfeSpacing.control)
-            .padding(.top, TyfeSpacing.small)
-            .padding(.bottom, TyfeSpacing.section)
+            .padding(.horizontal, TyfeSpacing.screenInset)
+            .padding(.top, TyfeSpacing.relatedGap)
+            .padding(.bottom, TyfeSpacing.screenInset)
         }
         .scrollIndicators(.hidden)
         .animation(reduceMotion ? nil : TyfeMotion.normalAnimation, value: presenter.session.state)
@@ -160,7 +160,7 @@ struct FocusView: View {
             ? TyfeEditorialPalette.disabledFill
             : daypart.visualStyle.focusAccentFill
 
-        return HStack(spacing: 12) {
+        return HStack(spacing: TyfeSpacing.relatedGap) {
             Image(systemName: daypart.symbolName)
                 .font(.headline)
                 .foregroundStyle(daypart.symbolColor)
@@ -221,7 +221,7 @@ struct FocusView: View {
                     presenter.onMarkCompletePressed()
                 }
                 .accessibilityLabel("Mark complete")
-                .padding(TyfeSpacing.small)
+                .padding(TyfeSpacing.relatedGap)
         }
 #endif
     }
@@ -252,7 +252,7 @@ struct FocusView: View {
             foreground: style.primaryForeground,
             strokeColor: style.cardBorder
         ) {
-            VStack(spacing: TyfeSpacing.card) {
+            VStack(spacing: TyfeSpacing.sectionGap) {
                 outcomeArtwork
                 outcomeCopy(style: style)
                 outcomeActions(style: style)
@@ -288,7 +288,7 @@ struct FocusView: View {
     }
 
     private func outcomeCopy(style: FocusDaypartVisualStyle) -> some View {
-        VStack(spacing: TyfeSpacing.small) {
+        VStack(spacing: TyfeSpacing.relatedGap) {
             Text(presenter.session.state == .completed ? "Session complete" : "Session ended")
                 .font(TyfeTypography.display)
                 .multilineTextAlignment(.center)
@@ -301,7 +301,7 @@ struct FocusView: View {
     }
 
     private func outcomeActions(style: FocusDaypartVisualStyle) -> some View {
-        VStack(spacing: TyfeSpacing.small) {
+        VStack(spacing: TyfeSpacing.relatedGap) {
             if presenter.session.state == .completed {
                 TyfeActionButtonView(
                     title: "Claim Reward",

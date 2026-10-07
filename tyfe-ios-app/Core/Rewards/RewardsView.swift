@@ -23,7 +23,7 @@ struct RewardsView: View {
                 .ignoresSafeArea()
 
             ScrollView {
-                VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+                VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
                     header
                     summaryCards
                     focusBlockingNotice
@@ -31,9 +31,9 @@ struct RewardsView: View {
                     starterSection
                     customSection
                 }
-                .padding(.horizontal, TyfeSpacing.control)
-                .padding(.top, TyfeSpacing.control)
-                .padding(.bottom, TyfeSpacing.section)
+                .padding(.horizontal, TyfeSpacing.screenInset)
+                .padding(.top, TyfeSpacing.screenInset)
+                .padding(.bottom, TyfeSpacing.screenInset)
             }
             .scrollIndicators(.hidden)
         }
@@ -74,7 +74,7 @@ struct RewardsView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
             Text("Rewards")
                 .font(TyfeTypography.display)
                 .tracking(-1.6)
@@ -98,7 +98,7 @@ struct RewardsView: View {
     private var summaryCards: some View {
         ViewThatFits(in: .horizontal) {
             GeometryReader { proxy in
-                let spacing = TyfeSpacing.control
+                let spacing = TyfeSpacing.itemGap
                 let cardWidth = max(0, proxy.size.width - spacing)
 
                 HStack(alignment: .top, spacing: spacing) {
@@ -112,7 +112,7 @@ struct RewardsView: View {
             .frame(minWidth: Self.summaryRowMinimumWidth, maxWidth: .infinity)
             .frame(height: Self.summaryCardHeight)
 
-            VStack(spacing: TyfeSpacing.section) {
+            VStack(spacing: TyfeSpacing.itemGap) {
                 balanceCard()
                 TyfeTierLegendView()
             }
@@ -144,7 +144,7 @@ struct RewardsView: View {
     }
 
     private var starterSection: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
             sectionTitle("STARTER REWARDS")
 
             rewardCarousel(presenter.starterRewards)
@@ -152,7 +152,7 @@ struct RewardsView: View {
     }
 
     private var customSection: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
             sectionTitle("YOUR REWARDS")
 
             if presenter.customRewards.isEmpty {
@@ -174,7 +174,7 @@ struct RewardsView: View {
 
     private func rewardCarousel(_ rewards: [RewardModel]) -> some View {
         ScrollView(.horizontal) {
-            HStack(alignment: .top, spacing: TyfeSpacing.control) {
+            HStack(alignment: .top, spacing: TyfeSpacing.itemGap) {
                 ForEach(rewards) { reward in
                     TyfeRewardCardView(
                         reward: reward,
@@ -187,17 +187,17 @@ struct RewardsView: View {
                     .frame(width: Self.rewardCardWidth)
                 }
             }
-            .padding(.horizontal, TyfeSpacing.control)
-            .padding(.vertical, TyfeSpacing.unit)
+            .padding(.horizontal, TyfeSpacing.screenInset)
+            .padding(.vertical, TyfeSpacing.tightGap)
         }
         .scrollIndicators(.hidden)
-        .padding(.horizontal, -TyfeSpacing.control)
+        .padding(.horizontal, -TyfeSpacing.screenInset)
         .accessibilityLabel("Rewards, scroll sideways for more")
     }
 
     private static let rewardCardWidth: CGFloat = 280
     private static let summaryCardHeight: CGFloat = 132
-    private static let summaryCardContentHeight: CGFloat = summaryCardHeight - (TyfeSpacing.card * 2)
+    private static let summaryCardContentHeight: CGFloat = summaryCardHeight - (TyfeSpacing.cardInset * 2)
     private static let summaryRowMinimumWidth: CGFloat = 320
 
     private func sectionTitle(_ text: String) -> some View {

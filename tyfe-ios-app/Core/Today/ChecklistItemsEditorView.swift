@@ -15,7 +15,7 @@ struct ChecklistItemsEditorView: View {
 
     var body: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                 Text("CHECKLIST ITEMS")
                     .font(TyfeTypography.eyebrow)
                     .tracking(1.1)
@@ -33,7 +33,7 @@ struct ChecklistItemsEditorView: View {
     private func itemRow(item: Binding<ChecklistItemDraft>) -> some View {
         let draft = item.wrappedValue
         let isLocked = draft.itemId.map { lockedItemIds.contains($0) } ?? false
-        return HStack(spacing: TyfeSpacing.small) {
+        return HStack(spacing: TyfeSpacing.relatedGap) {
             TyfeTextFieldView(placeholder: "Item title", text: item.title)
                 .accessibilityIdentifier("checklist-item-title")
 
@@ -50,7 +50,7 @@ struct ChecklistItemsEditorView: View {
     }
 
     private var addRow: some View {
-        HStack(spacing: TyfeSpacing.small) {
+        HStack(spacing: TyfeSpacing.relatedGap) {
             TyfeTextFieldView(placeholder: "Add an item", text: $newItemTitle)
                 .accessibilityIdentifier("checklist-new-item-field")
 

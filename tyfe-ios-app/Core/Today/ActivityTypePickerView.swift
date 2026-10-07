@@ -15,7 +15,7 @@ struct ActivityTypePickerView: View {
     }
 
     var body: some View {
-        HStack(spacing: TyfeSpacing.small) {
+        HStack(spacing: TyfeSpacing.relatedGap) {
             typeOption(.session)
             typeOption(.checklist)
         }

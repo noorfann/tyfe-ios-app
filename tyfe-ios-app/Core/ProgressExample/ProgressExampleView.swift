@@ -18,17 +18,17 @@ struct ProgressExampleView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
+            VStack(spacing: TyfeSpacing.sectionGap) {
                 // Error message
                 if let errorMessage {
                     Text(errorMessage)
                         .font(.caption)
                         .foregroundStyle(.red)
-                        .padding(.horizontal)
+                        .padding(.horizontal, TyfeSpacing.screenInset)
                 }
 
                 // Progress Summary
-                VStack(spacing: 8) {
+                VStack(spacing: TyfeSpacing.relatedGap) {
                     Text("Progress Items")
                         .font(.headline)
                     Text("\(presenter.allProgressItems.count)")
@@ -39,7 +39,7 @@ struct ProgressExampleView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-                .padding()
+                .padding(TyfeSpacing.screenInset)
 
                 // Add Progress Button
                 Button("Add Progress Item") {
@@ -49,7 +49,7 @@ struct ProgressExampleView: View {
 
                 // Progress Items List
                 if !presenter.allProgressItems.isEmpty {
-                    VStack(spacing: 12) {
+                    VStack(spacing: TyfeSpacing.relatedGap) {
                         ForEach(presenter.allProgressItems, id: \.id) { item in
                             ProgressItemCard(
                                 item: item,
@@ -80,10 +80,10 @@ struct ProgressExampleView: View {
                         .buttonStyle(.bordered)
                         .tint(.red)
                     }
-                    .padding(.horizontal)
+                    .padding(.horizontal, TyfeSpacing.screenInset)
                 }
             }
-            .padding()
+            .padding(TyfeSpacing.screenInset)
         }
         .navigationTitle("Progress Testing")
         .onAppear {
@@ -143,9 +143,9 @@ struct ProgressItemCard: View {
     let onDelete: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
+            HStack(spacing: TyfeSpacing.relatedGap) {
+                VStack(alignment: .leading, spacing: TyfeSpacing.tightGap) {
                     Text(item.id)
                         .font(.headline)
                     Text("Progress: \(Int(item.value * 100))%")
@@ -183,7 +183,7 @@ struct ProgressItemCard: View {
             }
             .frame(height: 8)
 
-            HStack {
+            HStack(spacing: TyfeSpacing.relatedGap) {
                 Text("Created: \(item.dateCreated.formatted(date: .abbreviated, time: .shortened))")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
@@ -193,7 +193,7 @@ struct ProgressItemCard: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .padding()
+        .padding(TyfeSpacing.screenInset)
         .background(Color.gray.opacity(0.1))
         .cornerRadius(12)
     }

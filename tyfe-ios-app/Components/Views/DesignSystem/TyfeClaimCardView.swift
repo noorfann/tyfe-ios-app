@@ -21,7 +21,7 @@ struct TyfeClaimCardView: View {
 
     private var readyCard: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                 Label("Reward ready", systemImage: "gift.fill")
                     .font(TyfeTypography.displayCompact)
 
@@ -53,7 +53,7 @@ struct TyfeClaimCardView: View {
 
     private var activeCard: some View {
         TyfeSurfaceView(role: .focusChamber) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
                 Label("Reward in progress", systemImage: "clock.fill")
                     .font(TyfeTypography.interfaceStrong)
 
@@ -73,7 +73,7 @@ struct TyfeClaimCardView: View {
 
     private var expiredCard: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
                 Label("Reward finished", systemImage: "checkmark.circle.fill")
                     .font(TyfeTypography.interfaceStrong)
 
@@ -97,10 +97,10 @@ struct TyfeClaimCardView: View {
 }
 
 #Preview("Claim cards") {
-    VStack(spacing: TyfeSpacing.control) {
+    VStack(spacing: TyfeSpacing.itemGap) {
         TyfeClaimCardView(claim: .mock, remainingSeconds: 0, endText: "—", onStart: {})
         TyfeClaimCardView(claim: .activeMock, remainingSeconds: 300, endText: "3:05 PM", onStart: {})
     }
-    .padding(TyfeSpacing.card)
+    .padding(TyfeSpacing.cardInset)
     .background(TyfeEditorialPalette.canvas)
 }

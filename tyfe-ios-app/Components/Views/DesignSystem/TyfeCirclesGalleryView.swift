@@ -50,7 +50,7 @@ struct TyfeCirclesGalleryView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
                 galleryHeader
                 enableSection
                 statusSection
@@ -61,8 +61,8 @@ struct TyfeCirclesGalleryView: View {
                 sheetSection
                 errorSection
             }
-            .padding(.horizontal, TyfeSpacing.control)
-            .padding(.vertical, TyfeSpacing.card)
+            .padding(.horizontal, TyfeSpacing.screenInset)
+            .padding(.vertical, TyfeSpacing.cardInset)
         }
         .background(TyfeEditorialPalette.canvas.ignoresSafeArea())
         .navigationTitle("Circles gallery")
@@ -70,7 +70,7 @@ struct TyfeCirclesGalleryView: View {
     }
 
     private var galleryHeader: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
             Text("Circles view states")
                 .font(TyfeTypography.displayCompact)
             Text("Mock-only review surface for every Circles state.")
@@ -88,7 +88,7 @@ struct TyfeCirclesGalleryView: View {
     private var statusSection: some View {
         gallerySection("Loading · Offline · Empty · Error") {
             TyfeStatusView(kind: .loading)
-            VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
                 TyfeStatusView(kind: .offline, onRetry: {})
                 Text("Last synced 5 minutes ago")
                     .font(TyfeTypography.caption)
@@ -107,7 +107,7 @@ struct TyfeCirclesGalleryView: View {
                 selectedCircleId: presenter.circles.first?.circleId,
                 onSelect: { _ in }
             )
-            HStack(spacing: TyfeSpacing.small) {
+            HStack(spacing: TyfeSpacing.relatedGap) {
                 TyfeActionButtonView(title: "New Circle", systemImage: "plus", role: .primary, onTap: {})
                 TyfeActionButtonView(title: "Join with code", systemImage: "key.fill", role: .secondary, onTap: {})
             }
@@ -184,7 +184,7 @@ struct TyfeCirclesGalleryView: View {
         _ title: String,
         @ViewBuilder content: () -> Content
     ) -> some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
             Text(title)
                 .font(TyfeTypography.eyebrow)
                 .textCase(.uppercase)

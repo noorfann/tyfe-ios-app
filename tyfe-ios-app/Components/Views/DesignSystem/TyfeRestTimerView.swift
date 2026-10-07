@@ -20,7 +20,7 @@ struct TyfeRestTimerView: View {
             foreground: style.primaryForeground,
             strokeColor: style.cardBorder
         ) {
-            VStack(spacing: TyfeSpacing.card) {
+            VStack(spacing: TyfeSpacing.sectionGap) {
                 restHeading
                 restDial
                 restGuidance
@@ -34,7 +34,7 @@ struct TyfeRestTimerView: View {
     }
 
     private var restHeading: some View {
-        VStack(spacing: TyfeSpacing.small) {
+        VStack(spacing: TyfeSpacing.relatedGap) {
             TyfePillView(label: "Resting", systemImage: "hourglass", tone: .warning)
 
             Text("Take a 5-minute rest")
@@ -74,7 +74,7 @@ struct TyfeRestTimerView: View {
     }
 
     private var actions: some View {
-        VStack(spacing: TyfeSpacing.small) {
+        VStack(spacing: TyfeSpacing.relatedGap) {
             TyfeActionButtonView(
                 title: "Skip and start another",
                 systemImage: "arrow.clockwise",
@@ -105,6 +105,6 @@ struct TyfeRestTimerView: View {
         onSkip: {},
         onBackToToday: {}
     )
-    .padding(TyfeSpacing.card)
+    .padding(TyfeSpacing.cardInset)
     .background(TyfeEditorialPalette.canvas)
 }

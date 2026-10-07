@@ -13,9 +13,9 @@ struct TyfeCircleNameSheetCardView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
             TyfeSurfaceView(role: .paper) {
-                VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+                VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                     Text(label)
                         .font(TyfeTypography.eyebrow)
                         .tracking(1.1)
@@ -46,7 +46,7 @@ struct TyfeCircleErrorCardView: View {
 
     var body: some View {
         TyfeSurfaceView(role: .warning) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                 Label("Something went wrong", systemImage: "exclamationmark.triangle.fill")
                     .font(TyfeTypography.interfaceStrong)
                 Text(message)

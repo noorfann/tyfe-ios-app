@@ -61,7 +61,7 @@ struct TodayActivityDetailSheet: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
             activityForm
             if selectedType == .checklist {
                 ChecklistItemsEditorView(items: $itemDrafts, lockedItemIds: tickedItemIds)
@@ -92,7 +92,7 @@ struct TodayActivityDetailSheet: View {
     }
 
     private var projectPicker: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
             Text("SPACE")
                 .font(TyfeTypography.eyebrow)
                 .tracking(1.1)
@@ -116,7 +116,7 @@ struct TodayActivityDetailSheet: View {
 
     private var activityForm: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                 Text("ACTIVITY")
                     .font(TyfeTypography.eyebrow)
                     .tracking(1.1)
@@ -139,13 +139,13 @@ struct TodayActivityDetailSheet: View {
 
     private var durationPicker: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                 Text("PLANNED DURATION")
                     .font(TyfeTypography.eyebrow)
                     .tracking(1.1)
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
-                HStack(spacing: TyfeSpacing.control) {
+                HStack(spacing: TyfeSpacing.itemGap) {
                     counterButton(
                         systemImage: "minus",
                         label: "Fewer sessions",
@@ -154,7 +154,7 @@ struct TodayActivityDetailSheet: View {
                         sessionCount -= 1
                     }
 
-                    VStack(spacing: TyfeSpacing.unit) {
+                    VStack(spacing: TyfeSpacing.tightGap) {
                         Text("\(sessionCount) \(sessionCount == 1 ? "session" : "sessions")")
                             .font(TyfeTypography.displayCompact)
                             .contentTransition(.numericText())
@@ -233,7 +233,7 @@ struct TodayActivityDetailSheet: View {
         onSave: { _ in },
         onRemove: { }
     )
-    .padding()
+    .padding(TyfeSpacing.screenInset)
     .background(TyfeEditorialPalette.canvas)
 }
 
@@ -265,7 +265,7 @@ struct TodayActivityDetailSheet: View {
         onSave: { _ in },
         onRemove: nil
     )
-    .padding()
+    .padding(TyfeSpacing.screenInset)
     .background(TyfeEditorialPalette.canvas)
 }
 
@@ -283,7 +283,7 @@ struct TodayActivityDetailSheet: View {
             onSave: { _ in },
             onRemove: nil
         )
-        .padding()
+        .padding(TyfeSpacing.screenInset)
     }
     .background(TyfeEditorialPalette.canvas)
     .environment(\.dynamicTypeSize, .accessibility3)

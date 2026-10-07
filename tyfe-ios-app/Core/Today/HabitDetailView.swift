@@ -9,8 +9,8 @@ struct HabitDetailView: View {
     private var accent: Color { ProjectColorOption.color(for: habit.colorToken) }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.section) {
-            HStack(alignment: .top) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
+            HStack(alignment: .top, spacing: TyfeSpacing.relatedGap) {
                 Label(habit.title, systemImage: habit.iconToken)
                     .font(TyfeTypography.displayCompact).frame(maxWidth: .infinity, alignment: .leading)
                 Image(systemName: "pencil").frame(minWidth: 44, minHeight: 44)
@@ -18,8 +18,8 @@ struct HabitDetailView: View {
                     .accessibilityLabel("Edit Habit")
             }
             ViewThatFits(in: .horizontal) {
-                HStack(spacing: TyfeSpacing.control) { streakCounters }
-                VStack(alignment: .leading, spacing: TyfeSpacing.control) { streakCounters }
+                HStack(spacing: TyfeSpacing.itemGap) { streakCounters }
+                VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) { streakCounters }
             }
             TyfeSurfaceView(role: .paper) {
                 ScrollView(.horizontal) {
@@ -49,8 +49,8 @@ struct HabitDetailView: View {
 
     private var monthCalendar: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(spacing: TyfeSpacing.control) {
-                HStack {
+            VStack(spacing: TyfeSpacing.itemGap) {
+                HStack(spacing: TyfeSpacing.relatedGap) {
                     Image(systemName: "chevron.left").frame(minWidth: 44, minHeight: 44)
                         .asButton(.press) { presenter.moveMonth(by: -1) }
                         .disabled(!presenter.canViewPreviousMonth).accessibilityLabel("Previous month")
@@ -61,7 +61,7 @@ struct HabitDetailView: View {
                         .disabled(!presenter.canViewNextMonth).accessibilityLabel("Next month")
                 }
                 if dynamicTypeSize.isAccessibilitySize {
-                    VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+                    VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                         ForEach(presenter.calendarDays(for: habit).filter(\.isInMonth)) { day in
                             Text("\(day.day.day): \(day.status.label)")
                                 .font(TyfeTypography.interface).accessibilityLabel(day.accessibilityLabel)
@@ -75,7 +75,7 @@ struct HabitDetailView: View {
     }
 
     private var calendarGrid: some View {
-        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: TyfeSpacing.small) {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: TyfeSpacing.relatedGap), count: 7), spacing: TyfeSpacing.relatedGap) {
                     ForEach(1...7, id: \.self) { weekday in
                         Text(ActivityRecurrenceModel.weekdayShortName(forISO: weekday))
                             .font(TyfeTypography.caption).accessibilityHidden(true)

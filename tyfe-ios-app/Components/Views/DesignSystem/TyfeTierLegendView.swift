@@ -10,13 +10,13 @@ struct TyfeTierLegendView: View {
 
     var body: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
                 Text("REWARD RATE")
                     .font(TyfeTypography.eyebrow)
                     .tracking(1.1)
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
-                HStack(alignment: .firstTextBaseline, spacing: TyfeSpacing.small) {
+                HStack(alignment: .firstTextBaseline, spacing: TyfeSpacing.relatedGap) {
                     rateValue("1", unit: "CREDIT")
 
                     Text("=")
@@ -33,7 +33,7 @@ struct TyfeTierLegendView: View {
     }
 
     private func rateValue(_ value: String, unit: String) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: TyfeSpacing.unit) {
+        HStack(alignment: .firstTextBaseline, spacing: TyfeSpacing.tightGap) {
             Text(value)
                 .font(TyfeTypography.displayCompact)
 
@@ -48,6 +48,6 @@ struct TyfeTierLegendView: View {
 
 #Preview("Reward rate") {
     TyfeTierLegendView()
-        .padding(TyfeSpacing.card)
+        .padding(TyfeSpacing.cardInset)
         .background(TyfeEditorialPalette.canvas)
 }

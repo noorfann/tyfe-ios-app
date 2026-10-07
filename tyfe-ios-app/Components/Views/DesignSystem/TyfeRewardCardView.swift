@@ -23,8 +23,8 @@ struct TyfeRewardCardView: View {
         HStack(spacing: 0) {
             stub
             rewardDetails
-                .padding(.horizontal, TyfeSpacing.control)
-                .padding(.vertical, TyfeSpacing.card)
+                .padding(.horizontal, TyfeSpacing.screenInset)
+                .padding(.vertical, TyfeSpacing.cardInset)
         }
         .background(alignment: .leading) {
             Rectangle()
@@ -55,7 +55,7 @@ struct TyfeRewardCardView: View {
     }
 
     private var stub: some View {
-        VStack(spacing: TyfeSpacing.unit) {
+        VStack(spacing: TyfeSpacing.tightGap) {
             Text(String(reward.durationTier.creditCost))
                 .font(TyfeTypography.displayCompact)
                 .lineLimit(1)
@@ -73,7 +73,7 @@ struct TyfeRewardCardView: View {
         }
         .foregroundStyle(stubInk)
         .frame(width: stubWidth)
-        .padding(.vertical, TyfeSpacing.control)
+        .padding(.vertical, TyfeSpacing.screenInset)
         .accessibilityHidden(true)
     }
 
@@ -82,13 +82,13 @@ struct TyfeRewardCardView: View {
             .stroke(style: StrokeStyle(lineWidth: TyfeStroke.hairline, dash: [5, 4]))
             .foregroundStyle(perforationColor)
             .frame(width: TyfeStroke.hairline)
-            .padding(.vertical, TyfeSpacing.control)
+            .padding(.vertical, TyfeSpacing.screenInset)
             .padding(.leading, stubWidth)
             .accessibilityHidden(true)
     }
 
     private var rewardDetails: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
             Text(reward.name)
                 .font(TyfeTypography.interfaceStrong)
                 .lineLimit(2, reservesSpace: true)
@@ -193,7 +193,7 @@ struct TyfeRewardCardView: View {
 }
 
 #Preview("Reward coupons") {
-    VStack(spacing: TyfeSpacing.control) {
+    VStack(spacing: TyfeSpacing.itemGap) {
         TyfeRewardCardView(reward: RewardModel.starters[0], balance: 2, onTap: {})
         TyfeRewardCardView(reward: RewardModel.starters[1], balance: 2, onTap: {})
         TyfeRewardCardView(
@@ -203,6 +203,6 @@ struct TyfeRewardCardView: View {
             onTap: {}
         )
     }
-    .padding(TyfeSpacing.card)
+    .padding(TyfeSpacing.cardInset)
     .background(TyfeEditorialPalette.canvas)
 }

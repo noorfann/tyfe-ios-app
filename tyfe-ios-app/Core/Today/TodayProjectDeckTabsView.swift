@@ -11,9 +11,9 @@ struct TodayProjectDeckTabsView: View {
     let onManage: () -> Void
 
     var body: some View {
-        HStack(spacing: TyfeSpacing.small) {
+        HStack(spacing: TyfeSpacing.relatedGap) {
             ScrollView(.horizontal) {
-                HStack(spacing: TyfeSpacing.small) {
+                HStack(spacing: TyfeSpacing.relatedGap) {
                     if showsUnassigned {
                         projectTab(project: nil)
                     }
@@ -53,7 +53,7 @@ struct TodayProjectDeckTabsView: View {
             "\(isSelected ? "Selected" : "Not selected"), color \(ProjectColorOption.title(for: $0.resolvedColorToken))"
         } ?? (isSelected ? "Selected" : "Not selected")
 
-        return HStack(spacing: TyfeSpacing.small) {
+        return HStack(spacing: TyfeSpacing.relatedGap) {
             if project != nil {
                 RoundedRectangle(cornerRadius: 2)
                     .fill(projectColor)
@@ -66,7 +66,7 @@ struct TodayProjectDeckTabsView: View {
                 .lineLimit(1)
         }
         .foregroundStyle(TyfeEditorialPalette.ink)
-        .padding(.horizontal, TyfeSpacing.control)
+        .padding(.horizontal, TyfeSpacing.screenInset)
         .frame(minHeight: 44)
         .background(TyfeEditorialPalette.paper)
         .clipShape(Capsule())
@@ -103,12 +103,12 @@ struct TodayProjectDeckTabsView: View {
         onSelect: { _ in },
         onManage: { }
     )
-    .padding()
+    .padding(TyfeSpacing.screenInset)
     .background(TyfeEditorialPalette.canvas)
 }
 
 #Preview("Space deck tabs variety") {
-    VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+    VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
         TodayProjectDeckTabsView(
             projects: [],
             showsUnassigned: false,
@@ -126,6 +126,6 @@ struct TodayProjectDeckTabsView: View {
             onManage: { }
         )
     }
-    .padding()
+    .padding(TyfeSpacing.screenInset)
     .background(TyfeEditorialPalette.canvas)
 }

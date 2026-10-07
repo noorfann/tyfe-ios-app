@@ -8,6 +8,8 @@ struct HomeDelegate {
 }
 
 struct HomeView: View {
+    private static let motifGap: CGFloat = 3
+    private static let motifInset: CGFloat = 5
 
     @State var presenter: HomePresenter
     let delegate: HomeDelegate
@@ -26,23 +28,23 @@ struct HomeView: View {
                 .ignoresSafeArea()
 
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(spacing: TyfeSpacing.sectionGap) {
                     header
                     editorialHero
                     progressSection
                     circleSnapshot
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 16)
-                .padding(.bottom, 28)
+                .padding(.horizontal, TyfeSpacing.screenInset)
+                .padding(.top, TyfeSpacing.screenInset)
+                .padding(.bottom, TyfeSpacing.screenInset)
             }
             .scrollIndicators(.hidden)
 
             if showDevSettingsButton {
                 devSettingsButton
                     .frame(maxWidth: .infinity, alignment: .trailing)
-                    .padding(.trailing, 16)
-                    .padding(.bottom, 12)
+                    .padding(.trailing, TyfeSpacing.screenInset)
+                    .padding(.bottom, TyfeSpacing.compactCardInset)
             }
         }
         .toolbar(.hidden, for: .navigationBar)
@@ -55,7 +57,7 @@ struct HomeView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: TyfeSpacing.relatedGap) {
             Text("tyfe")
                 .font(.system(.title, design: .serif, weight: .black))
                 .tracking(-1.4)
@@ -94,7 +96,7 @@ struct HomeView: View {
             editorialMotifs
                 .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                 Text(presenter.heroEyebrow)
                     .font(.caption2.weight(.black))
                     .tracking(1.4)
@@ -118,7 +120,7 @@ struct HomeView: View {
                     .foregroundStyle(TyfeEditorialPalette.ink.opacity(0.72))
                     .frame(maxWidth: 210, alignment: .leading)
 
-                HStack(spacing: 8) {
+                HStack(spacing: TyfeSpacing.relatedGap) {
                     Text(presenter.focusActionTitle)
                     Image(systemName: presenter.focusActionSystemImage)
                         .font(.subheadline.weight(.black))
@@ -146,7 +148,7 @@ struct HomeView: View {
                 .accessibilityLabel(presenter.focusActionAccessibilityLabel)
                 .accessibilityHint(presenter.focusActionAccessibilityHint)
             }
-            .padding(24)
+            .padding(TyfeSpacing.cardInset)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(maxWidth: .infinity, minHeight: 372)
@@ -175,8 +177,8 @@ struct HomeView: View {
 
     private var editorialGrid: some View {
         LazyVGrid(
-            columns: Array(repeating: GridItem(.fixed(14), spacing: 3), count: 3),
-            spacing: 3
+            columns: Array(repeating: GridItem(.fixed(14), spacing: Self.motifGap), count: 3),
+            spacing: Self.motifGap
         ) {
             ForEach(Array(0..<9), id: \.self) { index in
                 RoundedRectangle(cornerRadius: 3, style: .continuous)
@@ -188,7 +190,7 @@ struct HomeView: View {
                     }
             }
         }
-        .padding(5)
+        .padding(Self.motifInset)
         .background(TyfeEditorialPalette.orange)
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .overlay {
@@ -199,7 +201,7 @@ struct HomeView: View {
     }
 
     private var progressSection: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: TyfeSpacing.itemGap) {
             EditorialMetricCard(
                 label: "DAILY PLAN",
                 value: "\(presenter.planCompleted)/\(presenter.planTotal)",
@@ -231,8 +233,8 @@ struct HomeView: View {
     }
 
     private var circleSnapshot: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 5) {
+        HStack(spacing: TyfeSpacing.itemGap) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.tightGap) {
                 Text("Study Circle")
                     .font(.headline.weight(.bold))
 
@@ -249,7 +251,7 @@ struct HomeView: View {
             }
             .accessibilityHidden(true)
         }
-        .padding(16)
+        .padding(TyfeSpacing.cardInset)
         .background(TyfeEditorialPalette.paper)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay {
@@ -265,8 +267,8 @@ struct HomeView: View {
             .foregroundStyle(.white)
             .font(.callout)
             .bold()
-            .padding(.horizontal, 8)
-            .padding(.vertical, 6)
+            .padding(.horizontal, TyfeSpacing.relatedGap)
+            .padding(.vertical, TyfeSpacing.relatedGap)
             .background(Color.accent)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .fixedSize(horizontal: true, vertical: false)
@@ -283,7 +285,7 @@ private struct EditorialMetricCard: View {
     let color: Color
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
             Text(label)
                 .font(.caption2.weight(.black))
                 .tracking(1.1)
@@ -299,7 +301,7 @@ private struct EditorialMetricCard: View {
         }
         .foregroundStyle(TyfeEditorialPalette.onAccent)
         .frame(maxWidth: .infinity, minHeight: 112, alignment: .leading)
-        .padding(16)
+        .padding(TyfeSpacing.cardInset)
         .background(color)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay {

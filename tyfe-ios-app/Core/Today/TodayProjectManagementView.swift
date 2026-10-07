@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftfulUI
 
 struct TodayProjectManagementView: View {
+    private static let floatingControlsClearance: CGFloat = 104
 
     @State private var presenter: TodayProjectManagementPresenter
     @State private var isProjectFormPresented = false
@@ -28,11 +29,11 @@ struct TodayProjectManagementView: View {
                 .listStyle(.insetGrouped)
                 .scrollContentBackground(.hidden)
                 .scrollIndicators(.hidden)
-                .contentMargins(.bottom, 104, for: .scrollContent)
+                .contentMargins(.bottom, Self.floatingControlsClearance, for: .scrollContent)
 
                 addProjectButton
-                    .padding(.trailing, TyfeSpacing.control)
-                    .padding(.bottom, TyfeSpacing.control)
+                    .padding(.trailing, TyfeSpacing.screenInset)
+                    .padding(.bottom, TyfeSpacing.screenInset)
             }
             .navigationTitle("Spaces")
             .navigationBarTitleDisplayMode(.inline)
@@ -148,7 +149,7 @@ struct TodayProjectManagementView: View {
     }
 
     private func projectRowContent(_ project: ProjectModel) -> some View {
-        HStack(spacing: TyfeSpacing.small) {
+        HStack(spacing: TyfeSpacing.relatedGap) {
             RoundedRectangle(cornerRadius: 3)
                 .fill(ProjectColorOption.color(for: project.resolvedColorToken))
                 .frame(width: 14, height: 14)

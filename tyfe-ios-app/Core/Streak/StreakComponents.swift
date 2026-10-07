@@ -9,7 +9,7 @@ struct TyfeStreakHeroView: View {
 
     var body: some View {
         TyfeSurfaceView(role: .streakBoard) {
-            VStack(spacing: TyfeSpacing.small) {
+            VStack(spacing: TyfeSpacing.relatedGap) {
                 TyfeStreakFireView(streakCount: streakCount)
 
                 Text(String(streakCount))
@@ -89,16 +89,16 @@ private struct TyfeStreakGrowthTilesView: View {
     }
 
     var body: some View {
-        HStack(alignment: .bottom, spacing: TyfeSpacing.small) {
+        HStack(alignment: .bottom, spacing: TyfeSpacing.relatedGap) {
             ForEach(0..<tileCount, id: \.self) { index in
                 let isFilled = index < filledTileCount
                 let height = 20 + CGFloat(index) * 8
 
-                RoundedRectangle(cornerRadius: TyfeSpacing.unit)
+                RoundedRectangle(cornerRadius: TyfeSpacing.tightGap)
                     .fill(isFilled ? tint : .clear)
                     .frame(width: tileWidth, height: height)
                     .overlay {
-                        RoundedRectangle(cornerRadius: TyfeSpacing.unit)
+                        RoundedRectangle(cornerRadius: TyfeSpacing.tightGap)
                             .stroke(
                                 isFilled ? tint : tint.opacity(0.3),
                                 lineWidth: TyfeStroke.standard
@@ -118,7 +118,7 @@ struct TyfeStreakStatsView: View {
 
     var body: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
                 Text("Longest run")
                     .font(TyfeTypography.eyebrow)
                     .textCase(.uppercase)
@@ -147,13 +147,13 @@ struct TyfeStreakFreezeBankView: View {
 
     var body: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
                 Text("Freeze bank")
                     .font(TyfeTypography.eyebrow)
                     .textCase(.uppercase)
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
-                HStack(spacing: TyfeSpacing.unit) {
+                HStack(spacing: TyfeSpacing.tightGap) {
                     ForEach(0..<progress.maximum, id: \.self) { index in
                         freezeToken(isFilled: index < progress.available)
                     }
@@ -202,15 +202,15 @@ struct TyfeStreakWeekTrailView: View {
 
     var body: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                 Text("Last 7 days")
                     .font(TyfeTypography.eyebrow)
                     .textCase(.uppercase)
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
-                HStack(spacing: TyfeSpacing.small) {
+                HStack(spacing: TyfeSpacing.relatedGap) {
                     ForEach(Array(days.enumerated()), id: \.element.id) { index, day in
-                        VStack(spacing: TyfeSpacing.unit) {
+                        VStack(spacing: TyfeSpacing.tightGap) {
                             Text(day.weekdayInitial)
                                 .font(TyfeTypography.caption)
                                 .foregroundStyle(
@@ -311,9 +311,9 @@ private struct TyfeStreakDayTile: View {
     }
 
     return ScrollView {
-        VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
             TyfeStreakHeroView(streakCount: 7, state: .secured)
-            HStack(alignment: .top, spacing: TyfeSpacing.small) {
+            HStack(alignment: .top, spacing: TyfeSpacing.relatedGap) {
                 TyfeStreakStatsView(longestStreak: 12)
                 TyfeStreakFreezeBankView(
                     progress: StreakFreezeProgress(available: 2, maximum: 3),
@@ -322,20 +322,20 @@ private struct TyfeStreakDayTile: View {
             }
             TyfeStreakWeekTrailView(days: days)
         }
-        .padding(TyfeSpacing.control)
+        .padding(TyfeSpacing.screenInset)
     }
     .background(TyfeEditorialPalette.canvas)
 }
 
 #Preview("Narrow streak cards") {
-    HStack(alignment: .top, spacing: TyfeSpacing.small) {
+    HStack(alignment: .top, spacing: TyfeSpacing.relatedGap) {
         TyfeStreakStatsView(longestStreak: 120)
         TyfeStreakFreezeBankView(
             progress: StreakFreezeProgress(available: 2, maximum: 3),
             guidance: StreakFreezePolicy.guidance
         )
     }
-    .padding(TyfeSpacing.control)
+    .padding(TyfeSpacing.screenInset)
     .frame(width: 320)
     .background(TyfeEditorialPalette.canvas)
 }

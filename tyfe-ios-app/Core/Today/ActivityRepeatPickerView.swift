@@ -62,13 +62,13 @@ struct ActivityRepeatPickerView: View {
 
     var body: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                 Text("REPEAT")
                     .font(TyfeTypography.eyebrow)
                     .tracking(1.1)
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
-                HStack(spacing: TyfeSpacing.small) {
+                HStack(spacing: TyfeSpacing.relatedGap) {
                     choiceButton(.never, title: "Never")
                     choiceButton(.everyDay, title: "Every day")
                     choiceButton(.certainDays, title: "Certain days")
@@ -110,7 +110,7 @@ struct ActivityRepeatPickerView: View {
             .lineLimit(1)
             .minimumScaleFactor(0.8)
             .foregroundStyle(isSelected ? TyfeEditorialPalette.onAccent : TyfeEditorialPalette.ink)
-            .padding(.horizontal, TyfeSpacing.small)
+            .padding(.horizontal, TyfeSpacing.relatedGap)
             .frame(minHeight: 36)
             .frame(maxWidth: .infinity)
             .background(isSelected ? TyfeEditorialPalette.teal : TyfeEditorialPalette.canvas)
@@ -128,7 +128,7 @@ struct ActivityRepeatPickerView: View {
     }
 
     private var weekdayPicker: some View {
-        HStack(spacing: TyfeSpacing.small) {
+        HStack(spacing: TyfeSpacing.relatedGap) {
             ForEach(orderedWeekdays, id: \.self) { weekday in
                 let isSelected = draft.weekdays.contains(weekday)
                 Text(Self.weekdayLetters[weekday - 1])
@@ -174,7 +174,7 @@ struct ActivityRepeatPickerView: View {
 
 #Preview("Repeat picker") {
     ActivityRepeatPickerPreview()
-        .padding()
+        .padding(TyfeSpacing.screenInset)
         .background(TyfeEditorialPalette.canvas)
 }
 

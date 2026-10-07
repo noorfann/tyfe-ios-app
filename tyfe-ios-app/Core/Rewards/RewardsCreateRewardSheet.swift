@@ -12,7 +12,7 @@ struct RewardsCreateRewardSheet: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
             nameForm
             durationForm
             TyfeActionButtonView(
@@ -26,7 +26,7 @@ struct RewardsCreateRewardSheet: View {
 
     private var nameForm: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                 Text("REWARD NAME")
                     .font(TyfeTypography.eyebrow)
                     .tracking(1.1)
@@ -39,7 +39,7 @@ struct RewardsCreateRewardSheet: View {
 
     private var durationForm: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
                 Text("DOWNTIME")
                     .font(TyfeTypography.eyebrow)
                     .tracking(1.1)

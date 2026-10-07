@@ -67,7 +67,7 @@ struct TyfeActionButtonView: View {
     }
 
     var body: some View {
-        HStack(spacing: TyfeSpacing.small) {
+        HStack(spacing: TyfeSpacing.relatedGap) {
             if let systemImage {
                 Image(systemName: systemImage)
                     .imageScale(.medium)
@@ -78,7 +78,7 @@ struct TyfeActionButtonView: View {
                 .minimumScaleFactor(0.85)
         }
         .frame(maxWidth: .infinity, minHeight: 44)
-        .padding(.horizontal, TyfeSpacing.control)
+        .padding(.horizontal, TyfeSpacing.screenInset)
         .foregroundStyle(resolvedForeground)
         .background(resolvedFill)
         .clipShape(Capsule())
@@ -98,12 +98,12 @@ struct TyfeActionButtonView: View {
 }
 
 #Preview("Action buttons") {
-    VStack(spacing: TyfeSpacing.control) {
+    VStack(spacing: TyfeSpacing.itemGap) {
         TyfeActionButtonView(title: "Start Focus", systemImage: "play.fill") {}
         TyfeActionButtonView(title: "Keep focusing", role: .secondary) {}
         TyfeActionButtonView(title: "Abandon", systemImage: "stop.fill", role: .destructive) {}
         TyfeActionButtonView(title: "Unavailable", role: .primary, isEnabled: false) {}
     }
-    .padding(TyfeSpacing.card)
+    .padding(TyfeSpacing.cardInset)
     .background(TyfeEditorialPalette.canvas)
 }

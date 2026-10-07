@@ -148,6 +148,6 @@ struct TyfePerforationLine: Shape {
                 .stroke(TyfeEditorialPalette.ink, lineWidth: TyfeStroke.standard)
         }
         .frame(width: 280, height: 180)
-        .padding(TyfeSpacing.card)
+        .padding(TyfeSpacing.cardInset)
         .background(TyfeEditorialPalette.canvas)
 }

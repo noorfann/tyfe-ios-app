@@ -7,9 +7,9 @@ struct TyfeCircleInviteCardView: View {
     @State private var didCopy = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
             TyfeSurfaceView(role: .paper) {
-                VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+                VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                     Text("Invite code")
                         .font(TyfeTypography.eyebrow)
                         .tracking(1.1)

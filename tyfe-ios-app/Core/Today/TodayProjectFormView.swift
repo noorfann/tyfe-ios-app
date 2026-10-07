@@ -11,7 +11,7 @@ struct TodayProjectFormView: View {
     @State private var selectedColorToken: String
     @State private var validationMessage: String?
 
-    private let colorColumns = Array(repeating: GridItem(.flexible(), spacing: TyfeSpacing.small), count: 3)
+    private let colorColumns = Array(repeating: GridItem(.flexible(), spacing: TyfeSpacing.relatedGap), count: 3)
 
     init(
         project: ProjectModel?,
@@ -37,7 +37,7 @@ struct TodayProjectFormView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
             nameSection
             colorSection
 
@@ -60,7 +60,7 @@ struct TodayProjectFormView: View {
 
     private var nameSection: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                 Text("SPACE NAME")
                     .font(TyfeTypography.eyebrow)
                     .tracking(1.1)
@@ -83,13 +83,13 @@ struct TodayProjectFormView: View {
 
     private var colorSection: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                 Text("COLOR")
                     .font(TyfeTypography.eyebrow)
                     .tracking(1.1)
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
-                LazyVGrid(columns: colorColumns, spacing: TyfeSpacing.small) {
+                LazyVGrid(columns: colorColumns, spacing: TyfeSpacing.relatedGap) {
                     ForEach(ProjectColorOption.allCases) { option in
                         colorButton(option)
                     }
@@ -105,7 +105,7 @@ struct TodayProjectFormView: View {
     private func colorButton(_ option: ProjectColorOption) -> some View {
         let isSelected = selectedColorToken == option.rawValue
 
-        return HStack(spacing: TyfeSpacing.small) {
+        return HStack(spacing: TyfeSpacing.relatedGap) {
             Circle()
                 .fill(option.color)
                 .frame(width: 24, height: 24)
@@ -123,7 +123,7 @@ struct TodayProjectFormView: View {
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(.horizontal, TyfeSpacing.small)
+        .padding(.horizontal, TyfeSpacing.relatedGap)
         .frame(minHeight: 44)
         .background(isSelected ? TyfeEditorialPalette.canvas : TyfeEditorialPalette.paper)
         .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))

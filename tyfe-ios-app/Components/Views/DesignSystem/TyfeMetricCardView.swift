@@ -28,13 +28,13 @@ struct TyfeMetricCardView: View {
         TyfeSurfaceView(role: .paper) {
             Group {
                 if let detail {
-                    VStack(alignment: .leading, spacing: TyfeSpacing.small) {
-                        HStack(alignment: .center, spacing: TyfeSpacing.small) {
-                            RoundedRectangle(cornerRadius: TyfeSpacing.unit)
+                    VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
+                        HStack(alignment: .center, spacing: TyfeSpacing.relatedGap) {
+                            RoundedRectangle(cornerRadius: TyfeSpacing.tightGap)
                                 .fill(accent)
                                 .frame(width: 12, height: 12)
                                 .overlay {
-                                    RoundedRectangle(cornerRadius: TyfeSpacing.unit)
+                                    RoundedRectangle(cornerRadius: TyfeSpacing.tightGap)
                                         .stroke(TyfeEditorialPalette.onAccent, lineWidth: TyfeStroke.hairline)
                                 }
                             Image(systemName: systemImage)
@@ -44,7 +44,7 @@ struct TyfeMetricCardView: View {
                                 .textCase(.uppercase)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        HStack(alignment: .firstTextBaseline, spacing: TyfeSpacing.small) {
+                        HStack(alignment: .firstTextBaseline, spacing: TyfeSpacing.relatedGap) {
                             Text(value)
                                 .font(TyfeTypography.displayCompact)
                             Text(detail)
@@ -53,8 +53,8 @@ struct TyfeMetricCardView: View {
                         }
                     }
                 } else {
-                    VStack(alignment: .center, spacing: TyfeSpacing.unit) {
-                        HStack(spacing: TyfeSpacing.small) {
+                    VStack(alignment: .center, spacing: TyfeSpacing.tightGap) {
+                        HStack(spacing: TyfeSpacing.relatedGap) {
                             Image(systemName: systemImage)
                                 .imageScale(.small)
                                 .foregroundStyle(accent)
@@ -78,7 +78,7 @@ struct TyfeMetricCardView: View {
 }
 
 #Preview("Metric cards") {
-    HStack(spacing: TyfeSpacing.control) {
+    HStack(spacing: TyfeSpacing.itemGap) {
         TyfeMetricCardView(
             title: "Credits",
             value: "2",
@@ -94,6 +94,6 @@ struct TyfeMetricCardView: View {
             accent: TyfeEditorialPalette.teal
         )
     }
-    .padding(TyfeSpacing.card)
+    .padding(TyfeSpacing.cardInset)
     .background(TyfeEditorialPalette.canvas)
 }

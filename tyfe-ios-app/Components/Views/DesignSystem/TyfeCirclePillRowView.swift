@@ -7,7 +7,7 @@ struct TyfeCirclePillRowView: View {
 
     var body: some View {
         ScrollView(.horizontal) {
-            HStack(spacing: TyfeSpacing.small) {
+            HStack(spacing: TyfeSpacing.relatedGap) {
                 ForEach(circles) { circle in
                     Button {
                         onSelect(circle.circleId)

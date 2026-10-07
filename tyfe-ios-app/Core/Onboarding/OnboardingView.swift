@@ -64,7 +64,7 @@ struct OnboardingView: View {
     }
 
     private var header: some View {
-        HStack(spacing: TyfeSpacing.small) {
+        HStack(spacing: TyfeSpacing.relatedGap) {
             Image(systemName: "chevron.left")
                 .font(.headline.weight(.black))
                 .foregroundStyle(TyfeEditorialPalette.ink)
@@ -93,13 +93,13 @@ struct OnboardingView: View {
                     .accessibilityIdentifier("onboarding-skip")
             }
         }
-        .padding(.horizontal, TyfeSpacing.control)
-        .padding(.top, TyfeSpacing.small)
+        .padding(.horizontal, TyfeSpacing.screenInset)
+        .padding(.top, TyfeSpacing.relatedGap)
     }
 
     private var footer: some View {
-        VStack(spacing: TyfeSpacing.small) {
-            HStack(spacing: TyfeSpacing.unit) {
+        VStack(spacing: TyfeSpacing.relatedGap) {
+            HStack(spacing: TyfeSpacing.tightGap) {
                 ForEach(0..<presenter.pages.count, id: \.self) { index in
                     Circle()
                         .fill(
@@ -120,13 +120,13 @@ struct OnboardingView: View {
             )
             .accessibilityIdentifier("onboarding-continue")
         }
-        .padding(.horizontal, TyfeSpacing.control)
-        .padding(.bottom, TyfeSpacing.control)
+        .padding(.horizontal, TyfeSpacing.screenInset)
+        .padding(.bottom, TyfeSpacing.screenInset)
     }
 
     private func pageView(_ page: OnboardingPage) -> some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
                 artView(for: page)
 
                 Text(page.title)
@@ -147,18 +147,18 @@ struct OnboardingView: View {
                     pillsView(pills)
                 }
             }
-            .padding(.horizontal, TyfeSpacing.control)
-            .padding(.top, TyfeSpacing.control)
-            .padding(.bottom, TyfeSpacing.control)
+            .padding(.horizontal, TyfeSpacing.screenInset)
+            .padding(.top, TyfeSpacing.screenInset)
+            .padding(.bottom, TyfeSpacing.screenInset)
         }
         .scrollIndicators(.hidden)
     }
 
     private func pillsView(_ pills: [String]) -> some View {
         LazyVGrid(
-            columns: [GridItem(.adaptive(minimum: 120), spacing: TyfeSpacing.small, alignment: .leading)],
+            columns: [GridItem(.adaptive(minimum: 120), spacing: TyfeSpacing.relatedGap, alignment: .leading)],
             alignment: .leading,
-            spacing: TyfeSpacing.small
+            spacing: TyfeSpacing.relatedGap
         ) {
             ForEach(pills, id: \.self) { pill in
                 TyfePillView(label: pill, systemImage: "checkmark", tone: .accent)
@@ -168,7 +168,7 @@ struct OnboardingView: View {
 
     @ViewBuilder
     private func artView(for page: OnboardingPage) -> some View {
-        VStack(spacing: TyfeSpacing.control) {
+        VStack(spacing: TyfeSpacing.itemGap) {
             switch page.art {
             case .hero: heroArt
             case .focus: focusArt
@@ -181,8 +181,8 @@ struct OnboardingView: View {
     }
 
     private var heroArt: some View {
-        VStack(spacing: TyfeSpacing.control) {
-            HStack(spacing: TyfeSpacing.small) {
+        VStack(spacing: TyfeSpacing.itemGap) {
+            HStack(spacing: TyfeSpacing.relatedGap) {
                 TyfeMotifView(kind: .tile)
                 TyfeMotifView(kind: .badge)
                 TyfeMotifView(kind: .completion)
@@ -196,7 +196,7 @@ struct OnboardingView: View {
 
     private var focusArt: some View {
         TyfeSurfaceView(role: .focusChamber) {
-            VStack(spacing: TyfeSpacing.small) {
+            VStack(spacing: TyfeSpacing.relatedGap) {
                 TyfePillView(label: "Focus time", systemImage: "timer", tone: .accent)
                 Text("25:00")
                     .font(TyfeTypography.timer)
@@ -207,12 +207,12 @@ struct OnboardingView: View {
                     .foregroundStyle(TyfeEditorialPalette.onDark.opacity(0.82))
             }
             .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.vertical, TyfeSpacing.small)
+            .padding(.vertical, TyfeSpacing.relatedGap)
         }
     }
 
     private var circlesArt: some View {
-        VStack(spacing: TyfeSpacing.control) {
+        VStack(spacing: TyfeSpacing.itemGap) {
             iconTile(symbolName: "square.grid.2x2.fill", accent: TyfeEditorialPalette.slateBlue)
             Text("PLAN · CIRCLES · OFFLINE")
                 .font(TyfeTypography.eyebrow)

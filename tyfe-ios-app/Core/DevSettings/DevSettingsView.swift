@@ -117,7 +117,7 @@ struct DevSettingsView: View {
     #endif
     
     private func itemRow(item: (key: String, value: Any)) -> some View {
-        HStack {
+        HStack(spacing: TyfeSpacing.relatedGap) {
             Text(item.key)
             Spacer(minLength: 4)
             

@@ -40,7 +40,7 @@ struct TodayAddActivitySheet: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
             activityForm
             if selectedType == .checklist {
                 ChecklistItemsEditorView(items: $checklistItems)
@@ -58,7 +58,7 @@ struct TodayAddActivitySheet: View {
     }
 
     private var projectPicker: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
             Text("SPACE")
                 .font(TyfeTypography.eyebrow)
                 .tracking(1.1)
@@ -82,7 +82,7 @@ struct TodayAddActivitySheet: View {
 
     private var activityForm: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                 Text("ACTIVITY")
                     .font(TyfeTypography.eyebrow)
                     .tracking(1.1)
@@ -99,13 +99,13 @@ struct TodayAddActivitySheet: View {
 
     private var sessionCountPicker: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                 Text("HOW MANY SESSIONS?")
                     .font(TyfeTypography.eyebrow)
                     .tracking(1.1)
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
-                HStack(spacing: TyfeSpacing.control) {
+                HStack(spacing: TyfeSpacing.itemGap) {
                     counterButton(
                         systemImage: "minus",
                         label: "Fewer sessions",
@@ -114,7 +114,7 @@ struct TodayAddActivitySheet: View {
                         sessionCount -= 1
                     }
 
-                    VStack(spacing: TyfeSpacing.unit) {
+                    VStack(spacing: TyfeSpacing.tightGap) {
                         Text("\(sessionCount)")
                             .font(TyfeTypography.displayCompact)
                         Text("\(sessionCount * FocusSessionModel.durationMinutes) minutes focus")

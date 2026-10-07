@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftfulUI
 
 struct HabitTileView: View {
+    private static let skippedMarkInset: CGFloat = 2
     let day: HabitGridDay
     let accent: Color
 
@@ -11,7 +12,7 @@ struct HabitTileView: View {
             .aspectRatio(1, contentMode: .fit)
             .overlay {
                 if day.status == .skipped {
-                    Rectangle().fill(TyfeEditorialPalette.muted).frame(height: 1).padding(2)
+                    Rectangle().fill(TyfeEditorialPalette.muted).frame(height: 1).padding(Self.skippedMarkInset)
                 } else if day.status == .missed {
                     RoundedRectangle(cornerRadius: 2).stroke(TyfeEditorialPalette.controlBorder, lineWidth: 1)
                 }

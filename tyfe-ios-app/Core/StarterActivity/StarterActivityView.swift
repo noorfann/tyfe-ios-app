@@ -27,7 +27,7 @@ struct StarterActivityView: View {
                 .ignoresSafeArea()
 
             ScrollView {
-                VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+                VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
                     header
                     intro
                     activityForm
@@ -39,9 +39,9 @@ struct StarterActivityView: View {
                     )
                     .accessibilityIdentifier("starter-activity-continue")
                 }
-                .padding(.horizontal, TyfeSpacing.control)
-                .padding(.top, TyfeSpacing.control)
-                .padding(.bottom, TyfeSpacing.section)
+                .padding(.horizontal, TyfeSpacing.screenInset)
+                .padding(.top, TyfeSpacing.screenInset)
+                .padding(.bottom, TyfeSpacing.screenInset)
             }
             .scrollIndicators(.hidden)
         }
@@ -55,7 +55,7 @@ struct StarterActivityView: View {
     }
 
     private var header: some View {
-        HStack(spacing: TyfeSpacing.small) {
+        HStack(spacing: TyfeSpacing.relatedGap) {
             Image(systemName: "chevron.left")
                 .font(.headline.weight(.black))
                 .foregroundStyle(TyfeEditorialPalette.ink)
@@ -74,7 +74,7 @@ struct StarterActivityView: View {
     }
 
     private var intro: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
             Text("One clear thing\nfor today.")
                 .font(TyfeTypography.display)
                 .tracking(-1.6)
@@ -88,7 +88,7 @@ struct StarterActivityView: View {
 
     private var activityForm: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                 Text("NAME YOUR ACTIVITY")
                     .font(TyfeTypography.eyebrow)
                     .tracking(1.2)

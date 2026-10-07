@@ -35,16 +35,16 @@ struct SignInView: View {
                 .ignoresSafeArea()
 
             ScrollView {
-                VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+                VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
                     header
                     intro
                     credentialsForm
                     errorMessage
                     actions
                 }
-                .padding(.horizontal, TyfeSpacing.control)
-                .padding(.top, TyfeSpacing.control)
-                .padding(.bottom, TyfeSpacing.section)
+                .padding(.horizontal, TyfeSpacing.screenInset)
+                .padding(.top, TyfeSpacing.screenInset)
+                .padding(.bottom, TyfeSpacing.screenInset)
             }
             .scrollIndicators(.hidden)
         }
@@ -59,7 +59,7 @@ struct SignInView: View {
     }
 
     private var header: some View {
-        HStack(spacing: TyfeSpacing.small) {
+        HStack(spacing: TyfeSpacing.relatedGap) {
             Image(systemName: "chevron.left")
                 .font(.headline.weight(.black))
                 .foregroundStyle(TyfeEditorialPalette.ink)
@@ -80,7 +80,7 @@ struct SignInView: View {
     }
 
     private var intro: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
             Text("Welcome back.")
                 .font(TyfeTypography.display)
                 .tracking(-1.6)
@@ -94,7 +94,7 @@ struct SignInView: View {
 
     private var credentialsForm: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                 fieldLabel("EMAIL")
                 TyfeTextFieldView(
                     placeholder: "you@example.com",
@@ -132,7 +132,7 @@ struct SignInView: View {
     }
 
     private var actions: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
             TyfeActionButtonView(
                 title: presenter.isSubmitting ? "Signing in…" : "Sign in",
                 systemImage: "arrow.right",

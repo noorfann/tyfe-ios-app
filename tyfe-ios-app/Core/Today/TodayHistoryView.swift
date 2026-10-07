@@ -12,7 +12,7 @@ struct TodayDateNavigatorView: View {
 
     var body: some View {
         TyfeSurfaceView(role: .paper) {
-            HStack(spacing: TyfeSpacing.small) {
+            HStack(spacing: TyfeSpacing.relatedGap) {
                 navigationButton(
                     systemImage: "chevron.left",
                     label: "Previous day",
@@ -20,7 +20,7 @@ struct TodayDateNavigatorView: View {
                     action: onPreviousDay
                 )
 
-                VStack(spacing: TyfeSpacing.unit) {
+                VStack(spacing: TyfeSpacing.tightGap) {
                     Text(title)
                         .font(TyfeTypography.interfaceStrong)
                     Text(dateLabel)
@@ -71,7 +71,7 @@ struct TodayHistoricalEmptyView: View {
 
     var body: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                 Image(systemName: completedSessionCount > 0 ? "timer" : "calendar.badge.minus")
                     .font(.title2.weight(.bold))
                     .foregroundStyle(TyfeEditorialPalette.teal)

@@ -23,7 +23,7 @@ struct TyfeTextFieldView: View {
         .keyboardType(keyboardType)
         .textContentType(textContentType)
         .submitLabel(submitLabel)
-        .padding(.horizontal, TyfeSpacing.control)
+        .padding(.horizontal, TyfeSpacing.screenInset)
         .frame(minHeight: 52)
         .background(TyfeEditorialPalette.canvas)
         .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
@@ -36,12 +36,12 @@ struct TyfeTextFieldView: View {
 
 #Preview("Text field") {
     TyfeTextFieldView(placeholder: "Name your activity", text: .constant(""))
-        .padding(TyfeSpacing.card)
+        .padding(TyfeSpacing.cardInset)
         .background(TyfeEditorialPalette.paper)
 }
 
 #Preview("Secure field") {
     TyfeTextFieldView(placeholder: "Password", text: .constant(""), isSecure: true)
-        .padding(TyfeSpacing.card)
+        .padding(TyfeSpacing.cardInset)
         .background(TyfeEditorialPalette.paper)
 }

@@ -10,7 +10,7 @@ struct WelcomeView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
                 introduction
                 choices
                 if let error = presenter.errorMessage {
@@ -21,8 +21,8 @@ struct WelcomeView: View {
                         .accessibilityIdentifier("welcome-error")
                 }
             }
-            .padding(.horizontal, TyfeSpacing.control)
-            .padding(.vertical, TyfeSpacing.section)
+            .padding(.horizontal, TyfeSpacing.screenInset)
+            .padding(.vertical, TyfeSpacing.screenInset)
         }
         .scrollIndicators(.hidden)
         .background(TyfeEditorialPalette.canvas.ignoresSafeArea())
@@ -31,7 +31,7 @@ struct WelcomeView: View {
     }
 
     private var introduction: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
             TyfeMotifView(kind: .completion)
                 .accessibilityHidden(true)
             Text("WELCOME TO TYFE")
@@ -52,7 +52,7 @@ struct WelcomeView: View {
     }
 
     private var choices: some View {
-        VStack(spacing: TyfeSpacing.control) {
+        VStack(spacing: TyfeSpacing.itemGap) {
             TyfeActionButtonView(
                 title: presenter.accountActionTitle,
                 systemImage: "person.crop.circle.badge.plus",

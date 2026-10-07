@@ -78,7 +78,7 @@ struct TabBarView: View {
     }
 
     var body: some View {
-        VStack(spacing: presenter.progressStatus == nil ? 0 : TyfeSpacing.small) {
+        VStack(spacing: presenter.progressStatus == nil ? 0 : TyfeSpacing.relatedGap) {
             if let status = presenter.progressStatus {
                 TyfeProgressStatusBarView(
                     title: status.kind.title,
@@ -89,8 +89,8 @@ struct TabBarView: View {
                     accessibilityIdentifier: status.kind.accessibilityIdentifier,
                     onTap: { presenter.onProgressStatusPressed(delegate: delegate) }
                 )
-                .padding(.horizontal, TyfeSpacing.control)
-                .padding(.top, TyfeSpacing.small)
+                .padding(.horizontal, TyfeSpacing.screenInset)
+                .padding(.top, TyfeSpacing.relatedGap)
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
 
@@ -206,19 +206,19 @@ private extension TabBarProgressStatusKind {
      TabBarView(
          tabs: [
              TabBarScreen(title: "Explore", systemImage: "eyes", screen: {
-                 VStack(spacing: 20) {
+                 VStack(spacing: TyfeSpacing.sectionGap) {
                      Color.red
                  }
                  .any()
              }),
              TabBarScreen(title: "Chats", systemImage: "bubble.left.and.bubble.right.fill", screen: {
-                 VStack(spacing: 20) {
+                 VStack(spacing: TyfeSpacing.sectionGap) {
                      Color.blue
                  }
                  .any()
              }),
              TabBarScreen(title: "Profile", systemImage: "person.fill", screen: {
-                 VStack(spacing: 20) {
+                 VStack(spacing: TyfeSpacing.sectionGap) {
                      Color.green
                  }
                  .any()

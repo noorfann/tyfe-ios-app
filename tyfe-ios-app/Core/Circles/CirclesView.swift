@@ -25,7 +25,7 @@ struct CirclesView: View {
                 .ignoresSafeArea()
 
             ScrollView {
-                VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+                VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
                     header
                     if presenter.canAccessCircles {
                         content
@@ -37,9 +37,9 @@ struct CirclesView: View {
                         )
                     }
                 }
-                .padding(.horizontal, TyfeSpacing.control)
-                .padding(.top, TyfeSpacing.control)
-                .padding(.bottom, TyfeSpacing.section)
+                .padding(.horizontal, TyfeSpacing.screenInset)
+                .padding(.top, TyfeSpacing.screenInset)
+                .padding(.bottom, TyfeSpacing.screenInset)
             }
             .scrollIndicators(.hidden)
         }
@@ -136,7 +136,7 @@ struct CirclesView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
             Text("Circles")
                 .font(TyfeTypography.display)
                 .tracking(-1.6)
@@ -148,7 +148,7 @@ struct CirclesView: View {
     }
 
     private var offlineBanner: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
             TyfeStatusView(kind: .offline, onRetry: { presenter.onRetry() })
             if let lastSyncedText = presenter.lastSyncedText {
                 Text("Last synced \(lastSyncedText)")
@@ -159,7 +159,7 @@ struct CirclesView: View {
     }
 
     private var circlesSection: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
             Text("Your Circles")
                 .font(TyfeTypography.interfaceStrong)
 
@@ -173,7 +173,7 @@ struct CirclesView: View {
                 )
             }
 
-            HStack(spacing: TyfeSpacing.small) {
+            HStack(spacing: TyfeSpacing.relatedGap) {
                 TyfeActionButtonView(
                     title: "New Circle",
                     systemImage: "plus",
@@ -191,7 +191,7 @@ struct CirclesView: View {
     }
 
     private var circleDetail: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
             if let circle = presenter.selectedCircle {
                 Text(circle.name)
                     .font(TyfeTypography.displayCompact)
@@ -219,7 +219,7 @@ struct CirclesView: View {
             )
 
             if presenter.isSelectedCircleOwner {
-                HStack(spacing: TyfeSpacing.small) {
+                HStack(spacing: TyfeSpacing.relatedGap) {
                     TyfeActionButtonView(
                         title: "Edit",
                         systemImage: "pencil",

@@ -23,8 +23,8 @@ struct TyfeActivityCardView: View {
 
     var body: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
-                HStack(alignment: .top, spacing: TyfeSpacing.control) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
+                HStack(alignment: .top, spacing: TyfeSpacing.itemGap) {
                     RoundedRectangle(cornerRadius: TyfeRadius.control)
                         .fill(accent)
                         .frame(width: 48, height: 48)
@@ -35,7 +35,7 @@ struct TyfeActivityCardView: View {
                                 .font(.title3.weight(.bold))
                                 .foregroundStyle(TyfeEditorialPalette.onAccent)
                         }
-                    VStack(alignment: .leading, spacing: TyfeSpacing.unit) {
+                    VStack(alignment: .leading, spacing: TyfeSpacing.tightGap) {
                         Text(activity.name)
                             .font(TyfeTypography.interfaceStrong)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -54,7 +54,7 @@ struct TyfeActivityCardView: View {
 }
 
 #Preview("Activity cards") {
-    VStack(spacing: TyfeSpacing.control) {
+    VStack(spacing: TyfeSpacing.itemGap) {
         TyfeActivityCardView(activity: .mock, sessionCount: 1, timeBlock: nil) {}
         TyfeActivityCardView(
             activity: ActivityModel.mocks[1],
@@ -62,6 +62,6 @@ struct TyfeActivityCardView: View {
             timeBlock: DailyPlanModel.timedMock.timeBlocks?.first
         ) {}
     }
-    .padding(TyfeSpacing.card)
+    .padding(TyfeSpacing.cardInset)
     .background(TyfeEditorialPalette.canvas)
 }

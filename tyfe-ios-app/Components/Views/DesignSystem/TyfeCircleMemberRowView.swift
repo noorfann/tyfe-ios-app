@@ -15,7 +15,7 @@ struct TyfeCircleMemberRowView: View {
 
     var body: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
                 header
                 progressText
                 if !isSelf {
@@ -26,7 +26,7 @@ struct TyfeCircleMemberRowView: View {
     }
 
     private var header: some View {
-        HStack(spacing: TyfeSpacing.small) {
+        HStack(spacing: TyfeSpacing.relatedGap) {
             avatar
             Text(isSelf ? "Me" : member.displayName)
                 .font(TyfeTypography.interfaceStrong)
@@ -94,7 +94,7 @@ struct TyfeCircleMemberRowView: View {
     }
 
     private var cheerRow: some View {
-        HStack(spacing: TyfeSpacing.small) {
+        HStack(spacing: TyfeSpacing.relatedGap) {
             ForEach(CheerKind.allCases, id: \.self) { kind in
                 cheerButton(for: kind)
             }

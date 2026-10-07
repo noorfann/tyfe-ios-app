@@ -11,8 +11,8 @@ struct TyfeCoachmarkView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.small) {
-            HStack(alignment: .top, spacing: TyfeSpacing.small) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
+            HStack(alignment: .top, spacing: TyfeSpacing.relatedGap) {
                 Image(systemName: systemImage)
                     .font(.headline.weight(.black))
                     .foregroundStyle(TyfeEditorialPalette.onAccent)
@@ -20,7 +20,7 @@ struct TyfeCoachmarkView: View {
                     .background(TyfeEditorialPalette.focus)
                     .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
 
-                VStack(alignment: .leading, spacing: TyfeSpacing.unit) {
+                VStack(alignment: .leading, spacing: TyfeSpacing.tightGap) {
                     Text(title)
                         .font(TyfeTypography.interfaceStrong)
 
@@ -34,7 +34,7 @@ struct TyfeCoachmarkView: View {
 
             swipeHint
         }
-        .padding(TyfeSpacing.control)
+        .padding(TyfeSpacing.screenInset)
         .frame(maxWidth: .infinity, alignment: .leading)
         .foregroundStyle(TyfeEditorialPalette.onDark)
         .background(TyfeEditorialPalette.charcoal)
@@ -57,7 +57,7 @@ struct TyfeCoachmarkView: View {
     }
 
     private var swipeHint: some View {
-        HStack(spacing: TyfeSpacing.small) {
+        HStack(spacing: TyfeSpacing.relatedGap) {
             hintIcon
 
             Text("Swipe left or right")
@@ -90,6 +90,6 @@ struct TyfeCoachmarkView: View {
         systemImage: "rectangle.stack.fill",
         onDismiss: {}
     )
-    .padding(TyfeSpacing.card)
+    .padding(TyfeSpacing.cardInset)
     .background(TyfeEditorialPalette.canvas)
 }

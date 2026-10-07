@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ProfileCropEditor: View {
+    private static let cropOutlineInset: CGFloat = 1
     let presenter: ProfilePresenter
     @State private var gestureStart: ProfileCropTransform?
 
@@ -9,13 +10,13 @@ struct ProfileCropEditor: View {
             ZStack {
                 TyfeEditorialPalette.canvas.ignoresSafeArea()
                 ScrollView {
-                    VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+                    VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                         Text("Drag to position your photo. Pinch to zoom. The circle previews how your square photo will appear.")
                             .font(TyfeTypography.interface)
                             .foregroundStyle(TyfeEditorialPalette.muted)
                         if let crop = presenter.crop {
                             cropCanvas(crop)
-                            HStack {
+                            HStack(spacing: TyfeSpacing.relatedGap) {
                                 Button("Zoom out") {
                                     presenter.onCropChanged(zoom: crop.transform.zoom - 0.25, offset: crop.transform.offset)
                                 }
@@ -43,7 +44,7 @@ struct ProfileCropEditor: View {
                         .disabled(!presenter.isEditingAccount)
                         .accessibilityIdentifier("profile-use-photo")
                     }
-                    .padding(TyfeSpacing.control)
+                    .padding(TyfeSpacing.screenInset)
                 }
             }
             .navigationTitle("Crop photo")
@@ -68,7 +69,7 @@ struct ProfileCropEditor: View {
                 CropCircleMask()
                     .fill(.black.opacity(0.55), style: FillStyle(eoFill: true))
                 Circle().stroke(.white, lineWidth: 2)
-                    .padding(1)
+                    .padding(Self.cropOutlineInset)
             }
             .frame(width: side, height: side)
             .clipped()

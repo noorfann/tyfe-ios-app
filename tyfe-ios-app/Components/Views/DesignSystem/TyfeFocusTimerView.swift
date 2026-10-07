@@ -39,7 +39,7 @@ struct TyfeFocusTimerView: View {
             foreground: daypart.visualStyle.primaryForeground,
             strokeColor: daypart.visualStyle.cardBorder
         ) {
-            VStack(spacing: TyfeSpacing.card) {
+            VStack(spacing: TyfeSpacing.sectionGap) {
                 sessionHeading
                 timerDial
                 sessionGuidance
@@ -88,7 +88,7 @@ struct TyfeFocusTimerView: View {
     }
 
     private var actions: some View {
-        VStack(spacing: TyfeSpacing.small) {
+        VStack(spacing: TyfeSpacing.relatedGap) {
             primaryAction
 
             if session.state == .ready || session.state == .running {
@@ -165,7 +165,7 @@ struct TyfeFocusTimerView: View {
         onBegin: {},
         onAbandon: {}
     )
-    .padding(TyfeSpacing.card)
+    .padding(TyfeSpacing.cardInset)
     .background(TyfeEditorialPalette.canvas)
 }
 
@@ -179,7 +179,7 @@ struct TyfeFocusTimerView: View {
         onBegin: {},
         onAbandon: {}
     )
-    .padding(TyfeSpacing.card)
+    .padding(TyfeSpacing.cardInset)
     .background(TyfeEditorialPalette.canvas)
 }
 
@@ -193,7 +193,7 @@ struct TyfeFocusTimerView: View {
         onBegin: {},
         onAbandon: {}
     )
-    .padding(TyfeSpacing.card)
+    .padding(TyfeSpacing.cardInset)
     .background(TyfeEditorialPalette.canvas)
     .environment(\.dynamicTypeSize, .accessibility2)
 }
@@ -208,7 +208,7 @@ struct TyfeFocusTimerView: View {
         onBegin: {},
         onAbandon: {}
     )
-    .padding(TyfeSpacing.card)
+    .padding(TyfeSpacing.cardInset)
     .background(TyfeEditorialPalette.canvas)
     .transaction { transaction in
         transaction.animation = nil

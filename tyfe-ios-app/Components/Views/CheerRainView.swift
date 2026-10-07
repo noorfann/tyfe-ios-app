@@ -60,14 +60,14 @@ struct CheerRainView: View {
     }
 
     private var staticBadge: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: TyfeSpacing.relatedGap) {
             ForEach(uniqueKinds, id: \.self) { kind in
                 Text(kind.emoji)
                     .font(.largeTitle)
             }
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12)
+        .padding(.horizontal, TyfeSpacing.screenInset)
+        .padding(.vertical, TyfeSpacing.compactCardInset)
         .background(.ultraThinMaterial, in: Capsule())
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

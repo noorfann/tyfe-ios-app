@@ -6,6 +6,7 @@ struct TodayDelegate {
 }
 
 struct TodayView: View {
+    private static let floatingControlsClearance: CGFloat = 96
 
     @State private var presenter: TodayPresenter
     let delegate: TodayDelegate
@@ -24,7 +25,7 @@ struct TodayView: View {
                 .ignoresSafeArea()
 
             ScrollView {
-                VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+                VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
                     header
                     pageSelector
                     if presenter.effort.preparationFailed {
@@ -47,9 +48,9 @@ struct TodayView: View {
                         }
                     }
                 }
-                .padding(.horizontal, TyfeSpacing.control)
-                .padding(.top, TyfeSpacing.control)
-                .padding(.bottom, 96)
+                .padding(.horizontal, TyfeSpacing.screenInset)
+                .padding(.top, TyfeSpacing.screenInset)
+                .padding(.bottom, Self.floatingControlsClearance)
             }
             .scrollIndicators(.hidden)
 
@@ -117,14 +118,14 @@ struct TodayView: View {
     }
 
     private var header: some View {
-        HStack(spacing: TyfeSpacing.small) {
+        HStack(spacing: TyfeSpacing.relatedGap) {
             Text("tyfe")
                 .font(TyfeTypography.display)
                 .tracking(-1.6)
                 .foregroundStyle(TyfeEditorialPalette.ink)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            HStack(spacing: 5) {
+            HStack(spacing: TyfeSpacing.tightGap) {
                 Image(systemName: "flame.fill")
                     .accessibilityHidden(true)
                 Text(String(presenter.currentStreakCount))
@@ -132,7 +133,7 @@ struct TodayView: View {
             }
                 .font(TyfeTypography.interfaceStrong)
                 .foregroundStyle(TyfeEditorialPalette.onAccent)
-                .padding(.horizontal, TyfeSpacing.small)
+                .padding(.horizontal, TyfeSpacing.relatedGap)
                 .frame(minWidth: 40, minHeight: 40)
                 .background(TyfeEditorialPalette.saffron)
                 .clipShape(RoundedRectangle(cornerRadius: TyfeRadius.control))
@@ -154,7 +155,7 @@ struct TodayView: View {
     @ViewBuilder private var pageSelector: some View {
         @Bindable var pagePresenter = presenter
         if dynamicTypeSize.isAccessibilitySize {
-            VStack(spacing: TyfeSpacing.small) {
+            VStack(spacing: TyfeSpacing.relatedGap) {
                 ForEach(TodayPage.allCases) { page in
                     Text(page.rawValue)
                         .font(TyfeTypography.interfaceStrong)
@@ -177,7 +178,7 @@ struct TodayView: View {
 
     private var preparationError: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                 Text("Your saved work could not be prepared.").font(TyfeTypography.interfaceStrong)
                 Text("Your previous data is intact. Retry to open Today.").font(TyfeTypography.interface)
                 TyfeActionButtonView(title: "Try again", systemImage: "arrow.clockwise", onTap: presenter.refreshForCurrentDay)
@@ -186,9 +187,9 @@ struct TodayView: View {
     }
 
     private var emptyContent: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
             TyfeSurfaceView(role: .paper) {
-                VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+                VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                     TyfeMotifView(kind: .tile)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                         .accessibilityHidden(true)
@@ -218,8 +219,8 @@ struct TodayView: View {
     }
 
     private var plannedContent: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.section) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
                 Text(presenter.isViewingToday ? presenter.greeting : "Day overview")
                     .font(TyfeTypography.displayCompact)
                     .tracking(-0.8)
@@ -230,7 +231,7 @@ struct TodayView: View {
             }
 
             if presenter.dailyPlan != nil {
-                HStack(spacing: TyfeSpacing.control) {
+                HStack(spacing: TyfeSpacing.itemGap) {
                     if presenter.showsTasksMetric {
                         TyfeMetricCardView(
                             title: "Tasks",
@@ -249,7 +250,7 @@ struct TodayView: View {
 
             if !presenter.hasUnfinishedPlan, presenter.planHasPlannedUnits {
                 TyfeSurfaceView(role: .paper) {
-                    HStack(spacing: TyfeSpacing.small) {
+                    HStack(spacing: TyfeSpacing.relatedGap) {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundStyle(TyfeEditorialPalette.success)
                         Text(presenter.isViewingToday
@@ -263,7 +264,7 @@ struct TodayView: View {
     }
 
     private var projectTabs: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
             Text("SPACES")
                 .font(TyfeTypography.eyebrow)
                 .tracking(1.1)
@@ -293,7 +294,7 @@ struct TodayView: View {
     }
 
     private var planDeck: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
             if !presenter.isViewingToday {
                 Text("ACTIVITIES")
                     .font(TyfeTypography.eyebrow)
@@ -303,7 +304,7 @@ struct TodayView: View {
 
             if presenter.deckPlanItems.isEmpty {
                 TyfeSurfaceView(role: .paper) {
-                    VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+                    VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                         Text("No planned Activities in \(presenter.selectedProjectTitle).")
                             .font(TyfeTypography.interfaceStrong)
                         if presenter.isViewingToday {
@@ -352,7 +353,7 @@ struct TodayView: View {
             systemImage: "rectangle.stack.fill",
             onDismiss: presenter.dismissDeckSwipeCoachmark
         )
-        .padding(.horizontal, TyfeSpacing.control)
+        .padding(.horizontal, TyfeSpacing.screenInset)
         .transition(.opacity.combined(with: .scale(scale: 0.94, anchor: .top)))
         .task {
             try? await Task.sleep(for: .seconds(4))
@@ -383,8 +384,8 @@ struct TodayView: View {
             }
             .disabled(presenter.effort.preparationFailed)
             .accessibilityLabel("Add \(presenter.selectedPage.rawValue)")
-            .padding(.trailing, TyfeSpacing.control)
-            .padding(.bottom, TyfeSpacing.control)
+            .padding(.trailing, TyfeSpacing.screenInset)
+            .padding(.bottom, TyfeSpacing.screenInset)
     }
 
     private var sessionsMetric: some View {
@@ -401,7 +402,7 @@ struct TodayView: View {
         Text("DEV")
             .font(TyfeTypography.caption)
             .foregroundStyle(TyfeEditorialPalette.onDark)
-            .padding(.horizontal, TyfeSpacing.small)
+            .padding(.horizontal, TyfeSpacing.relatedGap)
             .frame(minHeight: 32)
             .background(TyfeEditorialPalette.navy)
             .clipShape(RoundedRectangle(cornerRadius: 10))
@@ -412,8 +413,8 @@ struct TodayView: View {
             .asButton(.press) {
                 presenter.onDevSettingsPressed()
             }
-            .padding(.leading, TyfeSpacing.control)
-            .padding(.bottom, TyfeSpacing.small)
+            .padding(.leading, TyfeSpacing.screenInset)
+            .padding(.bottom, TyfeSpacing.relatedGap)
         #else
         EmptyView()
         #endif

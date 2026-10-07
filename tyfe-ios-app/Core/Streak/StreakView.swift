@@ -26,7 +26,7 @@ struct StreakView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
                 TyfeStreakHeroView(
                     streakCount: presenter.currentStreak,
                     state: presenter.heroState
@@ -49,8 +49,8 @@ struct StreakView: View {
                     onRetry: { presenter.onRetryHistoryPressed() }
                 )
             }
-            .padding(.horizontal, TyfeSpacing.control)
-            .padding(.vertical, TyfeSpacing.control)
+            .padding(.horizontal, TyfeSpacing.screenInset)
+            .padding(.vertical, TyfeSpacing.screenInset)
         }
         .scrollIndicators(.hidden)
         .background(TyfeEditorialPalette.canvas.ignoresSafeArea())
@@ -90,12 +90,12 @@ struct StreakView: View {
     @ViewBuilder
     private var streakSummary: some View {
         if dynamicTypeSize.isAccessibilitySize {
-            VStack(spacing: TyfeSpacing.small) {
+            VStack(spacing: TyfeSpacing.relatedGap) {
                 longestRunCard
                 freezeBankCard
             }
         } else {
-            HStack(alignment: .top, spacing: TyfeSpacing.small) {
+            HStack(alignment: .top, spacing: TyfeSpacing.relatedGap) {
                 longestRunCard
                 freezeBankCard
             }
@@ -128,14 +128,14 @@ struct StreakMonthCalendarView: View {
 
     var body: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                 Text("Activity")
                     .font(TyfeTypography.eyebrow)
                     .textCase(.uppercase)
                     .tracking(1.2)
                     .foregroundStyle(TyfeEditorialPalette.muted)
 
-                HStack(spacing: TyfeSpacing.small) {
+                HStack(spacing: TyfeSpacing.relatedGap) {
                     navigationButton(symbol: "chevron.left", label: "Previous month", enabled: canViewPreviousMonth, action: onPreviousMonth)
                     Text(month.title)
                         .font(TyfeTypography.displayCompact)
@@ -157,7 +157,7 @@ struct StreakMonthCalendarView: View {
                         .font(TyfeTypography.caption)
                 }
                 if hasError {
-                    VStack(alignment: .leading, spacing: TyfeSpacing.unit) {
+                    VStack(alignment: .leading, spacing: TyfeSpacing.tightGap) {
                         Text("Activity history is incomplete. Please try again.")
                             .font(TyfeTypography.caption)
                             .foregroundStyle(TyfeEditorialPalette.muted)
@@ -179,15 +179,15 @@ struct StreakMonthCalendarView: View {
                 }
 
                 LazyVGrid(
-                    columns: Array(repeating: GridItem(.flexible()), count: 7),
-                    spacing: TyfeSpacing.small
+                    columns: Array(repeating: GridItem(.flexible(), spacing: TyfeSpacing.relatedGap), count: 7),
+                    spacing: TyfeSpacing.relatedGap
                 ) {
                     ForEach(month.days) { day in
                         StreakDayCell(day: day)
                     }
                 }
 
-                HStack(spacing: TyfeSpacing.control) {
+                HStack(spacing: TyfeSpacing.itemGap) {
                     legendItem(title: "Focus day", symbol: "flame.fill", color: TyfeEditorialPalette.warning)
                     legendItem(title: "Freeze", symbol: "snowflake", color: TyfeEditorialPalette.teal)
                 }
@@ -209,7 +209,7 @@ struct StreakMonthCalendarView: View {
     }
 
     private func legendItem(title: String, symbol: String, color: Color) -> some View {
-        HStack(spacing: TyfeSpacing.unit) {
+        HStack(spacing: TyfeSpacing.tightGap) {
             Image(systemName: symbol)
                 .foregroundStyle(color)
                 .accessibilityHidden(true)
@@ -224,7 +224,7 @@ private struct StreakDayCell: View {
     let day: StreakCalendarDay
 
     var body: some View {
-        VStack(spacing: TyfeSpacing.unit) {
+        VStack(spacing: TyfeSpacing.tightGap) {
             Text(day.date, format: .dateTime.day())
                 .font(TyfeTypography.caption)
                 .foregroundStyle(textColor)
@@ -232,7 +232,7 @@ private struct StreakDayCell: View {
                 .background(backgroundColor)
                 .clipShape(Circle())
 
-            HStack(spacing: TyfeSpacing.unit) {
+            HStack(spacing: TyfeSpacing.tightGap) {
                 if day.hasFocus {
                     Image(systemName: "flame.fill")
                         .foregroundStyle(TyfeEditorialPalette.warning)
@@ -356,7 +356,7 @@ private struct StreakDayCell: View {
         isViewingCurrentMonth: true, isLoading: false, hasError: false,
         onPreviousMonth: { }, onNextMonth: { }, onToday: { }, onRetry: { }
     )
-    .padding(TyfeSpacing.control)
+    .padding(TyfeSpacing.screenInset)
     .background(TyfeEditorialPalette.canvas)
 }
 
@@ -365,7 +365,7 @@ private struct StreakDayCell: View {
     let today = Date()
     let historicalMonth = calendar.date(byAdding: .month, value: -1, to: today) ?? today
     return ScrollView {
-        VStack(spacing: TyfeSpacing.section) {
+        VStack(spacing: TyfeSpacing.sectionGap) {
             ForEach(0..<3) { state in
                 StreakMonthCalendarView(
                     month: StreakCalendarMonth(month: state == 0 ? historicalMonth : today, today: today, calendar: calendar, eventsByDay: [:]),
@@ -375,7 +375,7 @@ private struct StreakDayCell: View {
                 )
             }
         }
-        .padding(TyfeSpacing.control)
+        .padding(TyfeSpacing.screenInset)
     }
     .background(TyfeEditorialPalette.canvas)
 }

@@ -69,11 +69,11 @@ struct TyfeMotifView: View {
 }
 
 #Preview("Motifs") {
-    HStack(spacing: TyfeSpacing.control) {
+    HStack(spacing: TyfeSpacing.itemGap) {
         TyfeMotifView(kind: .tile)
         TyfeMotifView(kind: .badge)
         TyfeMotifView(kind: .completion)
     }
-    .padding(TyfeSpacing.card)
+    .padding(TyfeSpacing.cardInset)
     .background(TyfeEditorialPalette.canvas)
 }

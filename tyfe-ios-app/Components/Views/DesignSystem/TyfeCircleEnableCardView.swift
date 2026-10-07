@@ -7,7 +7,7 @@ struct TyfeCircleEnableCardView: View {
 
     var body: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                 Label("Unlock Circles", systemImage: "lock.fill")
                     .font(TyfeTypography.displayCompact)
 

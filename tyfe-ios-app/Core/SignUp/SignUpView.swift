@@ -23,7 +23,7 @@ struct SignUpView: View {
         ZStack {
             TyfeEditorialPalette.canvas.ignoresSafeArea()
             ScrollView {
-                VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+                VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
                     header
                     progress
                     intro
@@ -35,9 +35,9 @@ struct SignUpView: View {
                         .font(TyfeTypography.caption)
                         .foregroundStyle(TyfeEditorialPalette.muted)
                 }
-                .padding(.horizontal, TyfeSpacing.control)
-                .padding(.top, TyfeSpacing.control)
-                .padding(.bottom, TyfeSpacing.section)
+                .padding(.horizontal, TyfeSpacing.screenInset)
+                .padding(.top, TyfeSpacing.screenInset)
+                .padding(.bottom, TyfeSpacing.screenInset)
             }
             .scrollIndicators(.hidden)
             .scrollDismissesKeyboard(.interactively)
@@ -73,7 +73,7 @@ struct SignUpView: View {
     }
 
     private var header: some View {
-        HStack(spacing: TyfeSpacing.small) {
+        HStack(spacing: TyfeSpacing.relatedGap) {
             if presenter.canGoBack {
                 Image(systemName: "chevron.left")
                     .font(.headline)
@@ -102,7 +102,7 @@ struct SignUpView: View {
     @ViewBuilder
     private var progress: some View {
         if presenter.step != .complete {
-            VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
                 Text("Step \(presenter.stepNumber) of 3")
                     .font(TyfeTypography.caption)
                     .foregroundStyle(TyfeEditorialPalette.muted)
@@ -115,7 +115,7 @@ struct SignUpView: View {
     }
 
     private var intro: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
             Text(introTitle)
                 .font(TyfeTypography.display)
                 .tracking(-1.6)
@@ -155,7 +155,7 @@ struct SignUpView: View {
         if presenter.step == .details || presenter.step == .password
             || (presenter.step == .verification && !presenter.isEmailVerified) {
             TyfeSurfaceView(role: .paper) {
-                VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+                VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                     switch presenter.step {
                     case .details: detailsFields
                     case .verification: verificationField
@@ -213,7 +213,7 @@ struct SignUpView: View {
     private var passwordField: some View {
         Group {
             fieldLabel("PASSWORD")
-            HStack(spacing: TyfeSpacing.small) {
+            HStack(spacing: TyfeSpacing.relatedGap) {
                 TyfeTextFieldView(
                     placeholder: "At least 6 characters", text: fieldBinding(.password),
                     autocapitalization: .never, isSecure: !presenter.isPasswordVisible,
@@ -258,7 +258,7 @@ struct SignUpView: View {
     }
 
     private var actions: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
             TyfeActionButtonView(
                 title: presenter.primaryButtonTitle,
                 systemImage: presenter.step == .complete ? "checkmark" : "arrow.right",
@@ -288,12 +288,12 @@ struct SignUpView: View {
     }
 
     private var signInLink: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
             if !presenter.isEmailVerified {
                 Text(presenter.offersSignIn ? "Sign in to your existing account" : "Already have an account? Sign in")
                     .font(TyfeTypography.interfaceStrong)
                     .foregroundStyle(TyfeEditorialPalette.ink)
-                    .padding(.vertical, TyfeSpacing.small)
+                    .padding(.vertical, TyfeSpacing.relatedGap)
                     .asButton(.press) { presenter.onSignInPressed(delegate: delegate) }
                     .disabled(presenter.isBusy)
                     .accessibilityAddTraits(.isButton)

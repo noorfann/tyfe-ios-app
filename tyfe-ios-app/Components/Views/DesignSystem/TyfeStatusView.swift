@@ -45,8 +45,8 @@ struct TyfeStatusView: View {
 
     var body: some View {
         TyfeSurfaceView(role: kind == .error ? .warning : .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
-                HStack(spacing: TyfeSpacing.small) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
+                HStack(spacing: TyfeSpacing.relatedGap) {
                     Image(systemName: kind.symbolName)
                         .font(.title3.weight(.bold))
                     Text(kind.title)
@@ -72,12 +72,12 @@ struct TyfeStatusView: View {
 }
 
 #Preview("Async states") {
-    VStack(spacing: TyfeSpacing.control) {
+    VStack(spacing: TyfeSpacing.itemGap) {
         TyfeStatusView(kind: .loading)
         TyfeStatusView(kind: .empty) {}
         TyfeStatusView(kind: .offline)
         TyfeStatusView(kind: .error) {}
     }
-    .padding(TyfeSpacing.card)
+    .padding(TyfeSpacing.cardInset)
     .background(TyfeEditorialPalette.canvas)
 }

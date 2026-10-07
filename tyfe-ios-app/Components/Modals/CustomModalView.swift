@@ -18,8 +18,8 @@ struct CustomModalView: View {
     var secondaryButtonAction: () -> Void = { }
     
     var body: some View {
-        VStack(spacing: 24) {
-            VStack(spacing: 12) {
+        VStack(spacing: TyfeSpacing.sectionGap) {
+            VStack(spacing: TyfeSpacing.relatedGap) {
                 Text(title)
                     .font(.title3)
                     .fontWeight(.semibold)
@@ -30,12 +30,12 @@ struct CustomModalView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            .padding(12)
             
-            VStack(spacing: 8) {
+            VStack(spacing: TyfeSpacing.relatedGap) {
                 Text(primaryButtonTitle)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, TyfeSpacing.compactCardInset)
+                    .frame(minHeight: 44)
                     .background(.accent)
                     .foregroundStyle(.white)
                     .cornerRadius(16)
@@ -47,7 +47,8 @@ struct CustomModalView: View {
                     .font(.headline)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, TyfeSpacing.compactCardInset)
+                    .frame(minHeight: 44)
                     .tappableBackground()
                     .asButton {
                         secondaryButtonAction()
@@ -55,10 +56,10 @@ struct CustomModalView: View {
             }
         }
         .multilineTextAlignment(.center)
-        .padding(16)
+        .padding(TyfeSpacing.cardInset)
         .background(Color(uiColor: .systemBackground))
         .cornerRadius(16)
-        .padding(40)
+        .padding(TyfeSpacing.screenInset)
     }
 }
 

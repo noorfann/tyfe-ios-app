@@ -12,7 +12,7 @@ struct SettingsView: View {
         ZStack {
             TyfeEditorialPalette.canvas.ignoresSafeArea()
             ScrollView {
-                VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+                VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
                     Text("Settings")
                         .font(TyfeTypography.display)
                         .tracking(-1.6)
@@ -21,9 +21,9 @@ struct SettingsView: View {
                     purchasesSection
                     applicationSection
                 }
-                .padding(.horizontal, TyfeSpacing.control)
-                .padding(.top, TyfeSpacing.control)
-                .padding(.bottom, TyfeSpacing.section)
+                .padding(.horizontal, TyfeSpacing.screenInset)
+                .padding(.top, TyfeSpacing.screenInset)
+                .padding(.bottom, TyfeSpacing.screenInset)
             }
             .scrollIndicators(.hidden)
         }
@@ -34,10 +34,10 @@ struct SettingsView: View {
 
     private var profileSection: some View {
         section("Profile") {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
-                HStack(alignment: .top, spacing: TyfeSpacing.control) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
+                HStack(alignment: .top, spacing: TyfeSpacing.itemGap) {
                     ProfileAvatarView(initials: presenter.initials, photoURL: presenter.photoURL)
-                    VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+                    VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
                         Text(presenter.displayName)
                             .font(TyfeTypography.interfaceStrong)
                             .fixedSize(horizontal: false, vertical: true)
@@ -89,9 +89,9 @@ struct SettingsView: View {
     }
 
     private var applicationSection: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
             section("Application") {
-                VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+                VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                     detailRow(title: "Version", value: Utilities.appVersion ?? "—")
                     detailRow(title: "Build number", value: Utilities.buildNumber ?? "—")
                     TyfeActionButtonView(
@@ -118,14 +118,14 @@ struct SettingsView: View {
     }
 
     private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
             Text(title).font(TyfeTypography.interfaceStrong)
             TyfeSurfaceView(role: .paper, content: content)
         }
     }
 
     private func detailRow(title: String, value: String) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: TyfeSpacing.small) {
+        HStack(alignment: .firstTextBaseline, spacing: TyfeSpacing.relatedGap) {
             Text(title)
             Spacer()
             Text(value).foregroundStyle(TyfeEditorialPalette.muted)

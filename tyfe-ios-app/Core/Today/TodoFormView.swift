@@ -7,9 +7,9 @@ struct TodoFormView: View {
     let onSave: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
             TyfeSurfaceView(role: .paper) {
-                VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+                VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                     TyfeTextFieldView(placeholder: "What needs doing?", text: $draft.title)
                         .accessibilityIdentifier("todo-title-field")
                     EffortSpacePicker(projectId: $draft.projectId, projects: projects)
@@ -17,10 +17,10 @@ struct TodoFormView: View {
                 }
             }
             TyfeSurfaceView(role: .paper) {
-                VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+                VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                     Text("CHECKLIST · OPTIONAL").font(TyfeTypography.eyebrow)
                     ForEach($draft.items) { $item in
-                        HStack {
+                        HStack(spacing: TyfeSpacing.relatedGap) {
                             TyfeTextFieldView(placeholder: "Checklist item", text: $item.title)
                             Image(systemName: "minus.circle")
                                 .frame(minWidth: 44, minHeight: 44)

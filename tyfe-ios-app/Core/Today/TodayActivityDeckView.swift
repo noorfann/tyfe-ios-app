@@ -57,7 +57,7 @@ struct TodayActivityDeckView: View {
 
     var body: some View {
         if let selectedIndex {
-            VStack(spacing: TyfeSpacing.section) {
+            VStack(spacing: TyfeSpacing.sectionGap) {
                 ZStack {
                     ForEach(visibleCards.reversed()) { card in
                         cardView(card)
@@ -101,7 +101,7 @@ struct TodayActivityDeckView: View {
                     }
                 }
 
-                HStack(spacing: TyfeSpacing.small) {
+                HStack(spacing: TyfeSpacing.relatedGap) {
                     ForEach(planItems.indices, id: \.self) { index in
                         Circle()
                             .fill(index == selectedIndex
@@ -180,6 +180,7 @@ struct TodayActivityDeckView: View {
 }
 
 struct TodayPlanCardView: View {
+    private static let scrollIndicatorInset: CGFloat = 2
 
     let activity: ActivityModel
     let item: DailyPlanItemModel
@@ -208,7 +209,7 @@ struct TodayPlanCardView: View {
 
     var body: some View {
         TyfeSurfaceView(role: isComplete ? .disabled : .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                 cardHeader
 
                 if isChecklist {
@@ -223,8 +224,8 @@ struct TodayPlanCardView: View {
     }
 
     private var cardHeader: some View {
-        HStack(alignment: .top, spacing: TyfeSpacing.small) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.unit) {
+        HStack(alignment: .top, spacing: TyfeSpacing.relatedGap) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.tightGap) {
                 Text(isNext && !isComplete ? "NEXT UP" : "ACTIVITY")
                     .font(TyfeTypography.eyebrow)
                     .tracking(1.1)
@@ -264,7 +265,7 @@ struct TodayPlanCardView: View {
                 Text(progressLabel)
                     .font(TyfeTypography.interfaceStrong)
             } else {
-                HStack(spacing: TyfeSpacing.small) {
+                HStack(spacing: TyfeSpacing.relatedGap) {
                     Text(progressLabel)
                         .font(TyfeTypography.interfaceStrong)
                         .lineLimit(1)
@@ -286,8 +287,8 @@ struct TodayPlanCardView: View {
     }
 
     private var checklistContent: some View {
-        VStack(alignment: .leading, spacing: TyfeSpacing.small) {
-            HStack(spacing: TyfeSpacing.small) {
+        VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
+            HStack(spacing: TyfeSpacing.relatedGap) {
                 Text(progressLabel)
                     .font(TyfeTypography.interfaceStrong)
                     .lineLimit(1)
@@ -305,7 +306,7 @@ struct TodayPlanCardView: View {
                     .foregroundStyle(TyfeEditorialPalette.muted)
             } else {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: TyfeSpacing.unit) {
+                    VStack(alignment: .leading, spacing: TyfeSpacing.tightGap) {
                         ForEach(checklistItems) { checklistItem in
                             checklistRow(checklistItem)
                         }
@@ -359,7 +360,7 @@ struct TodayPlanCardView: View {
                     .fill(TyfeEditorialPalette.focus)
                     .frame(width: 3, height: checklistThumbHeight)
                     .padding(.top, checklistThumbOffset)
-                    .padding(.trailing, 2)
+                    .padding(.trailing, Self.scrollIndicatorInset)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
             }
         }
@@ -369,7 +370,7 @@ struct TodayPlanCardView: View {
 
     private func checklistRow(_ checklistItem: ChecklistItemModel) -> some View {
         let isTicked = tickedItemIds.contains(checklistItem.itemId)
-        return HStack(spacing: TyfeSpacing.small) {
+        return HStack(spacing: TyfeSpacing.relatedGap) {
             Image(systemName: isTicked ? "checkmark.circle.fill" : "circle")
                 .font(.body.weight(.semibold))
                 .foregroundStyle(isTicked ? TyfeEditorialPalette.success : TyfeEditorialPalette.muted)
@@ -398,7 +399,7 @@ struct TodayPlanCardView: View {
         Label("Edit", systemImage: "pencil")
             .font(TyfeTypography.interfaceStrong)
             .foregroundStyle(TyfeEditorialPalette.ink)
-            .padding(.horizontal, TyfeSpacing.control)
+            .padding(.horizontal, TyfeSpacing.screenInset)
             .frame(minHeight: 44)
             .background(TyfeEditorialPalette.canvas)
             .clipShape(Capsule())

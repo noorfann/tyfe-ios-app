@@ -17,7 +17,7 @@ struct ProfileView: View {
         ZStack {
             TyfeEditorialPalette.canvas.ignoresSafeArea()
             ScrollView {
-                VStack(alignment: .leading, spacing: TyfeSpacing.section) {
+                VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
                     photoSection
                     identitySection
                     statusSection
@@ -29,7 +29,7 @@ struct ProfileView: View {
                     .disabled(!presenter.canSave)
                     .accessibilityIdentifier("profile-save")
                 }
-                .padding(TyfeSpacing.control)
+                .padding(TyfeSpacing.screenInset)
             }
             .scrollIndicators(.hidden)
         }
@@ -70,7 +70,7 @@ struct ProfileView: View {
 
     private var photoSection: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(spacing: TyfeSpacing.control) {
+            VStack(spacing: TyfeSpacing.itemGap) {
                 ProfileAvatarView(
                     initials: presenter.initials,
                     photoURL: presenter.currentPhotoURL,
@@ -102,7 +102,7 @@ struct ProfileView: View {
 
     private var identitySection: some View {
         TyfeSurfaceView(role: .paper) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.control) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                 Text("Name").font(TyfeTypography.interfaceStrong)
                 TyfeTextFieldView(
                     placeholder: "Your name",
@@ -143,7 +143,7 @@ struct ProfileView: View {
                 .accessibilityIdentifier("profile-account-changed")
         }
         if let message = presenter.errorMessage {
-            VStack(alignment: .leading, spacing: TyfeSpacing.small) {
+            VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
                 Text(message).font(TyfeTypography.interface)
                 Button("Try again") { Task { await presenter.onRetryPressed() } }
                     .frame(minHeight: 44)
