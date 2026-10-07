@@ -20,6 +20,8 @@ final class TodayEffortPresenter {
     var showsArchivedHabits = false
     private(set) var selectedHabitId: String?
     private(set) var selectedMonth: LocalDay
+    private(set) var habitViewPeriod: HabitViewPeriod
+    private(set) var habitCardHistories: [String: HabitCardHistory] = [:]
     private var pendingHabitEdit = false
 
     init(interactor: TodayInteractor, router: TodayRouter) {
@@ -28,6 +30,7 @@ final class TodayEffortPresenter {
         let currentDay = interactor.phase1CurrentLocalDay
         today = currentDay
         selectedMonth = currentDay
+        habitViewPeriod = interactor.habitViewPeriod
     }
 
     func reload() {
@@ -38,6 +41,54 @@ final class TodayEffortPresenter {
         occurrences = interactor.habitOccurrences
         today = interactor.phase1CurrentLocalDay
         preparationFailed = interactor.effortPreparationFailed
+        habitViewPeriod = interactor.habitViewPeriod
+        rebuildHabitCardHistories()
+    }
+
+    var habitPeriodSelection: HabitViewPeriod {
+        get { habitViewPeriod }
+        set { selectHabitViewPeriod(newValue) }
+    }
+
+    func selectHabitViewPeriod(_ period: HabitViewPeriod) {
+        guard period != habitViewPeriod else { return }
+        interactor.setHabitViewPeriod(period)
+        habitViewPeriod = period
+        rebuildHabitCardHistories()
+        interactor.trackEvent(eventName: "Habit_View_Period_Select", parameters: ["period": period.rawValue], type: .analytic)
+    }
+
+    private func rebuildHabitCardHistories() {
+        let dates = habitCardDates()
+        let occurrencesByHabit = Dictionary(grouping: occurrences, by: \.habitId)
+        habitCardHistories = Dictionary(uniqueKeysWithValues: habits.map { habit in
+            let statuses = Dictionary(uniqueKeysWithValues: (occurrencesByHabit[habit.id] ?? []).map { ($0.localDay.id, $0.status) })
+            let days = dates.map { day in
+                HabitGridDay(
+                    day: day, status: day.startDate > today.startDate ? .future : statuses[day.id] ?? .unscheduled,
+                    isToday: day == today, isInMonth: day.year == today.year && day.month == today.month
+                )
+            }
+            return (habit.id, HabitCardHistory(period: habitViewPeriod, anchorDay: today, days: days))
+        })
+    }
+
+    private func habitCardDates() -> [LocalDay] {
+        if habitViewPeriod == .week {
+            let monday = today.adding(days: -((ActivityRecurrenceModel.isoWeekday(for: today) ?? 1) - 1))
+            return (0..<7).map { monday.adding(days: $0) }
+        }
+        let first = LocalDay(
+            year: today.year, month: habitViewPeriod == .month ? today.month : 1,
+            day: 1, timeZoneIdentifier: today.timeZoneIdentifier
+        )
+        let leading = (ActivityRecurrenceModel.isoWeekday(for: first) ?? 1) - 1
+        let interval: Calendar.Component = habitViewPeriod == .month ? .month : .year
+        guard let nextDate = localCalendar.date(byAdding: interval, value: 1, to: first.startDate),
+              let count = localCalendar.dateComponents([.day], from: first.startDate, to: nextDate).day else { return [] }
+        let start = first.adding(days: -leading)
+        let cells = ((leading + count + 6) / 7) * 7
+        return (0..<cells).map { start.adding(days: $0) }
     }
 
     func tasks(in projectId: String?, completed: Bool) -> [TodoTaskModel] {

@@ -13,8 +13,10 @@ final class TodayManager {
 
     private static let deckSwipeCoachmarkKey = "tyfe.today-deck-coachmark-seen"
     private static let selectedProjectKey = "tyfe.today-selected-project-id"
+    private static let habitViewPeriodKey = "tyfe.today-habit-view-period"
 
     private(set) var hasSeenDeckSwipeCoachmark: Bool
+    private(set) var habitViewPeriod: HabitViewPeriod
 
     init(
         repository: LocalAppRepository = MockLocalAppRepository(),
@@ -29,6 +31,7 @@ final class TodayManager {
         self.notificationScheduler = notificationScheduler
         self.userDefaults = userDefaults
         self.hasSeenDeckSwipeCoachmark = userDefaults?.bool(forKey: Self.deckSwipeCoachmarkKey) ?? false
+        self.habitViewPeriod = HabitViewPeriod(rawValue: userDefaults?.string(forKey: Self.habitViewPeriodKey) ?? "") ?? .week
 
         if let dailyPlan {
             notificationScheduler?.schedulePlanReminders(for: dailyPlan)
@@ -601,5 +604,12 @@ extension TodayManager {
             userDefaults?.removeObject(forKey: Self.selectedProjectKey)
         }
         return didUpdate
+    }
+}
+
+extension TodayManager {
+    func setHabitViewPeriod(_ period: HabitViewPeriod) {
+        habitViewPeriod = period
+        userDefaults?.set(period.rawValue, forKey: Self.habitViewPeriodKey)
     }
 }

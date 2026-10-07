@@ -7,6 +7,8 @@ protocol TodayEffortInteractor: GlobalInteractor {
     var habits: [HabitModel] { get }
     var habitOccurrences: [HabitOccurrence] { get }
     var effortPreparationFailed: Bool { get }
+    var habitViewPeriod: HabitViewPeriod { get }
+    func setHabitViewPeriod(_ period: HabitViewPeriod)
     func saveTodo(_ draft: TodoDraft) throws
     func setTodoCompleted(taskId: String, completed: Bool) throws
     func toggleTodoItem(taskId: String, itemId: String) throws
@@ -20,6 +22,8 @@ extension CoreInteractor {
     var habits: [HabitModel] { habitManager.habits }
     var habitOccurrences: [HabitOccurrence] { habitManager.occurrences }
     var effortPreparationFailed: Bool { todoManager.preparationFailed }
+    var habitViewPeriod: HabitViewPeriod { todayManager.habitViewPeriod }
+    func setHabitViewPeriod(_ period: HabitViewPeriod) { todayManager.setHabitViewPeriod(period) }
 
     func saveTodo(_ draft: TodoDraft) throws { try todoManager.save(draft) }
     func setTodoCompleted(taskId: String, completed: Bool) throws { try todoManager.setCompleted(taskId: taskId, completed: completed) }
