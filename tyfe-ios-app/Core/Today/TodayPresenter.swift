@@ -169,22 +169,6 @@ final class TodayPresenter {
         completedUnitCounts[item.activityId, default: 0]
     }
 
-    func canConvertEditingActivity(to type: ActivityType) -> Bool {
-        guard let activity = editingActivity else { return false }
-        guard type != activity.type else { return true }
-        switch (activity.type, type) {
-        case (.session, .checklist):
-            return !interactor.phase1HasStartedFocusActivityToday(activityId: activity.activityId)
-        case (.checklist, .session):
-            return interactor.phase1CompletedChecklistItemCount(
-                for: activity.activityId,
-                on: interactor.phase1CurrentLocalDay
-            ) == 0
-        case (.session, .session), (.checklist, .checklist):
-            return true
-        }
-    }
-
     func remainingUnitCount(for item: DailyPlanItemModel) -> Int {
         max(item.plannedSessionCount - completedCount(for: item), 0)
     }
@@ -261,7 +245,7 @@ final class TodayPresenter {
     }
 
     func saveActivity(_ draft: ActivitySheetDraft) {
-        guard isViewingToday else { return }
+        guard isViewingToday, draft.type == .session else { return }
         guard draft.projectId == nil || projects.contains(where: { $0.projectId == draft.projectId }) else {
             return
         }
@@ -273,16 +257,6 @@ final class TodayPresenter {
         ) else { return }
         guard interactor.assignPhase1Activity(activityId: activity.activityId, to: draft.projectId) else {
             return
-        }
-        if let recurrence = draft.recurrence {
-            _ = interactor.setPhase1ActivityRecurrence(
-                activityId: activity.activityId,
-                recurrence: recurrence
-            )
-        }
-
-        if draft.type == .checklist {
-            addChecklistItems(activityId: activity.activityId, drafts: draft.checklistItems)
         }
 
         _ = interactor.addPhase1ActivityToDailyPlan(
@@ -334,11 +308,6 @@ final class TodayPresenter {
             return
         }
 
-        if draft.type != activity.type {
-            guard interactor.convertPhase1Activity(activityId: activity.activityId, to: draft.type) != nil else {
-                return
-            }
-        }
         guard interactor.updatePhase1Activity(
             activityId: activity.activityId,
             name: draft.name,
@@ -347,10 +316,6 @@ final class TodayPresenter {
         guard interactor.assignPhase1Activity(activityId: activity.activityId, to: draft.projectId) else {
             return
         }
-        _ = interactor.setPhase1ActivityRecurrence(
-            activityId: activity.activityId,
-            recurrence: draft.recurrence
-        )
 
         if draft.type == .checklist {
             syncChecklistItems(activityId: activity.activityId, drafts: draft.checklistItems)
@@ -598,18 +563,6 @@ extension TodayPresenter {
             do { try await Task.sleep(for: .seconds(delay)) } catch { return }
             guard !Task.isCancelled else { return }
             refreshForCurrentDay()
-        }
-    }
-
-    private func addChecklistItems(activityId: String, drafts: [ChecklistItemDraft]) {
-        for draft in drafts {
-            let trimmedTitle = draft.title.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !trimmedTitle.isEmpty else { continue }
-            _ = interactor.addPhase1ChecklistItem(
-                activityId: activityId,
-                title: trimmedTitle,
-                creditValue: draft.creditValue
-            )
         }
     }
 

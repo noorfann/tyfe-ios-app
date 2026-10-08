@@ -1,14 +1,13 @@
 import Foundation
 
 struct LocalAppSnapshot: Codable, Hashable {
-    private static let currentSchemaVersion = 8
+    private static let currentSchemaVersion = 9
 
     var schemaVersion: Int
     var effort: EffortState
     var activities: [ActivityModel]
     var projects: [ProjectModel]
     var dailyPlans: [DailyPlanModel]
-    var lastMaterializedLocalDay: LocalDay?
     var customRewards: [RewardModel]
     var rewardClaims: [RewardClaimModel]
     var focusSessions: [FocusSessionModel]
@@ -29,7 +28,6 @@ struct LocalAppSnapshot: Codable, Hashable {
         case projects
         case dailyPlans
         case dailyPlan
-        case lastMaterializedLocalDay
         case completedSessionCount
         case customRewards
         case rewardClaims
@@ -101,13 +99,12 @@ struct LocalAppSnapshot: Codable, Hashable {
     }
 
     init(
-        schemaVersion: Int = 8,
+        schemaVersion: Int = 9,
         activities: [ActivityModel],
         projects: [ProjectModel] = [],
         dailyPlan: DailyPlanModel? = nil,
         completedSessionCount: Int = 0,
         dailyPlans: [DailyPlanModel]? = nil,
-        lastMaterializedLocalDay: LocalDay? = nil,
         customRewards: [RewardModel] = [],
         rewardClaims: [RewardClaimModel] = [],
         focusSessions: [FocusSessionModel],
@@ -127,7 +124,6 @@ struct LocalAppSnapshot: Codable, Hashable {
         self.activities = activities
         self.projects = projects
         self.dailyPlans = dailyPlans ?? dailyPlan.map { [$0] } ?? []
-        self.lastMaterializedLocalDay = lastMaterializedLocalDay
         self.customRewards = customRewards
         self.rewardClaims = rewardClaims
         self.focusSessions = focusSessions
@@ -154,10 +150,6 @@ struct LocalAppSnapshot: Codable, Hashable {
             projects: try container.decodeIfPresent([ProjectModel].self, forKey: .projects) ?? [],
             dailyPlan: try container.decodeIfPresent(DailyPlanModel.self, forKey: .dailyPlan),
             dailyPlans: try container.decodeIfPresent([DailyPlanModel].self, forKey: .dailyPlans),
-            lastMaterializedLocalDay: try container.decodeIfPresent(
-                LocalDay.self,
-                forKey: .lastMaterializedLocalDay
-            ),
             customRewards: try container.decodeIfPresent([RewardModel].self, forKey: .customRewards) ?? [],
             rewardClaims: try container.decodeIfPresent([RewardClaimModel].self, forKey: .rewardClaims) ?? [],
             focusSessions: try container.decode([PersistedFocusSession].self, forKey: .focusSessions)
@@ -183,12 +175,11 @@ struct LocalAppSnapshot: Codable, Hashable {
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(effort.migrationDay == nil ? schemaVersion : Self.currentSchemaVersion, forKey: .schemaVersion)
+        try container.encode(effort.sessionRepeatRetiredDay == nil ? min(schemaVersion, 8) : Self.currentSchemaVersion, forKey: .schemaVersion)
         try container.encode(effort, forKey: .effort)
         try container.encode(activities, forKey: .activities)
         try container.encode(projects, forKey: .projects)
         try container.encode(dailyPlans, forKey: .dailyPlans)
-        try container.encodeIfPresent(lastMaterializedLocalDay, forKey: .lastMaterializedLocalDay)
         try container.encode(customRewards, forKey: .customRewards)
         try container.encode(rewardClaims, forKey: .rewardClaims)
         try container.encode(focusSessions, forKey: .focusSessions)
@@ -271,6 +262,16 @@ struct LocalFileRepositoryPersistence: LocalAppRepositoryPersistence {
                 let previousData = try Data(contentsOf: fileURL)
                 let previous = try JSONDecoder().decode(LocalAppSnapshot.self, from: previousData)
                 if previous.effort.migrationDay == nil { try previousData.write(to: backupURL, options: .atomic) }
+            }
+        }
+        if snapshot.effort.sessionRepeatRetiredDay != nil, FileManager.default.fileExists(atPath: fileURL.path) {
+            let backupURL = fileURL.appendingPathExtension("pre-v9-backup")
+            if !FileManager.default.fileExists(atPath: backupURL.path) {
+                let previousData = try Data(contentsOf: fileURL)
+                let previous = try JSONDecoder().decode(LocalAppSnapshot.self, from: previousData)
+                if previous.effort.sessionRepeatRetiredDay == nil {
+                    try previousData.write(to: backupURL, options: .atomic)
+                }
             }
         }
         try data.write(to: fileURL, options: .atomic)

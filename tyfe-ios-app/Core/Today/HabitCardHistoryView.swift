@@ -29,7 +29,7 @@ struct HabitCardHistoryView: View {
         HStack(alignment: .top, spacing: TyfeSpacing.relatedGap) {
             ForEach(history.days) { day in
                 VStack(spacing: TyfeSpacing.tightGap) {
-                    Text(ActivityRecurrenceModel.weekdayShortName(forISO: ActivityRecurrenceModel.isoWeekday(for: day.day) ?? 1))
+                    Text(RepeatSchedule.weekdayShortName(forISO: RepeatSchedule.isoWeekday(for: day.day) ?? 1))
                         .font(TyfeTypography.caption).foregroundStyle(TyfeEditorialPalette.muted)
                         .lineLimit(1).minimumScaleFactor(0.5)
                         .accessibilityHidden(true)
@@ -43,7 +43,7 @@ struct HabitCardHistoryView: View {
     private var monthGrid: some View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: TyfeSpacing.tightGap), count: 7), spacing: TyfeSpacing.tightGap) {
             ForEach(1...7, id: \.self) { weekday in
-                Text(ActivityRecurrenceModel.weekdayShortName(forISO: weekday))
+                Text(RepeatSchedule.weekdayShortName(forISO: weekday))
                     .font(TyfeTypography.caption).foregroundStyle(TyfeEditorialPalette.muted)
                     .lineLimit(1).minimumScaleFactor(0.5)
                     .accessibilityHidden(true)

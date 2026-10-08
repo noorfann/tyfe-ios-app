@@ -294,7 +294,6 @@ final class TodayManager {
             iconToken: iconToken(for: category),
             colorToken: existingActivity.colorToken,
             projectId: existingActivity.projectId,
-            recurrence: existingActivity.recurrence,
             isArchived: existingActivity.isArchived,
             createdAt: existingActivity.createdAt
         )

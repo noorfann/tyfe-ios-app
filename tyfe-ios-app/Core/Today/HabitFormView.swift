@@ -26,8 +26,8 @@ struct HabitFormView: View {
             TyfeSurfaceView(role: .paper) {
                 VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                     Picker("Repeat", selection: $draft.schedule.kind) {
-                        Text("Every day").tag(ActivityRecurrenceKind.daily)
-                        Text("Selected weekdays").tag(ActivityRecurrenceKind.weekly)
+                        Text("Every day").tag(RepeatScheduleKind.daily)
+                        Text("Selected weekdays").tag(RepeatScheduleKind.weekly)
                     }
                     .pickerStyle(.menu)
                     if draft.schedule.kind == .weekly {
@@ -53,7 +53,7 @@ struct HabitFormView: View {
 
     private func weekdayButton(_ weekday: Int) -> some View {
         let selected = draft.schedule.weekdays.contains(weekday)
-        return Text(ActivityRecurrenceModel.weekdayShortName(forISO: weekday))
+        return Text(RepeatSchedule.weekdayShortName(forISO: weekday))
             .font(TyfeTypography.interfaceStrong)
             .frame(maxWidth: .infinity, minHeight: 44)
             .background(selected ? TyfeEditorialPalette.teal : TyfeEditorialPalette.canvas)

@@ -64,6 +64,12 @@ struct TodayTodoView: View {
                         Text(task.title).font(TyfeTypography.interfaceStrong).strikethrough(task.isCompleted)
                         Text(task.hasEarnedAward ? "Already rewarded" : task.creditValue.creditLabel)
                             .font(TyfeTypography.caption).foregroundStyle(TyfeEditorialPalette.muted)
+                        Text(task.schedule(on: presenter.today)?.displaySummary ?? "Never")
+                            .font(TyfeTypography.caption).foregroundStyle(TyfeEditorialPalette.muted)
+                        if let pending = task.pendingSchedule(after: presenter.today) {
+                            Text("From tomorrow: \(pending.schedule?.displaySummary ?? "Never")")
+                                .font(TyfeTypography.caption).foregroundStyle(TyfeEditorialPalette.muted)
+                        }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     Image(systemName: "pencil")

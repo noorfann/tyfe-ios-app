@@ -272,74 +272,6 @@ extension TodayManager {
         return true
     }
 
-    @discardableResult
-    func convertActivity(activityId: String, to newType: ActivityType) -> ActivityModel? {
-        guard let activity = activities.first(where: { $0.activityId == activityId }),
-              activity.type != newType,
-              canConvertActivity(activity, to: newType) else {
-            return nil
-        }
-
-        let localDay = currentLocalDay
-        let updatedActivity = ActivityModel(
-            activityId: activity.activityId,
-            name: activity.name,
-            type: newType,
-            category: activity.category,
-            iconToken: activity.iconToken,
-            colorToken: activity.colorToken,
-            projectId: activity.projectId,
-            recurrence: activity.recurrence,
-            isArchived: activity.isArchived,
-            createdAt: activity.createdAt
-        )
-        let itemCount = checklistItems(for: activityId).count
-        let existingPlannedCount = dailyPlan?
-            .planItems
-            .first { $0.activityId == activityId }?
-            .plannedSessionCount ?? 0
-
-        var didConvert = false
-        do {
-            try repository.transaction { snapshot in
-                guard let index = snapshot.activities.firstIndex(where: { $0.activityId == activityId }) else {
-                    return
-                }
-                snapshot.activities[index] = updatedActivity
-                let plannedCount: Int
-                switch newType {
-                case .session:
-                    plannedCount = max(existingPlannedCount, 1)
-                case .checklist:
-                    plannedCount = itemCount
-                }
-                setTodayPlanItem(
-                    activityId: activityId,
-                    unitKind: newType,
-                    plannedCount: plannedCount,
-                    localDay: localDay,
-                    in: &snapshot
-                )
-                didConvert = true
-            }
-        } catch {
-            return nil
-        }
-        return didConvert ? updatedActivity : nil
-    }
-
-    func canConvertActivity(_ activity: ActivityModel, to newType: ActivityType) -> Bool {
-        let localDay = currentLocalDay
-        switch (activity.type, newType) {
-        case (.session, .checklist):
-            return !hasStartedFocusActivityToday(activityId: activity.activityId, on: localDay)
-        case (.checklist, .session):
-            return completedChecklistItemCount(for: activity.activityId, on: localDay) == 0
-        case (.session, .session), (.checklist, .checklist):
-            return false
-        }
-    }
-
     private func setTodayPlanItem(
         activityId: String,
         unitKind: ActivityType,
@@ -374,12 +306,6 @@ extension TodayManager {
             timeBlocks: plan.timeBlocks,
             isRevised: true
         )
-    }
-
-    func hasStartedFocusActivityToday(activityId: String, on localDay: LocalDay) -> Bool {
-        repository.snapshot.focusSessions.contains {
-            $0.activityId == activityId && $0.localDay == localDay && $0.state != .abandoned
-        }
     }
 
     static func checklistCompletionId(itemId: String, localDay: LocalDay) -> String {

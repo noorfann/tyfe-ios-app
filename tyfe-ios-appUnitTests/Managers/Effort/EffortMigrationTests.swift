@@ -14,7 +14,10 @@ struct EffortMigrationTests {
         let repository = MockLocalAppRepository()
         let today = TodayManager(repository: repository, clock: clock, calendar: calendar)
         let activity = try #require(today.createActivity(name: "Kitchen", category: nil, colorToken: nil, type: .checklist))
-        _ = today.setActivityRecurrence(activityId: activity.id, recurrence: ActivityRecurrenceModel(kind: .daily))
+        try repository.transaction { snapshot in
+            let index = try #require(snapshot.activities.firstIndex { $0.id == activity.id })
+            snapshot.activities[index].legacyRecurrence = LegacyActivityRecurrence(kind: .daily)
+        }
         let first = try #require(today.addChecklistItem(activityId: activity.id, title: "Dishes", creditValue: .oneCredit))
         _ = today.addChecklistItem(activityId: activity.id, title: "Counter", creditValue: .twoCredits)
         _ = today.completeChecklistItem(itemId: first.id)
@@ -30,13 +33,13 @@ struct EffortMigrationTests {
         let todo = TodoManager(repository: repository, clock: clock, calendar: calendar)
         try todo.prepare()
         let task = try #require(todo.tasks.first)
-        #expect(repository.snapshot.schemaVersion == 8)
+        #expect(repository.snapshot.schemaVersion == 9)
         #expect(task.title == "Kitchen")
         #expect(task.items[0].isCompleted)
         #expect(!task.items[1].isCompleted)
         #expect(repository.snapshot.creditLedger == original.creditLedger)
         #expect(repository.snapshot.dailyPlans == original.dailyPlans)
-        #expect(repository.snapshot.activities.filter { $0.type == .checklist }.allSatisfy { $0.isArchived && $0.recurrence == nil })
+        #expect(repository.snapshot.activities.filter { $0.type == .checklist }.allSatisfy { $0.isArchived && $0.legacyRecurrence == nil })
         try todo.toggleItem(taskId: task.id, itemId: task.items[1].id)
         #expect(todo.tasks[0].isCompleted)
         #expect(repository.snapshot.creditLedger.balance == 1)
@@ -86,7 +89,7 @@ struct EffortMigrationTests {
         try todo.prepare()
         #expect(!todo.preparationFailed)
         #expect(todo.tasks.count == 1)
-        #expect(persistence.snapshot?.schemaVersion == 8)
+        #expect(persistence.snapshot?.schemaVersion == 9)
     }
 
     @Test func failedLoadCannotOverwriteStoredWorkAndCanBeRetried() throws {

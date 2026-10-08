@@ -33,7 +33,7 @@ final class HabitManager: HabitManaging {
     func save(_ draft: HabitDraft) throws {
         try prepare()
         let title = draft.title.trimmingCharacters(in: .whitespacesAndNewlines)
-        let schedule = ActivityRecurrenceModel(kind: draft.schedule.kind, weekdays: draft.schedule.weekdays)
+        let schedule = RepeatSchedule(kind: draft.schedule.kind, weekdays: draft.schedule.weekdays)
         guard !title.isEmpty, repository.snapshot.isValidEffortProject(draft.projectId),
               schedule.kind == .daily || !schedule.weekdays.isEmpty else { throw EffortError.invalidEntry }
         try repository.transaction { snapshot in

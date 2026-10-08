@@ -46,30 +46,6 @@ struct FocusRepositoryTests {
         #expect(project.resolvedColorToken == ProjectModel.defaultColorToken)
     }
 
-    @Test func recurrenceAndMaterializationMarkerRoundTrip() throws {
-        var snapshot = LocalAppSnapshot.mock
-        snapshot.activities[0].recurrence = ActivityRecurrenceModel(
-            kind: .weekly,
-            weekdays: [2, 4],
-            defaultSessionCount: 3
-        )
-        snapshot.lastMaterializedLocalDay = LocalDay(
-            year: 2026,
-            month: 3,
-            day: 2,
-            timeZoneIdentifier: "GMT"
-        )
-
-        let restored = try JSONDecoder().decode(
-            LocalAppSnapshot.self,
-            from: JSONEncoder().encode(snapshot)
-        )
-
-        #expect(restored.schemaVersion == 8)
-        #expect(restored.activities[0].recurrence == snapshot.activities[0].recurrence)
-        #expect(restored.lastMaterializedLocalDay == snapshot.lastMaterializedLocalDay)
-    }
-
     @Test func versionOneSnapshotMigratesSingularPlanAndLegacySessionFields() throws {
         let plan = DailyPlanModel.mock
         let session = FocusSessionModel.readyMock

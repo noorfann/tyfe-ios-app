@@ -12,7 +12,6 @@ extension CoreInteractor {
         do {
             try todoManager.prepare()
             rewardManager.synchronizeCreditDay()
-            todayManager.materializeCurrentDay()
             try habitManager.prepare()
             reconcileEffortStreak()
         } catch {

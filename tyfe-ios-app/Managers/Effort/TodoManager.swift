@@ -29,7 +29,9 @@ final class TodoManager: TodoManaging {
             try repository.retryLoad()
             var prepared = repository.snapshot
             prepared.migrateEffort(on: currentDay, now: clock.now)
+            prepared.retireSessionRepeat(on: currentDay)
             prepared.prepareEffortDays(through: currentDay)
+            prepared.prepareRepeatingTasks(on: currentDay)
             if prepared != repository.snapshot {
                 try repository.transaction { $0 = prepared }
             }
@@ -44,7 +46,8 @@ final class TodoManager: TodoManaging {
     func save(_ draft: TodoDraft) throws {
         try prepare()
         let title = draft.title.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !title.isEmpty, repository.snapshot.isValidEffortProject(draft.projectId),
+        guard !title.isEmpty, draft.repeatDraft.isValid,
+              repository.snapshot.isValidEffortProject(draft.projectId),
               Set(draft.items.map(\.id)).count == draft.items.count,
               draft.items.allSatisfy({ !$0.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) else {
             throw EffortError.invalidEntry
@@ -53,6 +56,12 @@ final class TodoManager: TodoManaging {
             if let id = draft.taskId {
                 guard let index = snapshot.effort.tasks.firstIndex(where: { $0.id == id }) else { throw EffortError.missingEntry }
                 var task = snapshot.effort.tasks[index]
+                let schedule = draft.repeatDraft.recurrence()
+                if task.scheduleRevisions.last?.schedule != schedule {
+                    let tomorrow = currentDay.adding(days: 1)
+                    task.scheduleRevisions.removeAll { $0.effectiveDay.startDate >= tomorrow.startDate }
+                    task.scheduleRevisions.append(TodoScheduleRevision(effectiveDay: tomorrow, schedule: schedule))
+                }
                 task.title = title
                 task.projectId = draft.projectId
                 task.creditValue = draft.creditValue
@@ -72,7 +81,8 @@ final class TodoManager: TodoManaging {
                 }
                 snapshot.effort.tasks.append(TodoTaskModel(
                     id: "todo-" + UUID().uuidString, title: title, projectId: draft.projectId,
-                    items: items, creditValue: draft.creditValue, createdAt: clock.now
+                    items: items, creditValue: draft.creditValue, createdAt: clock.now,
+                    scheduleRevisions: [TodoScheduleRevision(effectiveDay: currentDay, schedule: draft.repeatDraft.recurrence())]
                 ))
             }
         }

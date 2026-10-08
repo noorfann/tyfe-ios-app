@@ -3,16 +3,12 @@ import SwiftfulUI
 
 struct TodayAddActivitySheet: View {
 
-    let initialSessionCount: Int
     let projects: [ProjectModel]
     let onSave: (ActivitySheetDraft) -> Void
 
     @State private var activityName: String
-    @State private var selectedType: ActivityType = .session
     @State private var sessionCount: Int
     @State private var selectedProjectId: String?
-    @State private var checklistItems: [ChecklistItemDraft] = []
-    @State private var repeatDraft = ActivityRepeatDraft(recurrence: nil)
 
     init(
         initialSessionCount: Int,
@@ -20,7 +16,6 @@ struct TodayAddActivitySheet: View {
         initialProjectId: String?,
         onSave: @escaping (ActivitySheetDraft) -> Void
     ) {
-        self.initialSessionCount = initialSessionCount
         self.projects = projects
         self.onSave = onSave
         _activityName = State(initialValue: "")
@@ -30,24 +25,12 @@ struct TodayAddActivitySheet: View {
 
     private var canSave: Bool {
         !activityName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            && repeatDraft.isValid
-    }
-
-    private var plannedItemCount: Int {
-        checklistItems.filter {
-            !$0.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        }.count
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
             activityForm
-            if selectedType == .checklist {
-                ChecklistItemsEditorView(items: $checklistItems)
-            } else {
-                sessionCountPicker
-            }
-            ActivityRepeatPickerView(draft: $repeatDraft)
+            sessionCountPicker
             TyfeActionButtonView(
                 title: "Add to Today",
                 systemImage: "checkmark",
@@ -164,11 +147,10 @@ struct TodayAddActivitySheet: View {
             ActivitySheetDraft(
                 name: activityName,
                 category: nil,
-                type: selectedType,
-                checklistItems: checklistItems,
-                sessionCount: selectedType == .session ? sessionCount : plannedItemCount,
-                projectId: selectedProjectId,
-                recurrence: repeatDraft.recurrence(defaultSessionCount: max(sessionCount, 1))
+                type: .session,
+                checklistItems: [],
+                sessionCount: sessionCount,
+                projectId: selectedProjectId
             )
         )
     }

@@ -2,7 +2,7 @@ import Foundation
 
 struct HabitRevision: Codable, Hashable, Sendable {
     let effectiveDay: LocalDay
-    var schedule: ActivityRecurrenceModel
+    var schedule: RepeatSchedule
     var creditValue: ChecklistCreditValue
     var isArchived: Bool = false
 

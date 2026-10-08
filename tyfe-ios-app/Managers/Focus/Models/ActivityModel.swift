@@ -31,7 +31,7 @@ struct ActivityModel: Identifiable, Codable, Hashable {
     let iconToken: String?
     let colorToken: String?
     var projectId: String?
-    var recurrence: ActivityRecurrenceModel?
+    var legacyRecurrence: LegacyActivityRecurrence?
     let isArchived: Bool
     let createdAt: Date
 
@@ -60,7 +60,6 @@ struct ActivityModel: Identifiable, Codable, Hashable {
         iconToken: String? = nil,
         colorToken: String? = nil,
         projectId: String? = nil,
-        recurrence: ActivityRecurrenceModel? = nil,
         isArchived: Bool = false,
         createdAt: Date
     ) {
@@ -71,7 +70,6 @@ struct ActivityModel: Identifiable, Codable, Hashable {
         self.iconToken = iconToken
         self.colorToken = colorToken
         self.projectId = projectId
-        self.recurrence = recurrence
         self.isArchived = isArchived
         self.createdAt = createdAt
     }
@@ -86,10 +84,10 @@ struct ActivityModel: Identifiable, Codable, Hashable {
             iconToken: try container.decodeIfPresent(String.self, forKey: .iconToken),
             colorToken: try container.decodeIfPresent(String.self, forKey: .colorToken),
             projectId: try container.decodeIfPresent(String.self, forKey: .projectId),
-            recurrence: try container.decodeIfPresent(ActivityRecurrenceModel.self, forKey: .recurrence),
             isArchived: try container.decodeIfPresent(Bool.self, forKey: .isArchived) ?? false,
             createdAt: try container.decode(Date.self, forKey: .createdAt)
         )
+        legacyRecurrence = try container.decodeIfPresent(LegacyActivityRecurrence.self, forKey: .recurrence)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -101,7 +99,7 @@ struct ActivityModel: Identifiable, Codable, Hashable {
         try container.encodeIfPresent(iconToken, forKey: .iconToken)
         try container.encodeIfPresent(colorToken, forKey: .colorToken)
         try container.encodeIfPresent(projectId, forKey: .projectId)
-        try container.encodeIfPresent(recurrence, forKey: .recurrence)
+        try container.encodeIfPresent(legacyRecurrence, forKey: .recurrence)
         try container.encode(isArchived, forKey: .isArchived)
         try container.encode(createdAt, forKey: .createdAt)
     }

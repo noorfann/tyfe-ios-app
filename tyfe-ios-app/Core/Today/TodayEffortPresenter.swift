@@ -75,14 +75,14 @@ final class TodayEffortPresenter {
 
     private func habitCardDates() -> [LocalDay] {
         if habitViewPeriod == .week {
-            let monday = today.adding(days: -((ActivityRecurrenceModel.isoWeekday(for: today) ?? 1) - 1))
+            let monday = today.adding(days: -((RepeatSchedule.isoWeekday(for: today) ?? 1) - 1))
             return (0..<7).map { monday.adding(days: $0) }
         }
         let first = LocalDay(
             year: today.year, month: habitViewPeriod == .month ? today.month : 1,
             day: 1, timeZoneIdentifier: today.timeZoneIdentifier
         )
-        let leading = (ActivityRecurrenceModel.isoWeekday(for: first) ?? 1) - 1
+        let leading = (RepeatSchedule.isoWeekday(for: first) ?? 1) - 1
         let interval: Calendar.Component = habitViewPeriod == .month ? .month : .year
         guard let nextDate = localCalendar.date(byAdding: interval, value: 1, to: first.startDate),
               let count = localCalendar.dateComponents([.day], from: first.startDate, to: nextDate).day else { return [] }
@@ -231,7 +231,7 @@ final class TodayEffortPresenter {
         let sixMonthsAgo = localCalendar.date(byAdding: .month, value: -6, to: today.startDate) ?? today.adding(days: -181).startDate
         let firstDay = fullHistory ? LocalDay(containing: habit.createdAt, calendar: localCalendar)
             : LocalDay(containing: sixMonthsAgo, calendar: localCalendar).adding(days: 1)
-        let first = firstDay.adding(days: -(ActivityRecurrenceModel.isoWeekday(for: firstDay).map { $0 - 1 } ?? 0))
+        let first = firstDay.adding(days: -(RepeatSchedule.isoWeekday(for: firstDay).map { $0 - 1 } ?? 0))
         var weeks: [HabitHeatmapWeek] = []
         var day = first
         let statuses = Dictionary(uniqueKeysWithValues: occurrences.filter { $0.habitId == habit.id }.map { ($0.localDay.id, $0.status) })
@@ -249,7 +249,7 @@ final class TodayEffortPresenter {
 
     func calendarDays(for habit: HabitModel) -> [HabitGridDay] {
         let month = LocalDay(year: selectedMonth.year, month: selectedMonth.month, day: 1, timeZoneIdentifier: today.timeZoneIdentifier)
-        let leading = (ActivityRecurrenceModel.isoWeekday(for: month) ?? 1) - 1
+        let leading = (RepeatSchedule.isoWeekday(for: month) ?? 1) - 1
         let start = month.adding(days: -leading)
         let count = localCalendar.range(of: .day, in: .month, for: month.startDate)?.count ?? 30
         let cells = ((leading + count + 6) / 7) * 7

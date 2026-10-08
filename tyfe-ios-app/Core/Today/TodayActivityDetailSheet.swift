@@ -4,22 +4,16 @@ import SwiftfulUI
 struct TodayActivityDetailSheet: View {
 
     let activity: ActivityModel
-    let initialSessionCount: Int
     let completedUnitCount: Int
-    let checklistItems: [ChecklistItemModel]
     let tickedItemIds: Set<String>
-    let canConvertToChecklist: Bool
-    let canConvertToSession: Bool
     let projects: [ProjectModel]
     let onSave: (ActivitySheetDraft) -> Void
     let onRemove: (() -> Void)?
 
     @State private var activityName: String
-    @State private var selectedType: ActivityType
     @State private var sessionCount: Int
     @State private var selectedProjectId: String?
     @State private var itemDrafts: [ChecklistItemDraft]
-    @State private var repeatDraft: ActivityRepeatDraft
 
     init(
         activity: ActivityModel,
@@ -27,48 +21,38 @@ struct TodayActivityDetailSheet: View {
         completedUnitCount: Int,
         checklistItems: [ChecklistItemModel],
         tickedItemIds: Set<String>,
-        canConvertToChecklist: Bool,
-        canConvertToSession: Bool,
         projects: [ProjectModel],
         onSave: @escaping (ActivitySheetDraft) -> Void,
         onRemove: (() -> Void)?
     ) {
         self.activity = activity
-        self.initialSessionCount = initialSessionCount
         self.completedUnitCount = completedUnitCount
-        self.checklistItems = checklistItems
         self.tickedItemIds = tickedItemIds
-        self.canConvertToChecklist = canConvertToChecklist
-        self.canConvertToSession = canConvertToSession
         self.projects = projects
         self.onSave = onSave
         self.onRemove = onRemove
         _activityName = State(initialValue: activity.name)
-        _selectedType = State(initialValue: activity.type)
-        _sessionCount = State(initialValue: max(initialSessionCount, completedUnitCount))
+        _sessionCount = State(initialValue: max(initialSessionCount, completedUnitCount, 1))
         _selectedProjectId = State(initialValue: activity.projectId)
         _itemDrafts = State(
             initialValue: checklistItems.map {
                 ChecklistItemDraft(itemId: $0.itemId, title: $0.title, creditValue: $0.creditValue)
             }
         )
-        _repeatDraft = State(initialValue: ActivityRepeatDraft(recurrence: activity.recurrence))
     }
 
     private var canSave: Bool {
         !activityName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            && repeatDraft.isValid
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
             activityForm
-            if selectedType == .checklist {
+            if activity.type == .checklist {
                 ChecklistItemsEditorView(items: $itemDrafts, lockedItemIds: tickedItemIds)
             } else {
                 durationPicker
             }
-            ActivityRepeatPickerView(draft: $repeatDraft)
             TyfeActionButtonView(
                 title: "Save Changes",
                 systemImage: "checkmark",
@@ -85,10 +69,7 @@ struct TodayActivityDetailSheet: View {
                 )
             }
         }
-        .onChange(of: selectedType) { _, newType in
-            guard newType == .session else { return }
-            sessionCount = max(initialSessionCount, completedUnitCount, 1)
-        }
+
     }
 
     private var projectPicker: some View {
@@ -126,14 +107,6 @@ struct TodayActivityDetailSheet: View {
                 Text(activity.type.displayName).font(TyfeTypography.interfaceStrong)
                 projectPicker
             }
-        }
-    }
-
-    private func isTypeOptionEnabled(_ type: ActivityType) -> Bool {
-        guard type != activity.type else { return true }
-        switch type {
-        case .session: return canConvertToSession
-        case .checklist: return canConvertToChecklist
         }
     }
 
@@ -208,13 +181,10 @@ struct TodayActivityDetailSheet: View {
             ActivitySheetDraft(
                 name: activityName,
                 category: activity.category,
-                type: selectedType,
+                type: activity.type,
                 checklistItems: itemDrafts,
                 sessionCount: max(sessionCount, completedUnitCount, 1),
-                projectId: selectedProjectId,
-                recurrence: repeatDraft.recurrence(
-                    defaultSessionCount: max(sessionCount, completedUnitCount, 1)
-                )
+                projectId: selectedProjectId
             )
         )
     }
@@ -227,8 +197,6 @@ struct TodayActivityDetailSheet: View {
         completedUnitCount: 0,
         checklistItems: [],
         tickedItemIds: [],
-        canConvertToChecklist: true,
-        canConvertToSession: true,
         projects: ProjectModel.mocks,
         onSave: { _ in },
         onRemove: { }
@@ -259,8 +227,6 @@ struct TodayActivityDetailSheet: View {
             )
         ],
         tickedItemIds: ["checklist-item-1"],
-        canConvertToChecklist: true,
-        canConvertToSession: false,
         projects: ProjectModel.mocks,
         onSave: { _ in },
         onRemove: nil
@@ -277,8 +243,6 @@ struct TodayActivityDetailSheet: View {
             completedUnitCount: 1,
             checklistItems: [],
             tickedItemIds: [],
-            canConvertToChecklist: false,
-            canConvertToSession: true,
             projects: ProjectModel.mocks,
             onSave: { _ in },
             onRemove: nil

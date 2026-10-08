@@ -66,18 +66,6 @@ extension CoreInteractor {
         todayManager.isChecklistItemTicked(itemId: itemId, on: localDay)
     }
 
-    func phase1HasStartedFocusActivityToday(activityId: String) -> Bool {
-        todayManager.hasStartedFocusActivityToday(
-            activityId: activityId,
-            on: todayManager.currentLocalDay
-        )
-    }
-
-    @discardableResult
-    func convertPhase1Activity(activityId: String, to type: ActivityType) -> ActivityModel? {
-        todayManager.convertActivity(activityId: activityId, to: type)
-    }
-
     @discardableResult
     func addPhase1ChecklistItem(
         activityId: String,

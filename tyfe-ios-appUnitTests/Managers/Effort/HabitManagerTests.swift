@@ -38,10 +38,10 @@ struct HabitManagerTests {
         let repository = MockLocalAppRepository()
         try TodoManager(repository: repository, clock: clock, calendar: calendar).prepare()
         let manager = HabitManager(repository: repository, clock: clock, calendar: calendar)
-        let weekday = try #require(ActivityRecurrenceModel.isoWeekday(for: manager.currentDay))
+        let weekday = try #require(RepeatSchedule.isoWeekday(for: manager.currentDay))
         var draft = HabitDraft()
         draft.title = "Weekly"
-        draft.schedule = ActivityRecurrenceModel(kind: .weekly, weekdays: [(weekday % 7) + 1])
+        draft.schedule = RepeatSchedule(kind: .weekly, weekdays: [(weekday % 7) + 1])
         try manager.save(draft)
         let id = try #require(manager.habits.first?.id)
         let creationDay = manager.currentDay

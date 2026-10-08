@@ -237,13 +237,6 @@ struct TodayPlanCardView: View {
                     .lineLimit(2)
                     .minimumScaleFactor(0.6)
 
-                if let recurrence = activity.recurrence {
-                    Label(recurrence.displaySummary, systemImage: "repeat")
-                        .font(TyfeTypography.caption)
-                        .foregroundStyle(
-                            isComplete ? TyfeEditorialPalette.disabledInk : TyfeEditorialPalette.muted
-                        )
-                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 

@@ -26,7 +26,6 @@ protocol TodayInteractor: GlobalInteractor, TodayEffortInteractor {
     func phase1CompletedChecklistItemCount(for activityId: String, on localDay: LocalDay) -> Int
     func phase1ChecklistItems(for activityId: String) -> [ChecklistItemModel]
     func phase1IsChecklistItemTicked(itemId: String, on localDay: LocalDay) -> Bool
-    func phase1HasStartedFocusActivityToday(activityId: String) -> Bool
 
     @discardableResult
     func createPhase1Activity(
@@ -42,15 +41,6 @@ protocol TodayInteractor: GlobalInteractor, TodayEffortInteractor {
         name: String,
         category: ActivityCategory?
     ) -> ActivityModel?
-
-    @discardableResult
-    func setPhase1ActivityRecurrence(
-        activityId: String,
-        recurrence: ActivityRecurrenceModel?
-    ) -> ActivityModel?
-
-    @discardableResult
-    func convertPhase1Activity(activityId: String, to type: ActivityType) -> ActivityModel?
 
     @discardableResult
     func addPhase1ChecklistItem(

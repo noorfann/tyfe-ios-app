@@ -38,9 +38,14 @@ struct TodoFormView: View {
                         .font(TyfeTypography.caption).foregroundStyle(TyfeEditorialPalette.muted)
                 }
             }
+            TodoRepeatPickerView(draft: $draft.repeatDraft)
+            if draft.taskId != nil {
+                Text("Repeat changes begin tomorrow. Today's progress and reward stay intact.")
+                    .font(TyfeTypography.caption).foregroundStyle(TyfeEditorialPalette.muted)
+            }
             TyfeActionButtonView(
                 title: "Save To Do", systemImage: "checkmark",
-                isEnabled: !draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                isEnabled: draft.repeatDraft.isValid && !draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                     && draft.items.allSatisfy { !$0.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty },
                 onTap: onSave
             )

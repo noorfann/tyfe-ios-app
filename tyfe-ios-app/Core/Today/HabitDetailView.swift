@@ -77,7 +77,7 @@ struct HabitDetailView: View {
     private var calendarGrid: some View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: TyfeSpacing.relatedGap), count: 7), spacing: TyfeSpacing.relatedGap) {
                     ForEach(1...7, id: \.self) { weekday in
-                        Text(ActivityRecurrenceModel.weekdayShortName(forISO: weekday))
+                        Text(RepeatSchedule.weekdayShortName(forISO: weekday))
                             .font(TyfeTypography.caption).accessibilityHidden(true)
                     }
                     ForEach(presenter.calendarDays(for: habit)) { day in

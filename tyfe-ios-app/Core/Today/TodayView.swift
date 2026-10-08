@@ -87,8 +87,6 @@ struct TodayView: View {
                     completedUnitCount: presenter.completedCount(for: item),
                     checklistItems: presenter.checklistItems(for: item),
                     tickedItemIds: presenter.tickedItemIds,
-                    canConvertToChecklist: presenter.canConvertEditingActivity(to: .checklist),
-                    canConvertToSession: presenter.canConvertEditingActivity(to: .session),
                     projects: presenter.projects,
                     onSave: presenter.saveActivityEdits,
                     onRemove: presenter.removeEditingActivityFromToday

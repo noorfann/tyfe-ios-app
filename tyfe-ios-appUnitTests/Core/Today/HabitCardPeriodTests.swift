@@ -26,7 +26,7 @@ struct HabitCardPeriodTests {
             #expect(history.visibleDays.first?.day.day == 1)
             #expect(history.visibleDays.last?.day.day == count)
             #expect(history.days.count.isMultiple(of: 7))
-            #expect(ActivityRecurrenceModel.isoWeekday(for: try #require(history.days.first?.day)) == 1)
+            #expect(RepeatSchedule.isoWeekday(for: try #require(history.days.first?.day)) == 1)
             #expect(history.days.contains { !$0.isInMonth })
             #expect(history.weeks.isEmpty)
         }
@@ -43,7 +43,7 @@ struct HabitCardPeriodTests {
             #expect(history.days.contains { $0.day.year != today.year })
             #expect(history.weeks.allSatisfy { $0.days.count == 7 })
             #expect(history.weeks.flatMap(\.days).map(\.id) == history.days.map(\.id))
-            #expect(ActivityRecurrenceModel.isoWeekday(for: try #require(history.days.first?.day)) == 1)
+            #expect(RepeatSchedule.isoWeekday(for: try #require(history.days.first?.day)) == 1)
             let index = try #require(history.weeks.firstIndex { $0.days.contains(where: \.isToday) })
             #expect(history.initialScrollFraction == Double(index) / Double(history.weeks.count - 1))
             #expect(history.initialScrollFraction > 0.7 && history.initialScrollFraction < 0.9)

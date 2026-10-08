@@ -1,6 +1,42 @@
 import Foundation
 
 extension LocalAppSnapshot {
+
+    mutating func retireSessionRepeat(on today: LocalDay) {
+        guard effort.sessionRepeatRetiredDay == nil else { return }
+        // Resolve old recurrence fallback counts before removing compatibility data.
+        var day = effort.lastPreparedDay ?? effort.migrationDay ?? today
+        while day.startDate < today.startDate {
+            prepareEffortDay(day, today: today)
+            day = day.adding(days: 1)
+        }
+        for index in activities.indices { activities[index].legacyRecurrence = nil }
+        effort.sessionRepeatRetiredDay = today
+        schemaVersion = 9
+    }
+
+    mutating func prepareRepeatingTasks(on today: LocalDay) {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: today.timeZoneIdentifier) ?? .current
+        for index in effort.tasks.indices {
+            guard let completedAt = effort.tasks[index].completedAt,
+                  effort.tasks[index].scheduleRevisions.contains(where: { $0.schedule != nil }) else { continue }
+            var day = LocalDay(containing: completedAt, calendar: calendar).adding(days: 1)
+            while day.startDate <= today.startDate {
+                if effort.tasks[index].schedule(on: day)?.isDue(on: day) == true {
+                    effort.tasks[index].completedAt = nil
+                    effort.tasks[index].hasEarnedAward = false
+                    effort.tasks[index].awardDay = nil
+                    effort.tasks[index].awardAmount = 0
+                    for itemIndex in effort.tasks[index].items.indices {
+                        effort.tasks[index].items[itemIndex].isCompleted = false
+                    }
+                    break
+                }
+                day = day.adding(days: 1)
+            }
+        }
+    }
     /// Called inside a repository transaction; historical plans and ledger entries are never rewritten.
     mutating func migrateEffort(on day: LocalDay, now: Date) {
         guard effort.migrationDay == nil else { return }
@@ -35,7 +71,7 @@ extension LocalAppSnapshot {
             return ActivityModel(
                 activityId: activity.id, name: activity.name, type: activity.type,
                 category: activity.category, iconToken: activity.iconToken, colorToken: activity.colorToken,
-                projectId: activity.projectId, recurrence: nil, isArchived: true, createdAt: activity.createdAt
+                projectId: activity.projectId, isArchived: true, createdAt: activity.createdAt
             )
         }
         effort.migrationDay = day
@@ -79,8 +115,8 @@ extension LocalAppSnapshot {
         } else if day.startDate < today.startDate {
             planned = activities.filter {
                 $0.type == .session && !$0.isArchived && $0.createdAt < day.adding(days: 1).startDate
-                    && ($0.recurrence?.isDue(on: day) ?? false)
-            }.reduce(0) { $0 + ($1.recurrence?.defaultSessionCount ?? 0) }
+                    && ($0.legacyRecurrence?.isDue(on: day) ?? false)
+            }.reduce(0) { $0 + ($1.legacyRecurrence?.defaultSessionCount ?? 0) }
         } else {
             planned = 0
         }

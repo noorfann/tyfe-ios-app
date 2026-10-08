@@ -1,40 +1,35 @@
 import Foundation
 
-enum ActivityRecurrenceKind: String, Codable, CaseIterable, Hashable, Sendable {
+enum RepeatScheduleKind: String, Codable, CaseIterable, Hashable, Sendable {
     case daily
     case weekly
 }
 
-struct ActivityRecurrenceModel: Codable, Hashable, Sendable {
-    var kind: ActivityRecurrenceKind
+struct RepeatSchedule: Codable, Hashable, Sendable {
+    var kind: RepeatScheduleKind
     var weekdays: [Int]
-    var defaultSessionCount: Int
 
     private static let weekdayShortNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
     init(
-        kind: ActivityRecurrenceKind,
-        weekdays: [Int] = [],
-        defaultSessionCount: Int = 1
+        kind: RepeatScheduleKind,
+        weekdays: [Int] = []
     ) {
         self.kind = kind
         self.weekdays = Self.normalizedWeekdays(weekdays, kind: kind)
-        self.defaultSessionCount = max(defaultSessionCount, 1)
     }
 
     private enum CodingKeys: String, CodingKey {
         case kind
         case weekdays
-        case defaultSessionCount
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        let kind = try container.decodeIfPresent(ActivityRecurrenceKind.self, forKey: .kind) ?? .daily
+        let kind = try container.decodeIfPresent(RepeatScheduleKind.self, forKey: .kind) ?? .daily
         self.init(
             kind: kind,
-            weekdays: try container.decodeIfPresent([Int].self, forKey: .weekdays) ?? [],
-            defaultSessionCount: try container.decodeIfPresent(Int.self, forKey: .defaultSessionCount) ?? 1
+            weekdays: try container.decodeIfPresent([Int].self, forKey: .weekdays) ?? []
         )
     }
 
@@ -42,7 +37,6 @@ struct ActivityRecurrenceModel: Codable, Hashable, Sendable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(kind, forKey: .kind)
         try container.encode(weekdays, forKey: .weekdays)
-        try container.encode(defaultSessionCount, forKey: .defaultSessionCount)
     }
 
     func isDue(on localDay: LocalDay) -> Bool {
@@ -85,7 +79,7 @@ struct ActivityRecurrenceModel: Codable, Hashable, Sendable {
 
     private static func normalizedWeekdays(
         _ weekdays: [Int],
-        kind: ActivityRecurrenceKind
+        kind: RepeatScheduleKind
     ) -> [Int] {
         guard kind == .weekly else { return [] }
         return Array(Set(weekdays.filter { (1...7).contains($0) })).sorted()

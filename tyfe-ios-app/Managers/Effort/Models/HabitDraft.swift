@@ -6,7 +6,7 @@ struct HabitDraft {
     var iconToken: String = "leaf.fill"
     var colorToken: String = "teal"
     var projectId: String?
-    var schedule = ActivityRecurrenceModel(kind: .daily)
+    var schedule = RepeatSchedule(kind: .daily)
     var creditValue: ChecklistCreditValue = .halfCredit
     var isArchived = false
 

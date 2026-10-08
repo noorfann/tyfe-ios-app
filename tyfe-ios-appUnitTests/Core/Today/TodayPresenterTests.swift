@@ -170,8 +170,7 @@ struct TodayPresenterTests {
                 type: .session,
                 checklistItems: [],
                 sessionCount: 4,
-                projectId: project.projectId,
-                recurrence: nil
+                projectId: project.projectId
             )
         )
 
@@ -253,8 +252,7 @@ struct TodayPresenterTests {
                 type: .session,
                 checklistItems: [],
                 sessionCount: 1,
-                projectId: nil,
-                recurrence: nil
+                projectId: nil
             )
         )
 
@@ -340,8 +338,7 @@ struct TodayPresenterTests {
                 type: .session,
                 checklistItems: [],
                 sessionCount: 2,
-                projectId: presenter.selectedProjectId,
-                recurrence: nil
+                projectId: presenter.selectedProjectId
             )
         )
 
@@ -369,8 +366,7 @@ struct TodayPresenterTests {
                 type: .session,
                 checklistItems: [],
                 sessionCount: 1,
-                projectId: destinationProject.projectId,
-                recurrence: nil
+                projectId: destinationProject.projectId
             )
         )
 

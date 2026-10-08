@@ -112,28 +112,6 @@ struct TodayChecklistTests {
         #expect(today.deleteChecklistItem(itemId: item.itemId))
     }
 
-    @Test func activityTypeConversionRequiresAnUnrecordedDay() throws {
-        let clock = TestFocusClock()
-        let repository = MockLocalAppRepository()
-        let today = TodayManager(repository: repository, clock: clock)
-        let focus = FocusManager(repository: repository, clock: clock)
-        let activity = ActivityModel.mock
-        _ = today.addActivityToDailyPlan(activityId: activity.activityId, sessionCount: 1)
-
-        let converted = try #require(today.convertActivity(activityId: activity.activityId, to: .checklist))
-        #expect(converted.type == .checklist)
-        #expect(today.dailyPlan?.planItems.first?.unitKind == .checklist)
-        #expect(today.dailyPlan?.planItems.first?.plannedSessionCount == 0)
-
-        let restored = try #require(today.convertActivity(activityId: activity.activityId, to: .session))
-        #expect(restored.type == .session)
-        #expect(today.dailyPlan?.planItems.first?.unitKind == .session)
-        #expect(today.dailyPlan?.planItems.first?.plannedSessionCount == 1)
-
-        _ = try #require(focus.startFocusSession(activityId: activity.activityId))
-        #expect(today.convertActivity(activityId: activity.activityId, to: .checklist) == nil)
-    }
-
     @Test func checklistActivityCannotStartAFocusSession() throws {
         let clock = TestFocusClock()
         let repository = MockLocalAppRepository()
