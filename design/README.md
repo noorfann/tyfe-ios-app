@@ -2,7 +2,7 @@
 
 [tyfe.lib.pen](tyfe.lib.pen) contains shared variables, reusable component origins, state examples, and native behavior contracts. [tyfe.pen](tyfe.pen) imports that library and contains the preserved Today canvas and app composition examples. Pen specifies visual design; SwiftUI remains the runtime implementation. This migration changes no Swift source, business logic, component API, navigation, persistence, widgets, or Live Activities.
 
-The former workspace-root canvas was relocated into this repository. Its three Today compositions retain their original screen IDs: Session `vvgGg`, To Do `YdsWT`, and Habit `kxcK4`. Their component references now point to the shared library. The original empty frame is preserved. Component IDs below belong to `tyfe.lib.pen` unless explicitly marked as a composition. The importing document currently qualifies them with `7:`; that import alias is document-local and is not part of a component's stable ID. The library contains 194 reusable origins/reference cards and 127 variables; the composition file has 709 linked instances and no local duplicate origins.
+The former workspace-root canvas was relocated into this repository. Its three Today compositions retain their original screen IDs: Session `vvgGg`, To Do `YdsWT`, and Habit `kxcK4`. Their component references now point to the shared library. The original empty frame is preserved. Component IDs below belong to `tyfe.lib.pen` unless explicitly marked as a composition. The importing document currently qualifies them with `7:`; that import alias is document-local and is not part of a component's stable ID. The library contains 201 reusable origins/reference cards and 127 variables; the composition file has 813 linked instances and no local duplicate origins.
 
 ## Library organization
 
@@ -16,17 +16,32 @@ The former workspace-root canvas was relocated into this repository. Its three T
 | 05 Rewards and claims | `fxGrr` | Coupon availability and claim lifecycle states |
 | 06 Circles | `ewCRk` | Enable, member rows, owner controls, name validation, invite and errors |
 | 07 Streak | `iIIJG` | Hero outcomes, growth tiles, stats, freeze bank, week and month activity |
-| 08 Today, forms and identity | `U6AjC` | Plan/To Do states, checklist, repeat, activity type, avatars and metrics |
+| 08 Today, forms and identity | `U6AjC` | Plan/To Do states, checklist, To Do repeat, avatars and metrics |
 | 09 Native controls and behavior contracts | `IAlGK` | Explicit native controls, motion, gestures, crop, presentation and typography references |
 | 10 Habit width/theme/accessibility examples | `QOm3E` | 320/390 viewport widths, Light/Dark, all three periods, long labels, archived/new/unscheduled and expanded history |
 | 11 Family verification examples | `n1mDX` | Shared families at 320/390 component widths in Light/Dark |
 | 12 Accessibility family examples | `r6HG7A` | Expanded fields, actions, activity/plan/claim cards, rows, feedback, stats and modal |
 | 13 To Do forms, history and recovery | `l5GdU` | To Do form and sheets, checklist editor, history records, native menus, recovery, and task states |
 | 14 Habit and Session feature patterns | `sWR1l` | Habit settings/repeat/form/history, Session count/add/edit/checklist forms, Focus outcomes and native confirmations |
+| 15 To Do repeat | `au5Fo` | Daily/weekday forms, invalid weekdays, narrow/Dark/accessibility repeat layouts, and carry-forward/credit contracts |
+| 16 Minimal tab summaries | `DQxce` | Shared 28-point progress ring; empty, partial, complete, and accessibility summary rows; width and theme examples |
+| Today / Minimal summary verification | `K3dI1c` in `tyfe.pen` | Linked rows at 320/390 points, Light/Dark, long counts, accessibility, and skipped-only states |
 | App composition examples | `ufqdv` in `tyfe.pen` | Filled Today, Focus/Rest, Rewards, Circles and Streak assembled from library instances |
 | To Do / Feature flow | `kSrz3` in `tyfe.pen` | Creation, editing, completion, history/reopening, failures, native contracts, and layout examples |
 | Habit / Feature flow | `A3SGZ` in `tyfe.pen` | Creation, repeat, Week/Month/Year, complete/undo, skip/undo, history/edit, archive/restore, failures and accessibility |
-| Session / Feature flow | `X0YnvD` in `tyfe.pen` | Creation/count/repeat/deck, edit/remove, Focus/confirmation/completion/rest, rewards, abandon, existing checklists, historical days and failures |
+| Session / Feature flow | `X0YnvD` in `tyfe.pen` | Creation/count/deck, edit/remove, Focus/confirmation/completion/rest, rewards, abandon, existing checklists, historical days and failures |
+
+## Minimal tab summaries
+
+The top summary cards in the three Today compositions and their feature flows have been replaced by 63 linked transparent rows. SwiftUI implements the same pattern through `TyfeSummaryRowView`. Individual Session, To Do, and Habit content cards remain unchanged. Historical Session checklist counts use the same row pattern. Existing screen IDs, board positions, count wording, Spaces, selectors, and actions are preserved. The older metric origins remain available for unrelated compositions and the design-system gallery.
+
+Each row has a 28-point progress ring with a 3-point band, a label, and a trailing readable count. Eight-point gaps and eight-point vertical padding give a 44-point minimum height without a background, border, shadow, or decorative icon. Counts may wrap when narrow; at accessibility sizes, the label and count stack beside the ring. The ring is display-only and belongs to the same accessibility summary as the readable count.
+
+Session progress is completed divided by planned; legacy checklist progress is checked divided by planned items. To Do progress is done divided by done plus open in the selected Space. Habit progress is completed divided by due, excluding skipped, while the count retains the skipped value. Fill starts at twelve o'clock and advances clockwise, clamped to 0–100%; a zero denominator, including skipped-only Habits, uses an empty subdued ring. Session/Habit use teal; To Do/checklist use saffron. All colors and typography reference existing library variables.
+
+Reusable origins are the small ring `tPIRK`, empty row `bhdfB`, partial row `d2PXs`, complete row `AJhno`, and accessibility row `L3wuRq`. Board `DQxce` holds the library examples. Composition board `K3dI1c` covers all three labels, Light/Dark at 320/390-point widths, long counts, empty/partial/complete/skipped-only states, and stacked accessibility text. Both files are verified through resolved layout checks and renders, then saved and reopened to confirm shared references.
+
+Session no longer displays the time-of-day greeting or the accompanying focus guidance; historical day overview text remains. Focus daypart greetings remain unchanged. Session, To Do, Habit, Reward, Space, and Circle creation sheets use the 80% native detent, with scrollable content. To Do and Habit edit forms retain their large detent; Session details and other non-creation sheets retain their existing detents. Pen sheet content is expanded for inspection rather than clipped to the native viewport. SwiftUI previews cover normal and accessibility summary rows; runtime execution remains opt-in under repository policy.
 
 ## Foundations
 
@@ -64,7 +79,8 @@ Status **Linked** means a reusable component origin exists and compositions can 
 | `TyfeBottomSheet` | `F6hzZa` | Generic content slot, native detents and dismiss | Surface/slot `BlX8h`, presentation `b4HmbT` | Linked + Native |
 | `CustomModalView` | `xzgKv` | Title, optional subtitle, primary and secondary actions | Native background/accent/system font; min44pt actions | Linked |
 | `TyfeActivityCardView` | `Jr4Mu`, `SJkmy` | Flexible and scheduled metadata; Start Focus | Surface, Action, 48pt icon tile | Linked |
-| `TyfeMetricCardView` | `thcrs`, `zNpyp` | Centered/no detail and leading/detail | Surface, optional symbol/detail | Linked |
+| `TyfeMetricCardView` | `thcrs`, `zNpyp` | Centered/no detail and leading/detail; retained for existing runtime and unrelated library examples | Surface, optional symbol/detail | Linked |
+| `TyfeSummaryRowView` | `tPIRK`, `bhdfB`, `d2PXs`, `AJhno`, `L3wuRq` | 28-point ring; empty, partial, complete, and stacked accessibility rows | Existing colors, interface typography, 8-point gaps; display-only | Linked |
 | `TyfeCoachmarkView` | `UacLr` | Deck guidance and optional navigation hint | Motif, Surface | Linked |
 | `TyfeMotifView`, `TyfeMotifKind` | `eh2x1`, `x16BF`, `tjOcB` | Tile, badge, completion decoration | Native SF Symbol substitution | Linked |
 | `TyfeTierLegendView` | `c6I6Yw` | Credit/minute tiers | Metadata typography | Linked |
@@ -107,13 +123,13 @@ Swift files are under `tyfe-ios-app/Core/`. The existing symbols remain feature-
 | `TodayDateNavigatorView` | `RhPFr` | Current/historical dates; previous/next controls | Native local date labels/actions | Linked |
 | `TodayHistoricalEmptyView` | `AyTeU`, `wR4L9` | No activity; no completions | Surface | Linked |
 | `ChecklistItemsEditorView` | `x3ukGu` | Locked/open item, add/delete and incomplete draft guidance | Field,44pt actions; native focus | Linked |
-| `ActivityRepeatPickerView`, `ActivityRepeatPickerPreview` | `jkAaq`, `MdsII`, `xZ29J`, `YaXNK` | Never/every day/certain days/invalid; preserve native sizing contract below | Surface,36pt choices/weekdays, locale weekday order | Linked + Native |
-| `ActivityTypePickerView` | `ZcuBI` | Activity type selection | Surface,44pt selectors | Linked |
+| `TodoRepeatPickerView`, `TodoRepeatPickerPreview` | `jkAaq`, `MdsII`, `xZ29J`, `YaXNK` | Never/every day/certain days/invalid | Surface, adaptive 44pt choices/weekdays, locale weekday order | Linked |
+| Former `ActivityTypePickerView` | Former `ZcuBI` | Unreachable Session/Checklist conversion selector | Source and unreferenced origin removed | Removed |
 | `EffortCreditPicker`, `EffortSpacePicker` | `OtA9i`, `ETP39`, `FWYkM` | Native menu/picker choices and selected value; To Do default 0.5, choices 0.5/1/1.5/2 | Native Menu/Picker | Linked + Native |
 | `TodayProjectFormView` | `KGgSl` | Name validation, preset3-column colors, custom ColorPicker, Save/Cancel | Fields, native Form/ColorPicker | Native composition |
 | `HabitFormView` | `GC5fQ`, `piS9S`, `yO0ds`, `CqmTN`, `QBlX6`, `I9bS6a`, `L4Bj4`, `meUob` | Title/Space/icon/color/credit/repeat; blank/valid/weekday validation; edit/archive from tomorrow | Fields, repeat, native picker/toggle | Linked + Native |
 | `TodoFormView` | `KorMI`, `DEm9q`, `prE1l`, `HRqdH`, `Qbag2`, `Du4wn`, `U5gUm` | Blank/valid/checklist/invalid sheets; optional item addition/removal; title and empty-item validation | Field, Action, Surface, Sheet, native pickers; no per-item credits | Linked + Native |
-| `TodayAddActivitySheet`, `TodayActivityDetailSheet`, `TodayEffortSheets` | `g9c3ar`, `NYq7J`, `mZFkZ`, `i1cKAV`, `ZeBcw`, `RQinv`, `xC2HB`, `h9kno`, `XdnC2`, `cmdvt`, `gyihT`, `F6hzZa` | Session add/edit/count/repeat, existing checklist editing, native large detents | Field, Surface, Action, repeat, Session checklist, native Space picker | Linked + Native |
+| `TodayAddActivitySheet`, `TodayActivityDetailSheet`, `TodayEffortSheets` | `g9c3ar`, `NYq7J`, `mZFkZ`, `i1cKAV`, `ZeBcw`, `RQinv`, `xC2HB`, `h9kno`, `XdnC2`, `cmdvt`, `gyihT`, `F6hzZa` | Session add/edit/count, existing checklist editing, native large detents | Field, Surface, Action, Session checklist, native Space picker | Linked + Native |
 | `HabitDetailView` | `rXyRw`, `JwZnD`, `xnQtC`, `DXQEK`, `c3gDA` | Historical month paging, edit, streak counters, full-history heatmap,36pt month cells and today actions | Native navigation/sheets; detail history | Linked + Native |
 | `TodayProjectManagementView` | `gyihT`, `OtA9i` | Native Space management/edit/delete confirmation, floating control clearance | Native List/alert, Space selector | Native composition |
 | `RewardsCreateRewardSheet` | `KGgSl`, `gyihT` | Name, duration tier/cost and Save/Cancel | Native Form/Picker; Field | Native composition |
@@ -180,7 +196,7 @@ The following26 additional reusable origins live on board `sWR1l`. All are linke
 | `HabitDetailView` content/calendar/presentation | `rXyRw`, `xnQtC`, `JwZnD` | Title/edit, current/best streak,12pt full-history tile sample,36pt numbered calendar, today Complete/Skip; large history sheet | Linked + Native |
 | Session activity settings | `g9c3ar` | `TodayAddActivitySheet`/`TodayActivityDetailSheet` title, existing activity type label and native Space menu | Linked + Native |
 | Session count/duration control | `NYq7J` |48pt plus/minus, planned count/minutes and completed count; disabled minimum | Linked |
-| `TodayAddActivitySheet` content/presentation | `mZFkZ`, `i1cKAV`, `ZeBcw` | Blank/valid, count, Repeat and Add to Today; large Sheet shell | Linked + Native |
+| `TodayAddActivitySheet` content/presentation | `mZFkZ`, `i1cKAV`, `ZeBcw` | Blank/valid, count and Add to Today; large Sheet shell | Linked + Native |
 | `TodayActivityDetailSheet` content/presentation | `RQinv`, `xC2HB`, `h9kno` | Editable/with progress, count minimum, Save Changes, Remove only before completion | Linked + Native |
 | Existing Session checklist details | `XdnC2`, `cmdvt` | Session checklist editor `x3ukGu`, native per-item credit menus, checked-item delete lock, Save | Linked + Native |
 | `FocusView` outcome | `s7sIo`, `OoWoc` | Completed/rest pending or completed, abandoned; Surface, Actions, static native artwork equivalent | Linked + Behavior |
@@ -203,7 +219,7 @@ Habit edits update title, icon, color and Space immediately; schedule, credit an
 | Session row | Composition ID | Covered behavior |
 | --- | --- | --- |
 |01 Creation | `aUKfX` | First Activity/FAB, blank/valid add sheet, one Session saved |
-|02 Count/repeat/deck | `Nc0A9` | Two sessions/50 minutes, recurrence validation, automatic future matching days, second Activity and swipe coachmark |
+|02 Count/deck | `Nc0A9` | Two sessions/50 minutes, manual Add to Today, second Activity and swipe coachmark |
 |03 Edit/remove | `qSAsz`, `maYik` | Save Changes, completed-count minimum, Remove absent after progress; direct Remove from Today branch |
 |04 Focus lifecycle | `aHy3p` | Today Start, Ready, native start confirmation/Cancel, running25-minute timer, completion |
 |05 Rest/another | `J8IOo` | Pending5-minute rest, active rest, automatic rest completion, Start another and skip-rest contract |
@@ -216,7 +232,7 @@ Habit edits update title, icon, color and Space immediately; schedule, credit an
 
 The current Session add/edit forms display an activity type label without exposing a conversion selector. The checklist branch therefore starts with an existing stored checklist Activity. Session checklist items own individual credits, unlike To Do. Item undo can fail atomically; the Today presenter does not introduce a new alert for that failure. Session-form save guards likewise do not use the Effort Could not save alert. Focus uses its exact existing reward/persistence alerts. Each completed25-minute Focus Session awards1 credit once; abandoning does not award a completed unit. An active running session resumes regardless of another selected Activity; a different ready session is replaced. Running Focus disables Minimize and interactive dismissal, while phone lock/background preserves absolute-time progress. Rest lasts5 minutes and does not award another Session credit. Mock-only Mark complete, system sound, daypart transitions, confetti/Lottie, Reduce Motion and native lifecycle behavior are documented, not simulated.
 
-Visible resolved-layout checks and Pen renders cover the added families and flow examples. Intentional bounds exceptions are the Year scrolling strip, the dimmed expanded Habit screen beneath a390×844 native alert, and coupon notch halves in the existing Rewards destination component. Larger sheet content is expanded on the canvas to document scrolling. Native single-line fields show abbreviated text where appropriate; full long names remain in cards and annotations. The existing Session repeat weekday row's348pt minimum including insets is documented rather than changed. No Swift runtime APIs, logic, navigation, builds, tests or simulator verification were changed or run.
+Visible resolved-layout checks and Pen renders cover the added families and flow examples. Intentional bounds exceptions are the Year scrolling strip, the dimmed expanded Habit screen beneath a390×844 native alert, and coupon notch halves in the existing Rewards destination component. Larger sheet content is expanded on the canvas to document scrolling. Native single-line fields show abbreviated text where appropriate; full long names remain in cards and annotations. Session repeat controls and transitions have been removed. The subsequent To Do repeat change updates SwiftUI and Pen together; runtime verification remains opt-in.
 
 ## Navigation, screens and remaining native patterns
 
@@ -239,7 +255,7 @@ Habit cards use12pt inset,8pt section gaps and16pt list separation. Week has sev
 
 All habit titles continue opening existing detail. Complete/undo and Skip/undo skip preserve44×44 minimum targets. Unscheduled cards retain disabled completion controls and metadata, with no Skip action. New cards show pending/faint history. Long labels use stacked footer examples. Accessibility history expands into full date/status text; Year groups by month. The canvas shows representative date lines rather than hundreds of spoken labels. SwiftUI generates all actual local-calendar dates and accessibility labels.
 
-Native controls retain existing geometry, including Activity repeat's36pt controls and the40pt progress bar. The fixed repeat weekday row needs300pt content: seven36pt controls plus six8pt gaps, or348pt including standard card insets. The320pt family examples document this existing constraint and omit that row rather than silently invent a different runtime layout. This migration does not fix or refactor the SwiftUI constraint. The full row remains in the370pt origin and390pt example.
+To Do repeat uses adaptive 44-point actions and weekday targets. Choices stack when their intrinsic width does not fit; weekdays use an adaptive grid, with wider short-name labels at accessibility text sizes. Light/Dark 320- and 390-point examples demonstrate these layouts. The native 40-point progress bar remains unchanged.
 
 Coupons retain stub/notch/perforation geometry. Narrow examples override outline geometry and detail width together to keep the tear line aligned. The unavailable7/5 dashed outline is a native stroke contract; Pen's editable outline is solid because its stroke schema has no dash array. Native material blending, rounded trim caps, emoji/SF font rendering, image/crop interactions, animations, scrolling and semantic text scaling also remain runtime contracts. Accessibility examples demonstrate expansion; they are not evidence from a running iOS preview.
 
@@ -256,6 +272,29 @@ For a future visual change:
 5. Save and reopen both documents; verify library import, linked references and the three existing Today compositions. Do not remove old origins before all references are verified.
 6. Run diff checks and strict non-rewriting SwiftLint for Swift changes. Builds, tests, SwiftUI previews and simulator verification remain opt-in under [repository policy](../AGENTS.md).
 
-Final static accounting covered all 97 Swift View, Shape, and ViewModifier symbols in the shared Components, Core, and Root inventory and the original150 reusable Pen origin IDs. To Do adds18 origins; Habit/Session adds26, giving194 origins,127 shared variables, and709 linked canvas instances. Pen renders and resolved layouts were inspected; intentional year scrolling, coupon notch clipping, and native alert viewport clipping are documented above. Calendar fill-column arithmetic can produce subpixel boundary warnings without visible clipping.
+Final static accounting covered all 97 Swift View, Shape, and ViewModifier symbols in the shared Components, Core, and Root inventory and the original150 reusable Pen origin IDs. To Do adds18 origins; Habit/Session adds26, the later repeat change removes one unused type-selector origin and adds three To Do sheet origins, giving196 origins,127 shared variables, and801 linked canvas instances. Pen renders and resolved layouts were inspected; intentional year scrolling, coupon notch clipping, and native alert viewport clipping are documented above. Calendar fill-column arithmetic can produce subpixel boundary warnings without visible clipping.
 
-No Swift changes were necessary for this migration. Runtime verification was not run. The source inventory includes shared Components and reusable Core patterns; widgets and Live Activities are explicitly excluded.
+The initial library migration required no Swift changes. The subsequent Session/To Do repeat change updates SwiftUI, models, migration, and test sources together with Pen. Strict non-rewriting SwiftLint and syntax checks were run; runtime verification was not run. The source inventory includes shared Components and reusable Core patterns; widgets and Live Activities are explicitly excluded.
+
+
+## Session simplification and To Do repeat
+
+Session creation and editing now contain title, Space, count, and actions. Session plans are manually added to each day. Repeat state, live recurrence APIs, automatic plan generation, and unreachable type-conversion controls were removed. Stored checklist rendering and historical plans remain supported; Habit scheduling is unchanged.
+
+| Swift pattern | Pen origin or composition | Variants and dependencies | Status |
+| --- | --- | --- | --- |
+| `TodoFormView` repeat | `KorMI` repeat slot `l0IMr`; `jkAaq`, `MdsII`, `xZ29J`, `YaXNK` | Never, daily, weekdays, invalid; adaptive 44-point controls | Linked |
+| Repeating To Do sheets | `AaQK9`, `GjXZ7`, `vFPAX` | Daily, weekdays, invalid weekdays; linked Sheet shell, form, repeat, and Save | Linked |
+| To Do schedule metadata | `kr24y` label `yhW7A`, `vr4kC` label `EqS02`, `NoUX8` label `i29wo` | Current schedule and pending next-day text; inherited by checklist/history card variants | Linked |
+| Repeat setup flow | `q6UzB` in `tyfe.pen` | Daily, weekdays, empty-day validation, and immediately visible saved task | Linked |
+| Carry-forward and reset flow | `Up6K2` in `tyfe.pen` | Partial work carried across scheduled days; completion then next scheduled cycle with preserved history | Linked |
+| Edit/stop repeat flow | `bnvl6` in `tyfe.pen` | Current schedule, edit, pending tomorrow change, and Never | Linked |
+| Repeat layout checks | `wndQq` in `tyfe.pen`; library `UAukH`, `aJPCg` | Light320, Dark390/320, accessibility390; stacked choices and adaptive weekday rows | Linked |
+
+New tasks default to Never and appear immediately even on a nonmatching day. Unfinished tasks stay open with their checklist progress; no duplicate or overdue occurrences are created. A completed task resets on its next scheduled local day while retaining its task ID, creation order, title, Space, credit value, and completion history. After several days away, it reopens once without synthetic history or retroactive credits. Reset clears completion, ticks, and award eligibility without rewriting the ledger. Same-day undo uses the awarded amount and remains atomic; previous-day reopening retains its award until the current cycle finishes and a later scheduled cycle begins.
+
+Schedule edits take effect tomorrow. Repeated edits replace tomorrow's pending revision. Cards show the current schedule plus “From tomorrow” when a change is pending; the editor explains that today's progress and reward stay intact. Title, Space, checklist, and credit edits retain existing semantics.
+
+Snapshot version 9 decodes missing To Do schedules as Never. Preparation resolves legacy Session fallback counts through yesterday before clearing compatibility recurrence; recorded plans, Focus sessions, effort counts, and ledger entries remain intact. Migration and recurring-task preparation are transactional and retryable through the existing preparation-error flow. The first file migration preserves the exact previous file at `local-app-snapshot-v1.txt.pre-v9-backup`. To roll back, restore that backup with the previous app version; the previous version cannot read a version 9 snapshot. Existing repeating Sessions are not converted into To Dos.
+
+The canvas preserves the user's current board positions. Intentional clipping is limited to scrolling Year strips, native-alert viewport content, and coupon notch halves. New repeat families have no visible resolved-layout clipping. Focused test sources cover scheduling, progress, credits, persistence, retirement, and backup preservation. Builds, test execution, previews, and simulators were intentionally not run under repository policy.

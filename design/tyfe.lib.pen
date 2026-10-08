@@ -2428,7 +2428,7 @@
               "type": "frame",
               "id": "F6hzZa",
               "name": "Sheet / Shell",
-              "context": "TyfeBottomSheet; 80% default detent, native presentation and scrolling. Content slot.",
+              "context": "TyfeBottomSheet: create/add Session, To Do, Habit, Reward, Space and Circle forms use .fraction(0.8). Existing edit/detail detents retain their previous values. Scrollable content slot; native safe areas/keyboard.",
               "reusable": true,
               "width": "fill_container",
               "fill": "$tyfe-canvas",
@@ -22011,6 +22011,18 @@
                           "fontFamily": "$tyfe-interface-font",
                           "fontSize": 11,
                           "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "yhW7A",
+                          "name": "Repeat summary",
+                          "fill": "$tyfe-muted",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Never",
+                          "fontFamily": "$tyfe-interface-font",
+                          "fontSize": 13,
+                          "fontWeight": "600"
                         }
                       ]
                     },
@@ -22125,6 +22137,18 @@
                           "fontFamily": "$tyfe-interface-font",
                           "fontSize": 11,
                           "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "i29wo",
+                          "name": "Repeat summary",
+                          "fill": "$tyfe-muted",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Never",
+                          "fontFamily": "$tyfe-interface-font",
+                          "fontSize": 13,
+                          "fontWeight": "600"
                         }
                       ]
                     },
@@ -22238,6 +22262,18 @@
                           "content": "1 credit",
                           "fontFamily": "$tyfe-interface-font",
                           "fontSize": 11,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "EqS02",
+                          "name": "Repeat summary",
+                          "fill": "$tyfe-muted",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Never",
+                          "fontFamily": "$tyfe-interface-font",
+                          "fontSize": 13,
                           "fontWeight": "600"
                         }
                       ]
@@ -22596,8 +22632,8 @@
             {
               "type": "frame",
               "id": "jkAaq",
-              "name": "Repeat / Never",
-              "context": "ActivityRepeatPickerView; 36pt choices and weekday circles retain existing geometry, locale weekday order, validation.",
+              "name": "To Do Repeat / Never",
+              "context": "TodoRepeatPickerView; 44pt adaptive choices and weekdays. Carry unfinished work; reset completed tasks on next due day.",
               "reusable": true,
               "width": 370,
               "fill": "$tyfe-paper",
@@ -22643,7 +22679,7 @@
                       "id": "fDOcQ",
                       "name": "Repeat choice Never",
                       "width": "fill_container",
-                      "height": 36,
+                      "height": 44,
                       "fill": "$tyfe-teal",
                       "cornerRadius": 16,
                       "stroke": "$tyfe-control-border",
@@ -22676,7 +22712,7 @@
                       "id": "W8ew4A",
                       "name": "Repeat choice Every day",
                       "width": "fill_container",
-                      "height": 36,
+                      "height": 44,
                       "fill": "$tyfe-canvas",
                       "cornerRadius": 16,
                       "stroke": "$tyfe-control-border",
@@ -22709,7 +22745,7 @@
                       "id": "QnPNN",
                       "name": "Repeat choice Certain days",
                       "width": "fill_container",
-                      "height": 36,
+                      "height": 44,
                       "fill": "$tyfe-canvas",
                       "cornerRadius": 16,
                       "stroke": "$tyfe-control-border",
@@ -22746,9 +22782,9 @@
                   "fill": "$tyfe-muted",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "Adds to today only.",
+                  "content": "Stays open until completed. Does not repeat.",
                   "fontFamily": "$tyfe-interface-font",
-                  "fontSize": 11,
+                  "fontSize": 13,
                   "fontWeight": "600"
                 }
               ]
@@ -22756,8 +22792,8 @@
             {
               "type": "frame",
               "id": "MdsII",
-              "name": "Repeat / Every day",
-              "context": "ActivityRepeatPickerView; 36pt choices and weekday circles retain existing geometry, locale weekday order, validation.",
+              "name": "To Do Repeat / Every day",
+              "context": "TodoRepeatPickerView; 44pt adaptive choices and weekdays. Carry unfinished work; reset completed tasks on next due day.",
               "reusable": true,
               "width": 370,
               "fill": "$tyfe-paper",
@@ -22803,7 +22839,7 @@
                       "id": "ApF06",
                       "name": "Repeat choice Never",
                       "width": "fill_container",
-                      "height": 36,
+                      "height": 44,
                       "fill": "$tyfe-canvas",
                       "cornerRadius": 16,
                       "stroke": "$tyfe-control-border",
@@ -22836,7 +22872,7 @@
                       "id": "hZxfH",
                       "name": "Repeat choice Every day",
                       "width": "fill_container",
-                      "height": 36,
+                      "height": 44,
                       "fill": "$tyfe-teal",
                       "cornerRadius": 16,
                       "stroke": "$tyfe-control-border",
@@ -22869,7 +22905,7 @@
                       "id": "Fwrxn",
                       "name": "Repeat choice Certain days",
                       "width": "fill_container",
-                      "height": 36,
+                      "height": 44,
                       "fill": "$tyfe-canvas",
                       "cornerRadius": 16,
                       "stroke": "$tyfe-control-border",
@@ -22906,9 +22942,9 @@
                   "fill": "$tyfe-muted",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "Appears in every day's plan automatically.",
+                  "content": "Completed tasks reopen the next day. Unfinished work carries forward.",
                   "fontFamily": "$tyfe-interface-font",
-                  "fontSize": 11,
+                  "fontSize": 13,
                   "fontWeight": "600"
                 }
               ]
@@ -22916,8 +22952,8 @@
             {
               "type": "frame",
               "id": "xZ29J",
-              "name": "Repeat / Certain days",
-              "context": "ActivityRepeatPickerView; 36pt choices and weekday circles retain existing geometry, locale weekday order, validation.",
+              "name": "To Do Repeat / Certain days",
+              "context": "TodoRepeatPickerView; 44pt adaptive choices and weekdays. Carry unfinished work; reset completed tasks on next due day.",
               "reusable": true,
               "width": 370,
               "fill": "$tyfe-paper",
@@ -22963,7 +22999,7 @@
                       "id": "zPmPA",
                       "name": "Repeat choice Never",
                       "width": "fill_container",
-                      "height": 36,
+                      "height": 44,
                       "fill": "$tyfe-canvas",
                       "cornerRadius": 16,
                       "stroke": "$tyfe-control-border",
@@ -22996,7 +23032,7 @@
                       "id": "pJfE6",
                       "name": "Repeat choice Every day",
                       "width": "fill_container",
-                      "height": 36,
+                      "height": 44,
                       "fill": "$tyfe-canvas",
                       "cornerRadius": 16,
                       "stroke": "$tyfe-control-border",
@@ -23029,7 +23065,7 @@
                       "id": "WdnSW",
                       "name": "Repeat choice Certain days",
                       "width": "fill_container",
-                      "height": 36,
+                      "height": 44,
                       "fill": "$tyfe-teal",
                       "cornerRadius": 16,
                       "stroke": "$tyfe-control-border",
@@ -23064,188 +23100,209 @@
                   "id": "SO4vu",
                   "name": "Repeat weekdays",
                   "width": "fill_container",
+                  "layout": "vertical",
                   "gap": 8,
                   "alignItems": "center",
                   "children": [
                     {
                       "type": "frame",
-                      "id": "wrLCX",
-                      "name": "Repeat weekday 0",
-                      "width": 36,
-                      "height": 36,
-                      "fill": "$tyfe-teal",
-                      "cornerRadius": 18,
-                      "stroke": "$tyfe-control-border",
-                      "strokeWidth": 1,
-                      "gap": "$tyfe-related-gap",
-                      "justifyContent": "center",
+                      "id": "L2i2Ae",
+                      "name": "Adaptive weekday row",
+                      "width": "fill_container",
+                      "gap": 8,
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "Sev6H",
-                          "name": "Weekday label",
-                          "fill": "$tyfe-ink",
-                          "content": "M",
-                          "fontFamily": "$tyfe-interface-font",
-                          "fontSize": 17,
-                          "fontWeight": "600"
+                          "type": "frame",
+                          "id": "wrLCX",
+                          "name": "Repeat weekday 0",
+                          "width": 44,
+                          "height": 44,
+                          "fill": "$tyfe-teal",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Sev6H",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "M",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 17,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "V1KYF",
+                          "name": "Repeat weekday 1",
+                          "width": 44,
+                          "height": 44,
+                          "fill": "$tyfe-canvas",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "gyXAY",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "T",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 17,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "EhHoi",
+                          "name": "Repeat weekday 2",
+                          "width": 44,
+                          "height": 44,
+                          "fill": "$tyfe-teal",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "t8VjV",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "W",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 17,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "V0C4dy",
+                          "name": "Repeat weekday 3",
+                          "width": 44,
+                          "height": 44,
+                          "fill": "$tyfe-canvas",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "UcoZ3",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "T",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 17,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "jVzbJ",
+                          "name": "Repeat weekday 4",
+                          "width": 44,
+                          "height": 44,
+                          "fill": "$tyfe-teal",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "uYXHs",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "F",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 17,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "qKNoG",
+                          "name": "Repeat weekday 5",
+                          "width": 44,
+                          "height": 44,
+                          "fill": "$tyfe-canvas",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "NHrXw",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "S",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 17,
+                              "fontWeight": "600"
+                            }
+                          ]
                         }
                       ]
                     },
                     {
                       "type": "frame",
-                      "id": "V1KYF",
-                      "name": "Repeat weekday 1",
-                      "width": 36,
-                      "height": 36,
-                      "fill": "$tyfe-canvas",
-                      "cornerRadius": 18,
-                      "stroke": "$tyfe-control-border",
-                      "strokeWidth": 1,
-                      "gap": "$tyfe-related-gap",
-                      "justifyContent": "center",
+                      "id": "twgDl",
+                      "name": "Adaptive weekday row",
+                      "width": "fill_container",
+                      "gap": 8,
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "gyXAY",
-                          "name": "Weekday label",
-                          "fill": "$tyfe-ink",
-                          "content": "T",
-                          "fontFamily": "$tyfe-interface-font",
-                          "fontSize": 17,
-                          "fontWeight": "600"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "EhHoi",
-                      "name": "Repeat weekday 2",
-                      "width": 36,
-                      "height": 36,
-                      "fill": "$tyfe-teal",
-                      "cornerRadius": 18,
-                      "stroke": "$tyfe-control-border",
-                      "strokeWidth": 1,
-                      "gap": "$tyfe-related-gap",
-                      "justifyContent": "center",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "t8VjV",
-                          "name": "Weekday label",
-                          "fill": "$tyfe-ink",
-                          "content": "W",
-                          "fontFamily": "$tyfe-interface-font",
-                          "fontSize": 17,
-                          "fontWeight": "600"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "V0C4dy",
-                      "name": "Repeat weekday 3",
-                      "width": 36,
-                      "height": 36,
-                      "fill": "$tyfe-canvas",
-                      "cornerRadius": 18,
-                      "stroke": "$tyfe-control-border",
-                      "strokeWidth": 1,
-                      "gap": "$tyfe-related-gap",
-                      "justifyContent": "center",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "UcoZ3",
-                          "name": "Weekday label",
-                          "fill": "$tyfe-ink",
-                          "content": "T",
-                          "fontFamily": "$tyfe-interface-font",
-                          "fontSize": 17,
-                          "fontWeight": "600"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "jVzbJ",
-                      "name": "Repeat weekday 4",
-                      "width": 36,
-                      "height": 36,
-                      "fill": "$tyfe-teal",
-                      "cornerRadius": 18,
-                      "stroke": "$tyfe-control-border",
-                      "strokeWidth": 1,
-                      "gap": "$tyfe-related-gap",
-                      "justifyContent": "center",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "uYXHs",
-                          "name": "Weekday label",
-                          "fill": "$tyfe-ink",
-                          "content": "F",
-                          "fontFamily": "$tyfe-interface-font",
-                          "fontSize": 17,
-                          "fontWeight": "600"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "qKNoG",
-                      "name": "Repeat weekday 5",
-                      "width": 36,
-                      "height": 36,
-                      "fill": "$tyfe-canvas",
-                      "cornerRadius": 18,
-                      "stroke": "$tyfe-control-border",
-                      "strokeWidth": 1,
-                      "gap": "$tyfe-related-gap",
-                      "justifyContent": "center",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "NHrXw",
-                          "name": "Weekday label",
-                          "fill": "$tyfe-ink",
-                          "content": "S",
-                          "fontFamily": "$tyfe-interface-font",
-                          "fontSize": 17,
-                          "fontWeight": "600"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "SVguw",
-                      "name": "Repeat weekday 6",
-                      "width": 36,
-                      "height": 36,
-                      "fill": "$tyfe-teal",
-                      "cornerRadius": 18,
-                      "stroke": "$tyfe-control-border",
-                      "strokeWidth": 1,
-                      "gap": "$tyfe-related-gap",
-                      "justifyContent": "center",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "rpOTU",
-                          "name": "Weekday label",
-                          "fill": "$tyfe-ink",
-                          "content": "S",
-                          "fontFamily": "$tyfe-interface-font",
-                          "fontSize": 17,
-                          "fontWeight": "600"
+                          "type": "frame",
+                          "id": "SVguw",
+                          "name": "Repeat weekday 6",
+                          "width": 44,
+                          "height": 44,
+                          "fill": "$tyfe-canvas",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "rpOTU",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "S",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 17,
+                              "fontWeight": "600"
+                            }
+                          ]
                         }
                       ]
                     }
@@ -23258,9 +23315,9 @@
                   "fill": "$tyfe-muted",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "Appears on matching days automatically. Changes apply from tomorrow.",
+                  "content": "Completed tasks reopen on the next matching day. Unfinished work carries forward.",
                   "fontFamily": "$tyfe-interface-font",
-                  "fontSize": 11,
+                  "fontSize": 13,
                   "fontWeight": "600"
                 }
               ]
@@ -23268,8 +23325,8 @@
             {
               "type": "frame",
               "id": "YaXNK",
-              "name": "Repeat / Invalid",
-              "context": "ActivityRepeatPickerView; 36pt choices and weekday circles retain existing geometry, locale weekday order, validation.",
+              "name": "To Do Repeat / Invalid",
+              "context": "TodoRepeatPickerView; 44pt adaptive choices and weekdays. Carry unfinished work; reset completed tasks on next due day.",
               "reusable": true,
               "width": 370,
               "fill": "$tyfe-paper",
@@ -23315,7 +23372,7 @@
                       "id": "t1eZKj",
                       "name": "Repeat choice Never",
                       "width": "fill_container",
-                      "height": 36,
+                      "height": 44,
                       "fill": "$tyfe-canvas",
                       "cornerRadius": 16,
                       "stroke": "$tyfe-control-border",
@@ -23348,7 +23405,7 @@
                       "id": "K7jJAc",
                       "name": "Repeat choice Every day",
                       "width": "fill_container",
-                      "height": 36,
+                      "height": 44,
                       "fill": "$tyfe-canvas",
                       "cornerRadius": 16,
                       "stroke": "$tyfe-control-border",
@@ -23381,8 +23438,8 @@
                       "id": "Mfzop",
                       "name": "Repeat choice Certain days",
                       "width": "fill_container",
-                      "height": 36,
-                      "fill": "$tyfe-canvas",
+                      "height": 44,
+                      "fill": "$tyfe-teal",
                       "cornerRadius": 16,
                       "stroke": "$tyfe-control-border",
                       "strokeWidth": 1,
@@ -23416,188 +23473,209 @@
                   "id": "A0ah67",
                   "name": "Repeat weekdays",
                   "width": "fill_container",
+                  "layout": "vertical",
                   "gap": 8,
                   "alignItems": "center",
                   "children": [
                     {
                       "type": "frame",
-                      "id": "YkvjA",
-                      "name": "Repeat weekday 0",
-                      "width": 36,
-                      "height": 36,
-                      "fill": "$tyfe-canvas",
-                      "cornerRadius": 18,
-                      "stroke": "$tyfe-control-border",
-                      "strokeWidth": 1,
-                      "gap": "$tyfe-related-gap",
-                      "justifyContent": "center",
+                      "id": "MoJ7Q",
+                      "name": "Adaptive weekday row",
+                      "width": "fill_container",
+                      "gap": 8,
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "EGpNl",
-                          "name": "Weekday label",
-                          "fill": "$tyfe-ink",
-                          "content": "M",
-                          "fontFamily": "$tyfe-interface-font",
-                          "fontSize": 17,
-                          "fontWeight": "600"
+                          "type": "frame",
+                          "id": "YkvjA",
+                          "name": "Repeat weekday 0",
+                          "width": 44,
+                          "height": 44,
+                          "fill": "$tyfe-canvas",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "EGpNl",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "M",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 17,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "jO4Cv",
+                          "name": "Repeat weekday 1",
+                          "width": 44,
+                          "height": 44,
+                          "fill": "$tyfe-canvas",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "U2IApf",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "T",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 17,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "H3VC0w",
+                          "name": "Repeat weekday 2",
+                          "width": 44,
+                          "height": 44,
+                          "fill": "$tyfe-canvas",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "VljgP",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "W",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 17,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "jVwWK",
+                          "name": "Repeat weekday 3",
+                          "width": 44,
+                          "height": 44,
+                          "fill": "$tyfe-canvas",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "EqZE7",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "T",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 17,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "DGUR1",
+                          "name": "Repeat weekday 4",
+                          "width": 44,
+                          "height": 44,
+                          "fill": "$tyfe-canvas",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "woUfx",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "F",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 17,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Md8C7",
+                          "name": "Repeat weekday 5",
+                          "width": 44,
+                          "height": 44,
+                          "fill": "$tyfe-canvas",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "G2nSfI",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "S",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 17,
+                              "fontWeight": "600"
+                            }
+                          ]
                         }
                       ]
                     },
                     {
                       "type": "frame",
-                      "id": "jO4Cv",
-                      "name": "Repeat weekday 1",
-                      "width": 36,
-                      "height": 36,
-                      "fill": "$tyfe-canvas",
-                      "cornerRadius": 18,
-                      "stroke": "$tyfe-control-border",
-                      "strokeWidth": 1,
-                      "gap": "$tyfe-related-gap",
-                      "justifyContent": "center",
+                      "id": "cA3ih",
+                      "name": "Adaptive weekday row",
+                      "width": "fill_container",
+                      "gap": 8,
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "U2IApf",
-                          "name": "Weekday label",
-                          "fill": "$tyfe-ink",
-                          "content": "T",
-                          "fontFamily": "$tyfe-interface-font",
-                          "fontSize": 17,
-                          "fontWeight": "600"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "H3VC0w",
-                      "name": "Repeat weekday 2",
-                      "width": 36,
-                      "height": 36,
-                      "fill": "$tyfe-canvas",
-                      "cornerRadius": 18,
-                      "stroke": "$tyfe-control-border",
-                      "strokeWidth": 1,
-                      "gap": "$tyfe-related-gap",
-                      "justifyContent": "center",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "VljgP",
-                          "name": "Weekday label",
-                          "fill": "$tyfe-ink",
-                          "content": "W",
-                          "fontFamily": "$tyfe-interface-font",
-                          "fontSize": 17,
-                          "fontWeight": "600"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "jVwWK",
-                      "name": "Repeat weekday 3",
-                      "width": 36,
-                      "height": 36,
-                      "fill": "$tyfe-canvas",
-                      "cornerRadius": 18,
-                      "stroke": "$tyfe-control-border",
-                      "strokeWidth": 1,
-                      "gap": "$tyfe-related-gap",
-                      "justifyContent": "center",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "EqZE7",
-                          "name": "Weekday label",
-                          "fill": "$tyfe-ink",
-                          "content": "T",
-                          "fontFamily": "$tyfe-interface-font",
-                          "fontSize": 17,
-                          "fontWeight": "600"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "DGUR1",
-                      "name": "Repeat weekday 4",
-                      "width": 36,
-                      "height": 36,
-                      "fill": "$tyfe-canvas",
-                      "cornerRadius": 18,
-                      "stroke": "$tyfe-control-border",
-                      "strokeWidth": 1,
-                      "gap": "$tyfe-related-gap",
-                      "justifyContent": "center",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "woUfx",
-                          "name": "Weekday label",
-                          "fill": "$tyfe-ink",
-                          "content": "F",
-                          "fontFamily": "$tyfe-interface-font",
-                          "fontSize": 17,
-                          "fontWeight": "600"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "Md8C7",
-                      "name": "Repeat weekday 5",
-                      "width": 36,
-                      "height": 36,
-                      "fill": "$tyfe-canvas",
-                      "cornerRadius": 18,
-                      "stroke": "$tyfe-control-border",
-                      "strokeWidth": 1,
-                      "gap": "$tyfe-related-gap",
-                      "justifyContent": "center",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "G2nSfI",
-                          "name": "Weekday label",
-                          "fill": "$tyfe-ink",
-                          "content": "S",
-                          "fontFamily": "$tyfe-interface-font",
-                          "fontSize": 17,
-                          "fontWeight": "600"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "aCcWL",
-                      "name": "Repeat weekday 6",
-                      "width": 36,
-                      "height": 36,
-                      "fill": "$tyfe-canvas",
-                      "cornerRadius": 18,
-                      "stroke": "$tyfe-control-border",
-                      "strokeWidth": 1,
-                      "gap": "$tyfe-related-gap",
-                      "justifyContent": "center",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "QhtCs",
-                          "name": "Weekday label",
-                          "fill": "$tyfe-ink",
-                          "content": "S",
-                          "fontFamily": "$tyfe-interface-font",
-                          "fontSize": 17,
-                          "fontWeight": "600"
+                          "type": "frame",
+                          "id": "aCcWL",
+                          "name": "Repeat weekday 6",
+                          "width": 44,
+                          "height": 44,
+                          "fill": "$tyfe-canvas",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "QhtCs",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "S",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 17,
+                              "fontWeight": "600"
+                            }
+                          ]
                         }
                       ]
                     }
@@ -23612,78 +23690,8 @@
                   "width": "fill_container",
                   "content": "Pick at least one day.",
                   "fontFamily": "$tyfe-interface-font",
-                  "fontSize": 11,
+                  "fontSize": 13,
                   "fontWeight": "600"
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "ZcuBI",
-              "name": "Activity / Type selector",
-              "context": "ActivityTypePickerView; Session/Checklist options, selected teal, unavailable disabled ink, 44pt targets.",
-              "reusable": true,
-              "width": "fill_container",
-              "gap": "$tyfe-related-gap",
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "GYdwD",
-                  "name": "Type Session",
-                  "width": "fill_container",
-                  "height": 44,
-                  "fill": "$tyfe-teal",
-                  "cornerRadius": 16,
-                  "stroke": "$tyfe-control-border",
-                  "strokeWidth": 1,
-                  "gap": "$tyfe-related-gap",
-                  "justifyContent": "center",
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "OK5Rr",
-                      "name": "Type label",
-                      "fill": "$tyfe-ink",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
-                      "content": "Session",
-                      "textAlign": "center",
-                      "fontFamily": "$tyfe-interface-font",
-                      "fontSize": 17,
-                      "fontWeight": "600"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "Nwl5y",
-                  "name": "Type Checklist",
-                  "width": "fill_container",
-                  "height": 44,
-                  "fill": "$tyfe-canvas",
-                  "cornerRadius": 16,
-                  "stroke": "$tyfe-control-border",
-                  "strokeWidth": 1,
-                  "gap": "$tyfe-related-gap",
-                  "justifyContent": "center",
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "YBe2U",
-                      "name": "Type label",
-                      "fill": "$tyfe-ink",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
-                      "content": "Checklist",
-                      "textAlign": "center",
-                      "fontFamily": "$tyfe-interface-font",
-                      "fontSize": 17,
-                      "fontWeight": "600"
-                    }
-                  ]
                 }
               ]
             }
@@ -24482,7 +24490,7 @@
                   "fill": "$tyfe-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "NavigationStack titles, toolbars, bottom tab bar, status bar, sheets with drag indicators/detents, menus and alerts are system-rendered. Pen chrome is illustrative; iOS provides safe areas, locale and accessibility.",
+                  "content": "NavigationStack titles, toolbars, bottom tabs, status bars, sheets, menus and alerts are native. Create/add forms use80% height with scrolling content. Existing edit/detail detents remain unchanged. Pen expands form content for inspection; runtime uses native safe areas, locale and accessibility.",
                   "fontFamily": "$tyfe-interface-font",
                   "fontSize": 17,
                   "fontWeight": "600"
@@ -26948,7 +26956,7 @@
                   "type": "frame",
                   "id": "KorMI",
                   "name": "To Do / Form content",
-                  "context": "TodoFormView. Native Space and Reward Credits menu pickers; optional checklist; Save enabled only for trimmed nonempty title and item titles.",
+                  "context": "TodoFormView. Native Space/Credit menus, optional checklist and To Do repeat. Save requires title, checklist titles, and valid selected weekdays.",
                   "reusable": true,
                   "width": 358,
                   "layout": "vertical",
@@ -27007,6 +27015,13 @@
                       "type": "ref",
                       "ref": "U5gUm",
                       "name": "Optional checklist",
+                      "width": "fill_container"
+                    },
+                    {
+                      "id": "l0IMr",
+                      "type": "ref",
+                      "ref": "jkAaq",
+                      "name": "To Do repeat",
                       "width": "fill_container"
                     },
                     {
@@ -28876,7 +28891,7 @@
                   "fill": "$tyfe-ink",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "1 current     4 best",
+                  "content": "2 current     4 best",
                   "fontFamily": "$tyfe-interface-font",
                   "fontSize": 17,
                   "fontWeight": "600"
@@ -29886,7 +29901,7 @@
                       "name": "Day 1",
                       "width": "fill_container",
                       "height": 36,
-                      "fill": "$tyfe-teal",
+                      "fill": "$tyfe-canvas",
                       "opacity": 1,
                       "stroke": "$tyfe-border",
                       "strokeWidth": 1,
@@ -29903,7 +29918,7 @@
                       "name": "Day 2",
                       "width": "fill_container",
                       "height": 36,
-                      "fill": "$tyfe-teal",
+                      "fill": "$tyfe-canvas",
                       "opacity": 1,
                       "stroke": "$tyfe-border",
                       "strokeWidth": 1,
@@ -29920,7 +29935,7 @@
                       "name": "Day 3",
                       "width": "fill_container",
                       "height": 36,
-                      "fill": "$tyfe-teal",
+                      "fill": "$tyfe-canvas",
                       "opacity": 1,
                       "stroke": "$tyfe-border",
                       "strokeWidth": 1,
@@ -29937,7 +29952,7 @@
                       "name": "Day 4",
                       "width": "fill_container",
                       "height": 36,
-                      "fill": "$tyfe-teal",
+                      "fill": "$tyfe-canvas",
                       "opacity": 1,
                       "stroke": "$tyfe-border",
                       "strokeWidth": 1,
@@ -29998,7 +30013,7 @@
                       "name": "Day 7",
                       "width": "fill_container",
                       "height": 36,
-                      "fill": "$tyfe-teal",
+                      "fill": "$tyfe-canvas",
                       "opacity": 1,
                       "stroke": "$tyfe-ink",
                       "strokeWidth": 2,
@@ -30774,13 +30789,6 @@
                   "width": "fill_container"
                 },
                 {
-                  "id": "KTMBU",
-                  "type": "ref",
-                  "ref": "jkAaq",
-                  "name": "Repeat / Never",
-                  "width": "fill_container"
-                },
-                {
                   "id": "lOkUe",
                   "type": "ref",
                   "ref": "thouy",
@@ -30926,13 +30934,6 @@
                       "enabled": true
                     }
                   }
-                },
-                {
-                  "id": "XMJqN",
-                  "type": "ref",
-                  "ref": "jkAaq",
-                  "name": "Repeat / Never",
-                  "width": "fill_container"
                 },
                 {
                   "id": "uqw9M",
@@ -31525,6 +31526,1253 @@
               ]
             }
           ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "au5Fo",
+      "x": 0,
+      "y": 27223,
+      "name": "15 / To Do repeat",
+      "width": 1700,
+      "fill": "$tyfe-canvas",
+      "gap": 24,
+      "padding": 24,
+      "children": [
+        {
+          "type": "frame",
+          "id": "L273b",
+          "name": "Daily and weekly forms",
+          "width": 390,
+          "layout": "vertical",
+          "gap": 24,
+          "children": [
+            {
+              "type": "frame",
+              "id": "AaQK9",
+              "name": "To Do / Sheet — Daily",
+              "reusable": true,
+              "width": 390,
+              "layout": "vertical",
+              "children": [
+                {
+                  "id": "mg5wA",
+                  "type": "ref",
+                  "ref": "F6hzZa",
+                  "name": "To Do / Sheet — Daily",
+                  "width": "fill_container",
+                  "descendants": {
+                    "eOMbw": {
+                      "content": "TO DO"
+                    },
+                    "BlX8h": {
+                      "type": "frame",
+                      "id": "In925",
+                      "name": "To Do content",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 24,
+                      "children": [
+                        {
+                          "id": "nuOTA",
+                          "type": "ref",
+                          "ref": "KorMI",
+                          "width": "fill_container",
+                          "descendants": {
+                            "p4Pyf/AQgzP": {
+                              "content": "Prepare for tomorrow"
+                            },
+                            "l0IMr": {
+                              "id": "KQauq",
+                              "type": "ref",
+                              "ref": "MdsII",
+                              "name": "To Do repeat",
+                              "width": "fill_container"
+                            },
+                            "yKW1P": {
+                              "fill": "$tyfe-focus"
+                            },
+                            "yKW1P/js0MV": {
+                              "fill": "$tyfe-on-accent"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "GjXZ7",
+              "name": "To Do / Sheet — Weekdays",
+              "reusable": true,
+              "width": 390,
+              "layout": "vertical",
+              "children": [
+                {
+                  "id": "u2h3NR",
+                  "type": "ref",
+                  "ref": "F6hzZa",
+                  "name": "To Do / Sheet — Weekdays",
+                  "width": "fill_container",
+                  "descendants": {
+                    "eOMbw": {
+                      "content": "TO DO"
+                    },
+                    "BlX8h": {
+                      "type": "frame",
+                      "id": "QOmWP",
+                      "name": "To Do content",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 24,
+                      "children": [
+                        {
+                          "id": "FdNdv",
+                          "type": "ref",
+                          "ref": "KorMI",
+                          "width": "fill_container",
+                          "descendants": {
+                            "p4Pyf/AQgzP": {
+                              "content": "Prepare for tomorrow"
+                            },
+                            "l0IMr": {
+                              "id": "M4Ydui",
+                              "type": "ref",
+                              "ref": "xZ29J",
+                              "name": "To Do repeat",
+                              "width": "fill_container"
+                            },
+                            "yKW1P": {
+                              "fill": "$tyfe-focus"
+                            },
+                            "yKW1P/js0MV": {
+                              "fill": "$tyfe-on-accent"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "GTHkI",
+          "name": "Validation and edit",
+          "width": 390,
+          "layout": "vertical",
+          "gap": 24,
+          "children": [
+            {
+              "type": "frame",
+              "id": "vFPAX",
+              "name": "To Do / Sheet — Invalid weekdays",
+              "reusable": true,
+              "width": 390,
+              "layout": "vertical",
+              "children": [
+                {
+                  "id": "DcmL0",
+                  "type": "ref",
+                  "ref": "F6hzZa",
+                  "name": "To Do / Sheet — Invalid weekdays",
+                  "width": "fill_container",
+                  "descendants": {
+                    "eOMbw": {
+                      "content": "TO DO"
+                    },
+                    "BlX8h": {
+                      "type": "frame",
+                      "id": "JrIs8",
+                      "name": "To Do content",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 24,
+                      "children": [
+                        {
+                          "id": "u09IH",
+                          "type": "ref",
+                          "ref": "KorMI",
+                          "width": "fill_container",
+                          "descendants": {
+                            "p4Pyf/AQgzP": {
+                              "content": "Prepare for tomorrow"
+                            },
+                            "l0IMr": {
+                              "id": "L7e4b",
+                              "type": "ref",
+                              "ref": "YaXNK",
+                              "name": "To Do repeat",
+                              "width": "fill_container"
+                            },
+                            "yKW1P": {
+                              "fill": "$tyfe-disabled-fill"
+                            },
+                            "yKW1P/js0MV": {
+                              "fill": "$tyfe-disabled-ink"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "VjPuq",
+              "name": "Next-day edits",
+              "fill": "$tyfe-ink",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Repeat changes begin tomorrow. Today's progress and reward stay intact.",
+              "fontFamily": "$tyfe-interface-font",
+              "fontSize": 17,
+              "fontWeight": "600"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "MdYe5",
+          "name": "Narrow / Dark / accessibility",
+          "width": 370,
+          "layout": "vertical",
+          "gap": 24,
+          "children": [
+            {
+              "id": "UAukH",
+              "type": "ref",
+              "ref": "xZ29J",
+              "name": "To Do repeat / Dark 320",
+              "width": 288,
+              "theme": {
+                "mode": "Dark"
+              },
+              "descendants": {
+                "OyL3Y": {
+                  "layout": "vertical",
+                  "gap": 8
+                },
+                "SO4vu": {
+                  "type": "frame",
+                  "id": "zXQpN",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "UB03F",
+                      "width": "fill_container",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "wLRZj",
+                          "name": "Repeat weekday 0",
+                          "width": 44,
+                          "height": 44,
+                          "fill": "$tyfe-teal",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "dsyhb",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "M",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 17,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "tdVAC",
+                          "name": "Repeat weekday 1",
+                          "width": 44,
+                          "height": 44,
+                          "fill": "$tyfe-canvas",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "xKY44",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "T",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 17,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "CZy76",
+                          "name": "Repeat weekday 2",
+                          "width": 44,
+                          "height": 44,
+                          "fill": "$tyfe-teal",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "kYtfk",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "W",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 17,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "SGi0i",
+                          "name": "Repeat weekday 3",
+                          "width": 44,
+                          "height": 44,
+                          "fill": "$tyfe-canvas",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "M22UR",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "T",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 17,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "YKQNA",
+                      "width": "fill_container",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "IWWDL",
+                          "name": "Repeat weekday 4",
+                          "width": 44,
+                          "height": 44,
+                          "fill": "$tyfe-teal",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "wDIDP",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "F",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 17,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "K1Janq",
+                          "name": "Repeat weekday 5",
+                          "width": 44,
+                          "height": 44,
+                          "fill": "$tyfe-canvas",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "DFREo",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "S",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 17,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "nAw9A",
+                          "name": "Repeat weekday 6",
+                          "width": 44,
+                          "height": 44,
+                          "fill": "$tyfe-canvas",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "iL5yC",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "S",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 17,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": "aJPCg",
+              "type": "ref",
+              "ref": "xZ29J",
+              "name": "To Do repeat / Accessibility 390",
+              "width": 358,
+              "descendants": {
+                "OyL3Y": {
+                  "layout": "vertical",
+                  "gap": 8
+                },
+                "RgsRo": {
+                  "fontSize": 23
+                },
+                "SygkF": {
+                  "fontSize": 23
+                },
+                "l2RhCd": {
+                  "fontSize": 23
+                },
+                "SO4vu": {
+                  "type": "frame",
+                  "id": "f46Pde",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "upqrY",
+                      "width": "fill_container",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Mcw9V",
+                          "name": "Repeat weekday 0",
+                          "width": 68,
+                          "height": 44,
+                          "fill": "$tyfe-teal",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "cBMwK",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "Mon",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 23,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "A5RL5",
+                          "name": "Repeat weekday 1",
+                          "width": 68,
+                          "height": 44,
+                          "fill": "$tyfe-canvas",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "OwyfV",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "Tue",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 23,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Z8EmsP",
+                          "name": "Repeat weekday 2",
+                          "width": 68,
+                          "height": 44,
+                          "fill": "$tyfe-teal",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "jAgVj",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "Wed",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 23,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "iHr5k",
+                          "name": "Repeat weekday 3",
+                          "width": 68,
+                          "height": 44,
+                          "fill": "$tyfe-canvas",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "gIsQi",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "Thu",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 23,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "EHiR9",
+                      "width": "fill_container",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "pgTWi",
+                          "name": "Repeat weekday 4",
+                          "width": 68,
+                          "height": 44,
+                          "fill": "$tyfe-teal",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "HaLm7",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "Fri",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 23,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "g3Ujd",
+                          "name": "Repeat weekday 5",
+                          "width": 68,
+                          "height": 44,
+                          "fill": "$tyfe-canvas",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "LIzir",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "Sat",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 23,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "dvmyM",
+                          "name": "Repeat weekday 6",
+                          "width": 68,
+                          "height": 44,
+                          "fill": "$tyfe-canvas",
+                          "cornerRadius": 22,
+                          "stroke": "$tyfe-control-border",
+                          "strokeWidth": 1,
+                          "gap": "$tyfe-related-gap",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "ECxUX",
+                              "name": "Weekday label",
+                              "fill": "$tyfe-ink",
+                              "content": "Sun",
+                              "fontFamily": "$tyfe-interface-font",
+                              "fontSize": 23,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "JCnBg": {
+                  "fontSize": 23
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "QyDwP",
+          "name": "Behavior",
+          "width": 370,
+          "layout": "vertical",
+          "gap": 24,
+          "children": [
+            {
+              "type": "text",
+              "id": "zaJ1r",
+              "name": "Repeat contract",
+              "fill": "$tyfe-ink",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Never is the default. New tasks appear immediately. Unfinished checklist progress carries forward. Completed tasks reopen on the next scheduled local day. A multi-day absence reopens once without missed-task history or credits.",
+              "fontFamily": "$tyfe-interface-font",
+              "fontSize": 17,
+              "fontWeight": "600"
+            },
+            {
+              "type": "text",
+              "id": "xpm8P",
+              "name": "Credits and history",
+              "fill": "$tyfe-ink",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Reset keeps the same task ID, Space and creation order. Preserve completed records and ledger entries. New cycles can earn task credits once; same-day undo uses the awarded amount. Prior-day reopening stays already rewarded until the next cycle.",
+              "fontFamily": "$tyfe-interface-font",
+              "fontSize": 17,
+              "fontWeight": "600"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "DQxce",
+      "x": 0,
+      "y": 29051,
+      "name": "16 / Minimal tab summaries",
+      "width": 1700,
+      "fill": "$tyfe-canvas",
+      "layout": "vertical",
+      "gap": 24,
+      "padding": 32,
+      "children": [
+        {
+          "type": "text",
+          "id": "A0bFTA",
+          "name": "Summary family heading",
+          "fill": "$tyfe-ink",
+          "content": "Minimal tab summaries",
+          "fontFamily": "$tyfe-heading-font",
+          "fontSize": 34,
+          "fontWeight": "800"
+        },
+        {
+          "type": "frame",
+          "id": "u012w",
+          "name": "Summary layout examples",
+          "width": "fill_container",
+          "gap": 24,
+          "children": [
+            {
+              "type": "frame",
+              "id": "M1eG0V",
+              "name": "390 / Light · origins",
+              "theme": {
+                "mode": "Light"
+              },
+              "width": 390,
+              "fill": "$tyfe-canvas",
+              "layout": "vertical",
+              "gap": 16,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Jyaeg",
+                  "name": "Light layout caption",
+                  "fill": "$tyfe-muted",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "390pt · Light · reusable origins",
+                  "fontFamily": "$tyfe-interface-font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "tPIRK",
+                  "name": "Progress / Small ring",
+                  "context": "Display-only 28pt ring; 3pt band. Fill is completed/total, clamped to 0–1. Zero total stays empty. Clockwise from twelve o’clock.",
+                  "reusable": true,
+                  "width": 28,
+                  "height": 28,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "ellipse",
+                      "id": "wSOkX",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Progress track",
+                      "innerRadius": 0.7857142857142857,
+                      "fill": "$tyfe-disabled-fill",
+                      "width": 28,
+                      "height": 28
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "ZeEow",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Completed progress",
+                      "enabled": false,
+                      "innerRadius": 0.7857142857142857,
+                      "startAngle": 90,
+                      "sweepAngle": 0,
+                      "fill": "$tyfe-teal",
+                      "width": 28,
+                      "height": 28
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "bhdfB",
+                  "name": "Today / Summary row — Empty",
+                  "context": "TyfeSummaryRowView: transparent Today summary row. Minimum44pt from28pt ring +16pt vertical padding;8pt gaps. Counts wrap when narrow. Display-only, readable label/value accessibility.",
+                  "reusable": true,
+                  "width": 358,
+                  "gap": "$tyfe-related-gap",
+                  "padding": [
+                    8,
+                    0
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "kFI1s",
+                      "type": "ref",
+                      "ref": "tPIRK",
+                      "name": "Completion progress",
+                      "width": 28,
+                      "height": 28
+                    },
+                    {
+                      "type": "text",
+                      "id": "OgkxV",
+                      "name": "Summary label",
+                      "fill": "$tyfe-ink",
+                      "content": "Sessions",
+                      "fontFamily": "$tyfe-interface-font",
+                      "fontSize": "$tyfe-font-interface-size",
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "GGR5t",
+                      "name": "Summary count",
+                      "fill": "$tyfe-muted",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "0 of 5",
+                      "textAlign": "right",
+                      "fontFamily": "$tyfe-interface-font",
+                      "fontSize": "$tyfe-font-interface-size",
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "id": "d2PXs",
+                  "type": "ref",
+                  "reusable": true,
+                  "ref": "bhdfB",
+                  "name": "Today / Summary row — Partial",
+                  "width": 358,
+                  "descendants": {
+                    "kFI1s/ZeEow": {
+                      "enabled": true,
+                      "sweepAngle": -144
+                    },
+                    "GGR5t": {
+                      "content": "2 of 5"
+                    }
+                  }
+                },
+                {
+                  "id": "AJhno",
+                  "type": "ref",
+                  "reusable": true,
+                  "ref": "bhdfB",
+                  "name": "Today / Summary row — Complete",
+                  "width": 358,
+                  "descendants": {
+                    "kFI1s/ZeEow": {
+                      "enabled": true,
+                      "sweepAngle": -360
+                    },
+                    "GGR5t": {
+                      "content": "5 of 5"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "eZi6m",
+              "name": "320 / Dark · count wrapping",
+              "theme": {
+                "mode": "Dark"
+              },
+              "width": 320,
+              "fill": "$tyfe-canvas",
+              "layout": "vertical",
+              "gap": 16,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "I49W6",
+                  "name": "Narrow layout caption",
+                  "fill": "$tyfe-muted",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "320pt · Dark · all tabs",
+                  "fontFamily": "$tyfe-interface-font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "id": "ozAmK",
+                  "type": "ref",
+                  "ref": "bhdfB",
+                  "name": "Sessions / 2 of 5",
+                  "width": "fill_container",
+                  "descendants": {
+                    "kFI1s/ZeEow": {
+                      "enabled": true,
+                      "sweepAngle": -144,
+                      "fill": "$tyfe-teal"
+                    },
+                    "OgkxV": {
+                      "content": "Sessions"
+                    },
+                    "GGR5t": {
+                      "content": "2 of 5"
+                    }
+                  }
+                },
+                {
+                  "id": "NnrMr",
+                  "type": "ref",
+                  "ref": "bhdfB",
+                  "name": "To Do / 2 done · 3 open",
+                  "width": "fill_container",
+                  "descendants": {
+                    "kFI1s/ZeEow": {
+                      "enabled": true,
+                      "sweepAngle": -144,
+                      "fill": "$tyfe-saffron"
+                    },
+                    "OgkxV": {
+                      "content": "To Do"
+                    },
+                    "GGR5t": {
+                      "content": "2 done · 3 open"
+                    }
+                  }
+                },
+                {
+                  "id": "b3PAJL",
+                  "type": "ref",
+                  "ref": "bhdfB",
+                  "name": "Habits today / 2 of 3 · 1 skipped",
+                  "width": "fill_container",
+                  "descendants": {
+                    "kFI1s/ZeEow": {
+                      "enabled": true,
+                      "sweepAngle": -240,
+                      "fill": "$tyfe-teal"
+                    },
+                    "OgkxV": {
+                      "content": "Habits today"
+                    },
+                    "GGR5t": {
+                      "content": "2 of 3 · 1 skipped"
+                    }
+                  }
+                },
+                {
+                  "id": "vaWCE",
+                  "type": "ref",
+                  "ref": "bhdfB",
+                  "name": "Habits today / 0 of 0 · 3 skipped",
+                  "width": "fill_container",
+                  "descendants": {
+                    "kFI1s/ZeEow": {
+                      "enabled": false,
+                      "sweepAngle": 0,
+                      "fill": "$tyfe-teal"
+                    },
+                    "OgkxV": {
+                      "content": "Habits today"
+                    },
+                    "GGR5t": {
+                      "content": "0 of 0 · 3 skipped"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "rcOqH",
+              "name": "390 / Dark · long labels",
+              "theme": {
+                "mode": "Dark"
+              },
+              "width": 390,
+              "fill": "$tyfe-canvas",
+              "layout": "vertical",
+              "gap": 16,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "kcpiM",
+                  "name": "Dark layout caption",
+                  "fill": "$tyfe-muted",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "390pt · Dark · long counts",
+                  "fontFamily": "$tyfe-interface-font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "id": "CgCWP",
+                  "type": "ref",
+                  "ref": "bhdfB",
+                  "name": "Sessions / 125 of 200",
+                  "width": "fill_container",
+                  "descendants": {
+                    "kFI1s/ZeEow": {
+                      "enabled": true,
+                      "sweepAngle": -225,
+                      "fill": "$tyfe-teal"
+                    },
+                    "OgkxV": {
+                      "content": "Sessions"
+                    },
+                    "GGR5t": {
+                      "content": "125 of 200"
+                    }
+                  }
+                },
+                {
+                  "id": "abHw8",
+                  "type": "ref",
+                  "ref": "bhdfB",
+                  "name": "To Do / 128 done · 246 open",
+                  "width": "fill_container",
+                  "descendants": {
+                    "kFI1s/ZeEow": {
+                      "enabled": true,
+                      "sweepAngle": -123.20855614973262,
+                      "fill": "$tyfe-saffron"
+                    },
+                    "OgkxV": {
+                      "content": "To Do"
+                    },
+                    "GGR5t": {
+                      "content": "128 done · 246 open"
+                    }
+                  }
+                },
+                {
+                  "id": "YIb4x",
+                  "type": "ref",
+                  "ref": "bhdfB",
+                  "name": "Habits today / 12 of 18 · 3 skipped",
+                  "width": "fill_container",
+                  "descendants": {
+                    "kFI1s/ZeEow": {
+                      "enabled": true,
+                      "sweepAngle": -240,
+                      "fill": "$tyfe-teal"
+                    },
+                    "OgkxV": {
+                      "content": "Habits today"
+                    },
+                    "GGR5t": {
+                      "content": "12 of 18 · 3 skipped"
+                    }
+                  }
+                },
+                {
+                  "id": "FCHTB",
+                  "type": "ref",
+                  "ref": "bhdfB",
+                  "name": "Habits today / 0 of 0 · 0 skipped",
+                  "width": "fill_container",
+                  "descendants": {
+                    "kFI1s/ZeEow": {
+                      "enabled": false,
+                      "sweepAngle": 0,
+                      "fill": "$tyfe-teal"
+                    },
+                    "OgkxV": {
+                      "content": "Habits today"
+                    },
+                    "GGR5t": {
+                      "content": "0 of 0 · 0 skipped"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "irh7e",
+              "name": "390 / Accessibility · stacked count",
+              "theme": {
+                "mode": "Light"
+              },
+              "width": 390,
+              "fill": "$tyfe-canvas",
+              "layout": "vertical",
+              "gap": 16,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "L3wuRq",
+                  "name": "Today / Summary row — Accessibility",
+                  "context": "Accessibility fallback: label and readable count stack beside28pt ring; static examples represent Dynamic Type, without adding interactions.",
+                  "reusable": true,
+                  "width": 358,
+                  "gap": "$tyfe-related-gap",
+                  "padding": [
+                    8,
+                    0
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "id": "I2bOe",
+                      "type": "ref",
+                      "ref": "tPIRK",
+                      "name": "Completion progress",
+                      "width": 28,
+                      "height": 28,
+                      "descendants": {
+                        "ZeEow": {
+                          "enabled": true,
+                          "sweepAngle": -240
+                        }
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "bMxNw",
+                      "name": "Accessible summary text",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "uaUGj",
+                          "name": "Summary label",
+                          "fill": "$tyfe-ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Habits today",
+                          "fontFamily": "$tyfe-interface-font",
+                          "fontSize": 23,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "mE1E3",
+                          "name": "Summary count",
+                          "fill": "$tyfe-muted",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "12 of 18 · 3 skipped",
+                          "fontFamily": "$tyfe-interface-font",
+                          "fontSize": 23,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "rtyZX",
+                  "name": "Accessibility caption",
+                  "fill": "$tyfe-muted",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Accessibility ·23pt ·28pt ring",
+                  "fontFamily": "$tyfe-interface-font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "id": "D7vqPp",
+                  "type": "ref",
+                  "ref": "L3wuRq",
+                  "name": "To Do / readable stacked count",
+                  "width": "fill_container",
+                  "descendants": {
+                    "I2bOe/ZeEow": {
+                      "enabled": true,
+                      "sweepAngle": -123.20855614973262,
+                      "fill": "$tyfe-saffron"
+                    },
+                    "uaUGj": {
+                      "content": "To Do"
+                    },
+                    "mE1E3": {
+                      "content": "128 done · 246 open"
+                    }
+                  }
+                },
+                {
+                  "id": "h4LpaE",
+                  "type": "ref",
+                  "ref": "L3wuRq",
+                  "name": "Sessions / readable stacked count",
+                  "width": "fill_container",
+                  "descendants": {
+                    "I2bOe/ZeEow": {
+                      "enabled": true,
+                      "sweepAngle": -225,
+                      "fill": "$tyfe-teal"
+                    },
+                    "uaUGj": {
+                      "content": "Sessions"
+                    },
+                    "mE1E3": {
+                      "content": "125 of 200"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "KsqS1",
+          "name": "Progress semantics",
+          "fill": "$tyfe-muted",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "Display-only. Session: completed / planned. To Do: done / (done + open), using the current Space. Habit: completed / due, excluding skipped. Zero total stays an empty subdued ring; clamp to0–100%. Counts remain readable. Labels/counts stack at accessibility sizes; ring has no separate spoken label.",
+          "fontFamily": "$tyfe-interface-font",
+          "fontSize": 14,
+          "fontWeight": "normal"
         }
       ]
     }
