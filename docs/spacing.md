@@ -1,6 +1,6 @@
 # Spacing roles
 
-`TyfeSpacing` in `Components/Views/TyfeDesignTokens.swift` owns the spacing scale. Apply the semantic role by relationship, not by whichever numeric value happens to look close. Swift points and pen.dev logical pixels use identical values.
+The shared variables in `design/tyfe.lib.pen` specify the spacing scale; `TyfeSpacing` in `Components/Views/TyfeDesignTokens.swift` implements it at runtime. Apply the semantic role by relationship, not by whichever numeric value happens to look close. Swift points and pen.dev logical pixels use identical values. See [the design library inventory](../design/README.md) for component mappings and native behavior contracts.
 
 | Swift role | Points | Canvas variable | Use |
 | --- | ---: | --- | --- |
@@ -31,4 +31,4 @@ Canvas's native status/navigation chrome keeps its device dimensions. Fraunces a
 
 ## Maintenance
 
-Change values in Swift first, update matching pen.dev variables through MCP, and inspect resolved layout plus all three Today frame renders. Token tests cover semantic values and compatibility aliases. Static SwiftLint and source inspection are the default verification; builds, tests, and simulator runs require explicit authorization under repository policy.
+Pen is the visual specification and SwiftUI is the runtime implementation. Update the shared variables or component origins in `design/tyfe.lib.pen`, the affected compositions in `design/tyfe.pen`, and corresponding SwiftUI together in one reviewed change. Preserve compatibility aliases and instance overrides. Use Pen tooling for all `.pen` changes, then inspect resolved layout and renders in both themes, at narrow widths and accessibility text sizes. Reopen both files to verify saved imports and references. Token tests cover semantic values and compatibility aliases. Non-rewriting strict SwiftLint and source inspection are the default checks for Swift changes; builds, tests, previews, and simulator runs require explicit authorization under repository policy.
