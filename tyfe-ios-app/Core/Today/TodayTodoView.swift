@@ -6,10 +6,12 @@ struct TodayTodoView: View {
     let projectId: String?
 
     var body: some View {
+        let done = presenter.tasks(in: projectId, completed: true).count
+        let open = presenter.tasks(in: projectId, completed: false).count
         VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
-            TyfeMetricCardView(
-                title: "To Do", value: "\(presenter.tasks(in: projectId, completed: true).count) done · \(presenter.tasks(in: projectId, completed: false).count) open",
-                systemImage: "checklist", accent: TyfeEditorialPalette.saffron
+            TyfeSummaryRowView(
+                title: "To Do", value: "\(done) done · \(open) open",
+                completedCount: done, totalCount: done + open, accent: TyfeEditorialPalette.saffron
             )
             if presenter.tasks(in: projectId, completed: false).isEmpty {
                 TyfeSurfaceView(role: .paper) {

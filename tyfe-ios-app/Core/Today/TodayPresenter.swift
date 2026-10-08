@@ -81,14 +81,6 @@ final class TodayPresenter {
         Self.streakCount(from: interactor.currentStreakData)
     }
 
-    var greeting: String {
-        switch Calendar.current.component(.hour, from: Date()) {
-        case 5..<12: return "Good morning."
-        case 12..<18: return "Good afternoon."
-        default: return "Good evening."
-        }
-    }
-
     var hasPlan: Bool {
         !planItems.isEmpty
     }

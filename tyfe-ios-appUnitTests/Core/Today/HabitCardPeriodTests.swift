@@ -5,6 +5,22 @@ import Testing
 
 @MainActor
 struct HabitCardPeriodTests {
+    @Test func summaryExcludesSkippedHabitsAndRespectsSpace() throws {
+        let fixture = try makeFixture(on: day(2026, 10, 7))
+        let habit = try #require(fixture.presenter.habits.first)
+        #expect(fixture.presenter.habitProgressCounts(in: nil).due == 1)
+        fixture.presenter.toggleHabit(habit)
+        #expect(fixture.presenter.habitProgressCounts(in: nil).completed == 1)
+        fixture.presenter.toggleSkip(habit)
+        let progress = fixture.presenter.habitProgressCounts(in: nil)
+        #expect(progress.completed == 0)
+        #expect(progress.due == 0)
+        #expect(progress.skipped == 1)
+        #expect(fixture.presenter.habitProgress(in: nil) == "0 of 0 · 1 skipped")
+        #expect(fixture.presenter.habitProgressCounts(in: "another-space").due == 0)
+        #expect(fixture.presenter.habitProgressCounts(in: "another-space").skipped == 0)
+    }
+
     @Test func weekIsMondayFirstAcrossMonthAndYearBoundaries() throws {
         for (today, monday) in [(day(2026, 1, 1), day(2025, 12, 29)), (day(2026, 2, 1), day(2026, 1, 26)), (day(2028, 3, 1), day(2028, 2, 28))] {
             let fixture = try makeFixture(on: today)

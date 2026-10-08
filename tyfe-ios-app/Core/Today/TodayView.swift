@@ -64,7 +64,6 @@ struct TodayView: View {
         .modifier(TodayEffortSheets(presenter: presenter.effort, projects: presenter.projects))
         .tyfeBottomSheet(
             isPresented: $presenter.isAddActivitySheetPresented,
-            detents: [.large],
             title: "Add to Today"
         ) {
             TodayAddActivitySheet(
@@ -192,10 +191,6 @@ struct TodayView: View {
                         .frame(maxWidth: .infinity, alignment: .trailing)
                         .accessibilityHidden(true)
 
-                    Text(presenter.greeting)
-                        .font(TyfeTypography.display)
-                        .tracking(-1.6)
-
                     Text(presenter.selectedProjectId == nil
                         ? "What would you like to make room for today?"
                         : "What would you like to make room for in \(presenter.selectedProjectTitle) today?"
@@ -218,27 +213,29 @@ struct TodayView: View {
 
     private var plannedContent: some View {
         VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
-            VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
-                Text(presenter.isViewingToday ? presenter.greeting : "Day overview")
-                    .font(TyfeTypography.displayCompact)
-                    .tracking(-0.8)
-
-                Text(presenter.isViewingToday ? "Choose what to focus on next." : "Your recorded plan for this day.")
-                    .font(TyfeTypography.interface)
-                    .foregroundStyle(TyfeEditorialPalette.muted)
+            if !presenter.isViewingToday {
+                VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {
+                    Text("Day overview")
+                        .font(TyfeTypography.displayCompact)
+                        .tracking(-0.8)
+                    Text("Your recorded plan for this day.")
+                        .font(TyfeTypography.interface)
+                        .foregroundStyle(TyfeEditorialPalette.muted)
+                }
             }
 
             if presenter.dailyPlan != nil {
-                HStack(spacing: TyfeSpacing.itemGap) {
+                VStack(spacing: TyfeSpacing.relatedGap) {
                     if presenter.showsTasksMetric {
-                        TyfeMetricCardView(
+                        TyfeSummaryRowView(
                             title: "Tasks",
                             value: presenter.taskProgressLabel,
-                            systemImage: "checklist",
+                            completedCount: presenter.completedChecklistUnitCount,
+                            totalCount: presenter.plannedChecklistUnitCount,
                             accent: TyfeEditorialPalette.saffron
                         )
                     }
-                    sessionsMetric
+                    sessionsSummary
                 }
             }
 
@@ -386,11 +383,12 @@ struct TodayView: View {
             .padding(.bottom, TyfeSpacing.screenInset)
     }
 
-    private var sessionsMetric: some View {
-        TyfeMetricCardView(
+    private var sessionsSummary: some View {
+        TyfeSummaryRowView(
             title: "Sessions",
             value: presenter.sessionProgressLabel,
-            systemImage: "list.bullet.rectangle",
+            completedCount: presenter.completedSessionUnitCount,
+            totalCount: presenter.plannedSessionUnitCount,
             accent: TyfeEditorialPalette.teal
         )
     }

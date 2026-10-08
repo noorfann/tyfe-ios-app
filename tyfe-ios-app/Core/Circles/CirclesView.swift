@@ -46,7 +46,6 @@ struct CirclesView: View {
         .toolbar(.hidden, for: .navigationBar)
         .tyfeBottomSheet(
             isPresented: $presenter.isCreateCirclePresented,
-            detents: [.medium],
             title: "New Circle"
         ) {
             TyfeCircleNameSheetCardView(

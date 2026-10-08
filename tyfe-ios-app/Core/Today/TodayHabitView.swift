@@ -7,10 +7,11 @@ struct TodayHabitView: View {
     let projectId: String?
 
     var body: some View {
+        let progress = presenter.habitProgressCounts(in: projectId)
         VStack(alignment: .leading, spacing: TyfeSpacing.sectionGap) {
-            TyfeMetricCardView(
+            TyfeSummaryRowView(
                 title: "Habits today", value: presenter.habitProgress(in: projectId),
-                systemImage: "leaf.fill", accent: TyfeEditorialPalette.teal
+                completedCount: progress.completed, totalCount: progress.due, accent: TyfeEditorialPalette.teal
             )
             VStack(alignment: .leading, spacing: TyfeSpacing.itemGap) {
                 VStack(alignment: .leading, spacing: TyfeSpacing.relatedGap) {

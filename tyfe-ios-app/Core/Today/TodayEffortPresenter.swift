@@ -1,5 +1,11 @@
 import SwiftUI
 
+struct HabitProgressSummary {
+    let completed: Int
+    let due: Int
+    let skipped: Int
+}
+
 @Observable
 @MainActor
 final class TodayEffortPresenter {
@@ -121,10 +127,15 @@ final class TodayEffortPresenter {
     }
 
     func habitProgress(in projectId: String?) -> String {
+        let progress = habitProgressCounts(in: projectId)
+        return "\(progress.completed) of \(progress.due) · \(progress.skipped) skipped"
+    }
+
+    func habitProgressCounts(in projectId: String?) -> HabitProgressSummary {
         let ids = Set(habits.filter { $0.projectId == projectId }.map(\.id))
         let due = occurrences.filter { ids.contains($0.habitId) && $0.localDay == today && $0.status != .skipped }
         let skipped = occurrences.filter { ids.contains($0.habitId) && $0.localDay == today && $0.status == .skipped }.count
-        return "\(due.filter { $0.status == .completed }.count) of \(due.count) · \(skipped) skipped"
+        return HabitProgressSummary(completed: due.filter { $0.status == .completed }.count, due: due.count, skipped: skipped)
     }
 
     func addTodo(in projectId: String?) {
